@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nómina Multiequipos</title>
+    <!-- PWA Setup -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <!-- Estilos -->
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #004494;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --white: #ffffff;
+            --danger: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; }
+        
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column;
+            transition: opacity 0.3s ease-out;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 86, 179, 0.1);
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Utilidades y Componentes */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .mt-2 { margin-top: 1rem; }
+        .text-right { text-align: right; }
+        .font-bold { font-weight: bold; }
+        .text-sm { font-size: 0.875rem; }
+        .w-full { width: 100%; }
+
+        .btn {
+            padding: 0.6rem 1.2rem; border: none; border-radius: var(--border-radius);
+            cursor: pointer; font-weight: 600; transition: 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
+            text-decoration: none;
+        }
+        .btn-primary { background-color: var(--primary-color); color: var(--white); }
+        .btn-primary:hover { background-color: var(--secondary-color); }
+        .btn-secondary { background-color: #6c757d; color: var(--white); }
+        .btn-success { background-color: var(--success); color: var(--white); }
+        .btn-danger { background-color: var(--danger); color: var(--white); }
+        .btn-warning { background-color: var(--warning); color: #333; font-size: 0.8rem; }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        #login-view {
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+        .login-card {
+            background: var(--white); padding: 2rem; border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px;
+        }
+        .login-header { text-align: center; margin-bottom: 1.5rem; }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .form-control {
+            width: 100%; padding: 0.7rem; border: 1px solid #ccc; border-radius: var(--border-radius); font-size: 1rem;
+        }
+        .form-control:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
+
+        header {
+            background: var(--white); padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+
+        .tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #ddd; }
+        .tab-btn {
+            padding: 0.8rem 1.5rem; background: none; border: none; cursor: pointer;
+            font-weight: 600; color: #666; border-bottom: 3px solid transparent;
+        }
+        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+
+        .card { background: var(--white); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; font-weight: 600; color: #444; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .badge { padding: 0.25rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
+        .badge-pending { background-color: #ffeeba; color: #856404; }
+        .badge-paid { background-color: #d4edda; color: #155724; }
+        
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
+        .toast {
+            background: #333; color: #fff; padding: 1rem 1.5rem; border-radius: var(--border-radius);
+            margin-top: 10px; opacity: 0; transition: opacity 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .toast.show { opacity: 1; }
+        .toast.error { background-color: var(--danger); }
+        .toast.success { background-color: var(--success); }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 500;
+        }
+        .modal { background: var(--white); padding: 2rem; border-radius: var(--border-radius); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--white); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); border-left: 4px solid var(--primary-color); }
+        .stat-card h3 { font-size: 2rem; margin: 0.5rem 0; }
+        .stat-card p { color: #666; margin: 0; }
+
+        /* Estilos PDF */
+        #print-area { display: none; background: white; padding: 40px; position: absolute; top: 0; left: 0; width: 100%; z-index: 9999; }
+        .pdf-table { width: 100%; border: 1px solid #000; margin-bottom: 30px; border-collapse: collapse; }
+        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 5px; text-align: left; }
+        .pdf-table th { background-color: #ddd; font-weight: bold; }
+        /* Estilo para celdas anchas en PDF */
+        th.narrow-cell { width: 1%; }
+        td.narrow-cell { width: 1%; }
+
+        .calc-result { background-color: #e7f3ff; border: 1px solid #b8daff; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .calc-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
+        .calc-total { font-size: 1.2rem; font-weight: bold; color: var(--primary-color); margin-top: 10px; border-top: 2px solid var(--primary-color); padding-top: 10px; }
+
+        .pdf-payment-box { border: 2px solid #000; padding: 15px; margin-bottom: 20px; background-color: #fff; }
+        .pdf-payment-title { text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 10px; font-size: 1.1rem; }
+        .pdf-payment-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
+        .pdf-payment-row.total { font-weight: bold; font-size: 1.1rem; border-top: 1px solid #000; padding-top: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla de Carga -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; font-weight: bold;">Cargando Multiequipos...</p>
+    </div>
+
+    <!-- Toasts -->
+    <div id="toast-container"></div>
+
+    <!-- Vista Login -->
+    <section id="login-view" class="hidden">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Multiequipos</h2>
+                <p>Gestión de Nómina y Gastos</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="login-email" class="form-control" required placeholder="admin@multiequipos.com">
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-password" class="form-control" required placeholder="******">
+                </div>
+                <button type="submit" class="btn btn-primary w-full">Ingresar</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Aplicación Principal -->
+    <div id="app-view" class="hidden">
+        <header>
+            <div class="logo">Multiequipos</div>
+            <div class="user-info">
+                <span id="user-display-name">Usuario</span>
+                <button id="logout-btn" class="btn btn-sm btn-secondary">Salir</button>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Panel Técnico -->
+            <div id="technician-panel" class="hidden">
+                <div class="stats-grid">
+                    <div class="stat-card"><p>Horas Extra (Pendientes)</p><h3 id="tech-pending-hours">0</h3></div>
+                    <div class="stat-card"><p>Gastos (Pendientes)</p><h3 id="tech-pending-expenses">₡0</h3></div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="window.switchTab('tech-hours')">Registro Horas</button>
+                    <button class="tab-btn" onclick="window.switchTab('tech-expenses')">Registro Gastos</button>
+                </div>
+
+                <!-- Tabla Horas -->
+                <div id="tech-hours" class="card">
+                    <div class="flex justify-between items-center">
+                        <h2>Mis Horas Extra</h2>
+                        <button class="btn btn-primary" onclick="window.openModal('modal-hour')">+ Nueva Hora</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="tech-hours-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>H. Inicio</th><th>H. Fin</th><th>Total</th><th>Extra</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+                    </div>
+                </div>
+
+                <!-- Tabla Gastos -->
+                <div id="tech-expenses" class="card hidden">
+                    <div class="flex justify-between items-center">
+                        <h2>Mis Gastos / Facturas</h2>
+                        <button class="btn btn-primary" onclick="window.openModal('modal-expense')">+ Nuevo Gasto</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="tech-expenses-table"><thead><tr><th>Fecha</th><th>Factura #</th><th>Comercio</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Administrador -->
+            <div id="admin-panel" class="hidden">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="window.switchAdminTab('admin-users')">Gestión Técnicos</button>
+                    <button class="tab-btn" onclick="window.switchAdminTab('admin-validation')">Validación y Pagos</button>
+                    <button class="tab-btn" onclick="window.switchAdminTab('admin-reports')">Generar Reporte</button>
+                </div>
+
+                <!-- Gestión de Usuarios -->
+                <div id="admin-users" class="card">
+                    <h2>Crear Técnico</h2>
+                    <form id="create-user-form" class="flex gap-2 mt-2" style="flex-wrap: wrap;">
+                        <input type="text" id="new-fullname" class="form-control" placeholder="Nombre Completo" style="flex: 2;" required>
+                        <input type="email" id="new-email" class="form-control" placeholder="Correo Electrónico" style="flex: 1;" required>
+                        <input type="password" id="new-password" class="form-control" placeholder="Contraseña Temporal" style="flex: 1;" required>
+                        <input type="number" id="new-salary" class="form-control" placeholder="Salario Mensual (₡)" style="flex: 1;" required>
+                        <button type="submit" class="btn btn-success">Crear</button>
+                    </form>
+                    <div class="table-responsive mt-2">
+                        <h3>Lista de Técnicos</h3>
+                        <table><thead><tr><th>Nombre</th><th>Salario</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="users-table-body"></tbody></table>
+                    </div>
+                </div>
+
+                <!-- Validación y Pagos -->
+                <div id="admin-validation" class="card hidden">
+                    <h2>Validar Registros</h2>
+                    <div class="flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Técnico</label><select id="filter-tech-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option></select></div>
+                        <div class="form-group" style="margin-bottom: 0;"><label>Fecha Inicio</label><input type="date" id="filter-start-date" class="form-control" onchange="window.renderValidationTable()"></div>
+                        <div class="form-group" style="margin-bottom: 0;"><label>Fecha Fin</label><input type="date" id="filter-end-date" class="form-control" onchange="window.renderValidationTable()"></div>
+                    </div>
+                    <div class="table-responsive mt-2">
+                        <table id="validation-table"><thead><tr><th style="width: 30px;"><input type="checkbox" id="select-all-validation" onclick="window.toggleSelectAllValidation()"></th><th>Técnico</th><th>Tipo</th><th>Detalle</th><th>Monto/Horas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+                    </div>
+                    <div class="mt-2 flex justify-between items-center">
+                        <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">Generar PDF</button>
+                        <button type="button" class="btn btn-primary" onclick="window.markSelectedAsPaid()">Procesar como Pagado</button>
+                    </div>
+                </div>
+
+                <!-- Reportes -->
+                <div id="admin-reports" class="card hidden">
+                    <h2>Generar Reporte de Nómina</h2>
+                    <div class="flex gap-2 mt-2">
+                        <select id="report-tech-select" class="form-control" onchange="window.updateReportSelection()"><option value="">Seleccione Técnico...</option></select>
+                    </div>
+                    <div class="mt-2">
+                        <h3>Registros Disponibles (Pendientes y Pagados)</h3>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table id="report-selection-table"><thead><tr><th><input type="checkbox" id="select-all-reports" onclick="window.toggleSelectAllReports()"></th><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Cantidad</th></tr></thead><tbody></tbody></table>
+                        </div>
+                    <div class="mt-2 flex justify-between items-center" style="background: #eee; padding: 15px; border-radius: 8px;">
+                        <div><p>Total Horas Extra: <strong id="report-total-hours">0</strong></p><p>Total Gastos: <strong id="report-total-amount">₡0</strong></p></div>
+                        <button class="btn btn-primary btn-lg" onclick="window.generatePrintView()">Generar Reporte PDF</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <div id="modal-hour" class="modal-overlay hidden"><div class="modal">
+        <div class="modal-header"><h3 id="hour-modal-title">Registro de Horas</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-hour')">X</button></div>
+        <form id="hour-form"><input type="hidden" id="hour-id"><div class="form-group"><label>Cliente</label><input type="text" id="hour-client" class="form-control" required></div><div class="form-group"><label>Fecha</label><input type="date" id="hour-date" class="form-control" required></div><div class="flex gap-2"><div class="form-group" style="flex:1;"><label>Hora Inicio</label><input type="time" id="hour-start" class="form-control" required></div><div class="form-group" style="flex:1;"><label>Hora Fin</label><input type="time" id="hour-end" class="form-control" required></div></div><button type="submit" class="btn btn-success w-full">Guardar</button></form></div></div>
+    
+    <div id="modal-expense" class="modal-overlay hidden"><div class="modal">
+        <div class="modal-header"><h3 id="expense-modal-title">Registro de Gastos</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-expense')">X</button></div>
+        <form id="expense-form"><input type="hidden" id="expense-id"><div class="form-group"><label>Fecha</label><input type="date" id="exp-date" class="form-control" required></div><div class="form-group"><label>Factura #</label><input type="text" id="exp-invoice" class="form-control" required></div><div class="form-group"><label>Comercio</label><input type="text" id="exp-store" class="form-control" required></div><div class="form-group"><label>Cliente</label><input type="text" id="exp-client" class="form-control" required></div><div class="form-group"><label>Descripción</label><textarea id="exp-desc" class="form-control" rows="2"></textarea></div><div class="form-group"><label>Monto</label><input type="number" id="exp-amount" class="form-control" required min="0"></div><button type="submit" class="btn btn-success w-full">Guardar</button></form></div></div>
+
+    <div id="modal-tech-edit" class="modal-overlay hidden"><div class="modal">
+        <div class="modal-header"><h3>Editar Perfil Técnico</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-tech-edit')">X</button></div>
+        <form id="tech-edit-form"><input type="hidden" id="edit-tech-id"><div class="form-group"><label>Nombre Completo</label><input type="text" id="edit-tech-fullname" class="form-control" required></div><div class="form-group"><label>Salario Mensual (₡)</label><input type="number" id="edit-tech-salary" class="form-control" required min="0"></div><button type="submit" class="btn btn-success w-full">Actualizar</button></form></div></div>
+
+    <!-- Modal de Confirmación de Borrado (Nuevo) -->
+    <div id="modal-confirm-delete" class="modal-overlay hidden">
+        <div class="modal" style="text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <h3 style="color: var(--danger);">Confirmar Eliminación</h3>
+            </div>
+            <div style="margin: 2rem 0; font-size: 1.1rem;">
+                <p>¿Estás seguro que quieres eliminar este registro?</p>
+            </div>
+            <div class="flex gap-2" style="justify-content: center;">
+                <button type="button" class="btn btn-secondary" onclick="window.cancelDelete()">No</button>
+                <button type="button" class="btn btn-danger" onclick="window.confirmDeleteAction()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de Impresión -->
+    <div id="print-area">
+        <div class="report-header"><h1>Multiequipos</h1><h2>Reporte de Nómina y Reembolso de Gastos</h2></div>
+        <div class="report-details"><div><p><strong>Técnico:</strong> <span id="print-tech-name"></span></p><p><strong>Fecha de Reporte:</strong> <span id="print-date"></span></p></div></div>
+        <div id="print-tables-container"></div>
+        <div class="report-total" id="print-totals-wrapper" style="text-align: right; margin-top: 20px; font-size: 1.2rem; font-weight: bold;"></div>
+        <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center;">
+            <div style="border-top: 1px solid #000; width: 40%; padding-top: 10px;">Firma Administrador</div>
+            <div style="border-top: 1px solid #000; width: 40%; padding-top: 10px;">Firma Técnico</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (Modular v9) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, query, where, writeBatch, orderBy, documentId } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+        // --- CONFIGURACIÓN FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_PhdokJhL4vNRr3uBPP7YXYBl4jkQs2A",
+            authDomain: "nominamultiequipos.firebaseapp.com",
+            projectId: "nominamultiequipos",
+            storageBucket: "nominamultiequipos.firebasestorage.app",
+            messagingSenderId: "687407000028",
+            appId: "1:687407000028:web:09a6b456ebae31d9cf0719"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- ESTADO ---
+        let currentUser = null;
+        let usersData = [];
+        let pendingDelete = { type: null, id: null };
+
+        // --- UTILIDADES ---
+        const Utils = {
+            formatCurrency: (amount) => '₡' + parseFloat(amount).toLocaleString('es-CR', {minimumFractionDigits: 0, maximumFractionDigits: 0}),
+            formatDate: (dateStr) => {
+                if(!dateStr) return '';
+                const [y, m, d] = dateStr.split('-');
+                return `${d}/${m}/${y}`;
+            },
+            formatDateTime: (isoStr) => {
+                if(!isoStr) return '';
+                const d = new Date(isoStr);
+                return d.toLocaleString('es-CR');
+            },
+            showToast: (msg, type = 'info') => {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = msg;
+                container.appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        };
+
+        // --- GESTIÓN DE SESIÓN ---
+        function checkSession() {
+            auth.signOut();
+
+            onAuthStateChanged(auth, async (user) => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                try {
+                    if (user) {
+                        await loadUserProfile(user.uid);
+                    } else {
+                        showLogin();
+                    }
+                } catch (error) {
+                    console.error("Error en sesión:", error);
+                    showLogin(); 
+                }
+            });
+        }
+
+        async function loadUserProfile(uid) {
+            try {
+                const docRef = doc(db, "users", uid);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    currentUser = { id: uid, ...docSnap.data() };
+                    if (!currentUser.role) currentUser.role = 'tech'; 
+                } else {
+                    const userAuth = auth.currentUser;
+                    currentUser = {
+                        id: uid,
+                        email: userAuth.email,
+                        fullName: userAuth.displayName || userAuth.email.split('@')[0],
+                        role: 'admin',
+                    };
+                }
+                showApp();
+            } catch (error) {
+                console.error("Error cargando perfil:", error);
+                Utils.showToast('Error de conexión', 'error');
+                auth.signOut();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('app-view').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            document.getElementById('user-display-name').textContent = `${currentUser.fullName} (${currentUser.role === 'admin' ? 'Admin' : 'Técnico'})`;
+
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-panel').classList.remove('hidden');
+                document.getElementById('technician-panel').classList.add('hidden');
+                loadAdminData();
+            } else {
+                document.getElementById('technician-panel').classList.remove('hidden');
+                document.getElementById('admin-panel').classList.add('hidden');
+                loadTechData();
+            }
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
+                Utils.showToast('Iniciando sesión...', 'info');
+            } catch (error) {
+                Utils.showToast('Credenciales incorrectas: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            signOut(auth).then(() => location.reload());
+        });
+
+        // --- LÓGICA DE NEGOCIO ---
+        function calculateTimeLogic(dateStr, startStr, endStr) {
+            const stdStart = 7.5; 
+            const stdEnd = 17.0;  
+            const dateObj = new Date(dateStr + 'T00:00:00');
+            const dayOfWeek = dateObj.getDay(); 
+            const toDecimal = (timeStr) => {
+                const [h, m] = timeStr.split(':').map(Number);
+                return h + (m / 60);
+            };
+            const startH = toDecimal(startStr);
+            const endH = toDecimal(endStr);
+            let totalMinutes = (endH - startH) * 60;
+            if (totalMinutes <= 0) return { total: '0.0', regular: '0.0', extra: '0.0' };
+            let regularMinutes = 0;
+            let extraMinutes = 0;
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                extraMinutes = totalMinutes;
+                regularMinutes = 0;
+            } else {
+                let overlapStart = Math.max(startH, stdStart);
+                let overlapEnd = Math.min(endH, stdEnd);
+                let overlapDuration = 0;
+                if (overlapEnd > overlapStart) {
+                    overlapDuration = (overlapEnd - overlapStart) * 60;
+                }
+                regularMinutes = overlapDuration;
+                extraMinutes = totalMinutes - regularMinutes;
+            }
+            return {
+                total: (totalMinutes / 60).toFixed(1),
+                regular: (regularMinutes / 60).toFixed(1),
+                extra: (extraMinutes / 60).toFixed(1)
+            };
+        }
+
+        function calculatePaymentForRecords(techId, hoursList) {
+            const tech = usersData.find(u => u.id === techId);
+            if (!tech || !tech.salary) return null;
+            if (!hoursList || hoursList.length === 0) return null;
+            const salary = parseFloat(tech.salary);
+            const hourlyRate = salary / 240;
+            const satRate = hourlyRate * 1.5;
+            const sunRate = hourlyRate * 2.0;
+            let satHours = 0;
+            let sunHours = 0;
+            hoursList.forEach(r => {
+                const day = new Date(r.date + 'T00:00:00').getDay();
+                const extra = parseFloat(r.extra);
+                if (day === 0) { sunHours += extra; } else { satHours += extra; }
+            });
+            const grossSat = satHours * satRate;
+            const grossSun = sunHours * sunRate;
+            const grossExtra = grossSat + grossSun;
+            const ccss = grossExtra * 0.1083;
+            let renta = 0;
+            const totalIncome = salary + grossExtra;
+            const exemption = 864000;
+            if (totalIncome > exemption) renta = (totalIncome - exemption) * 0.10; 
+            return { salary, gross: grossExtra, ccss, renta, neto: grossExtra - ccss - renta, satHours, sunHours };
+        }
+
+        // --- LOG DE AUDITORÍA (SE MANTIENE PERO NO SE USA) ---
+        async function logAudit(action, recordType, recordId, details) {
+            try {
+                await addDoc(collection(db, "auditLog"), {
+                    timestamp: new Date().toISOString(),
+                    actor: currentUser ? currentUser.fullName : 'Usuario',
+                    action: action,
+                    type: recordType,
+                    recordId: recordId,
+                    details: details
+                });
+            } catch (e) {
+                console.warn("No se pudo guardar log de auditoría:", e);
+            }
+        }
+
+        // --- GESTIÓN DE TÉCNICO ---
+        async function loadTechData() {
+            try {
+                const q = query(collection(db, "records"), where("userId", "==", currentUser.id));
+                const querySnapshot = await getDocs(q);
+                const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                const hours = records.filter(r => r.type === 'hour').sort((a,b) => new Date(b.date) - new Date(a.date));
+                
+                const hoursBody = document.querySelector('#tech-hours-table tbody');
+                let hoursRows = '';
+                let totalPendingExtra = 0;
+                
+                hours.forEach(h => {
+                    const isPaid = h.status === 'paid';
+                    if(!isPaid) totalPendingExtra += parseFloat(h.extra);
+                    
+                    hoursRows += `
+                        <tr>
+                            <td>${Utils.formatDate(h.date)}</td>
+                            <td>${h.client}</td>
+                            <td>${h.startTime}</td>
+                            <td>${h.endTime}</td>
+                            <td>${h.total}h</td>
+                            <td class="font-bold" style="color: ${parseFloat(h.extra) > 0 ? 'var(--primary-color)' : 'inherit'}">${h.extra}h</td>
+                            <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td>
+                            <td class="flex gap-2">
+                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-warning" onclick="window.openEditModal('hour', '${h.id}')">Editar</button>` : ''}
+                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('hour', '${h.id}')">Eliminar</button>` : ''}
+                            </td>
+                        </tr>`;
+                });
+                hoursBody.innerHTML = hoursRows;
+                document.getElementById('tech-pending-hours').textContent = totalPendingExtra.toFixed(1);
+
+                const expenses = records.filter(r => r.type === 'expense').sort((a,b) => new Date(b.date) - new Date(a.date));
+                const expBody = document.querySelector('#tech-expenses-table tbody');
+                let expRows = '';
+                let totalPendingExp = 0;
+                
+                expenses.forEach(ex => {
+                    const isPaid = ex.status === 'paid';
+                    if(!isPaid) totalPendingExp += parseFloat(ex.amount);
+                    
+                    expRows += `
+                        <tr>
+                            <td>${Utils.formatDate(ex.date)}</td>
+                            <td>${ex.invoiceNum}</td>
+                            <td>${ex.store}</td>
+                            <td>${ex.client}</td>
+                            <td>${ex.description}</td>
+                            <td>${Utils.formatCurrency(ex.amount)}</td>
+                            <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td>
+                            <td class="flex gap-2">
+                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-warning" onclick="window.openEditModal('expense', '${ex.id}')">Editar</button>` : ''}
+                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('expense', '${ex.id}')">Eliminar</button>` : ''}
+                            </td>
+                        </tr>`;
+                });
+                expBody.innerHTML = expRows;
+                document.getElementById('tech-pending-expenses').textContent = Utils.formatCurrency(totalPendingExp);
+            } catch (e) {
+                console.error(e);
+                Utils.showToast("Error cargando datos", "error");
+            }
+        }
+
+        // --- GESTIÓN DE MODALES Y FORMULARIOS ---
+        window.openEditModal = async function(type, id) {
+            const modalId = type === 'hour' ? 'modal-hour' : 'modal-expense';
+            window.openModal(modalId); 
+
+            try {
+                const docRef = doc(db, "records", id);
+                const docSnap = await getDoc(docRef);
+                const r = docSnap.data();
+                
+                if(type === 'hour') {
+                    document.getElementById('hour-id').value = id;
+                    document.getElementById('hour-client').value = r.client;
+                    document.getElementById('hour-date').value = r.date;
+                    document.getElementById('hour-start').value = r.startTime;
+                    document.getElementById('hour-end').value = r.endTime;
+                    document.getElementById('hour-modal-title').textContent = 'Editar Hora Extra';
+                } else {
+                    document.getElementById('expense-id').value = id;
+                    document.getElementById('exp-date').value = r.date;
+                    document.getElementById('exp-invoice').value = r.invoiceNum;
+                    document.getElementById('exp-store').value = r.store;
+                    document.getElementById('exp-amount').value = r.amount;
+                    document.getElementById('exp-client').value = r.client;
+                    document.getElementById('exp-desc').value = r.description;
+                    document.getElementById('expense-modal-title').textContent = 'Editar Gasto';
+                }
+            } catch(e) { 
+                Utils.showToast('Error cargando datos', 'error'); 
+            }
+        };
+
+        window.openDeleteConfirm = function(type, id) {
+            pendingDelete = { type, id };
+            const modal = document.getElementById('modal-confirm-delete');
+            modal.classList.remove('hidden');
+        };
+
+        window.cancelDelete = function() {
+            const modal = document.getElementById('modal-confirm-delete');
+            modal.classList.add('hidden');
+            pendingDelete = { type: null, id: null };
+        };
+
+        window.confirmDeleteAction = async function() {
+            if (!pendingDelete.id) return;
+
+            try {
+                await deleteDoc(doc(db, "records", pendingDelete.id));
+                try {
+                    await logAudit('DELETE', pendingDelete.type, pendingDelete.id, 'Registro eliminado');
+                } catch (e) { console.warn(e); }
+                await loadTechData();
+                Utils.showToast('Registro eliminado', 'success');
+                window.cancelDelete();
+            } catch (error) {
+                console.error("Error borrando:", error);
+                Utils.showToast('No se pudo borrar: ' + error.message, 'error');
+            }
+        };
+
+        window.openModal = function(id) {
+            document.getElementById(id).classList.remove('hidden');
+            
+            const form = document.getElementById(id).querySelector('form');
+            if(form) {
+                form.reset();
+                const hiddenId = form.querySelector('input[type="hidden"]');
+                if(hiddenId) hiddenId.value = '';
+            }
+
+            if(id === 'modal-hour') document.getElementById('hour-modal-title').textContent = 'Registro de Horas';
+            if(id === 'modal-expense') document.getElementById('expense-modal-title').textContent = 'Registro de Gastos';
+        };
+
+        document.getElementById('hour-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const id = document.getElementById('hour-id').value;
+                const date = document.getElementById('hour-date').value;
+                const start = document.getElementById('hour-start').value;
+                const end = document.getElementById('hour-end').value;
+                const client = document.getElementById('hour-client').value;
+                const calc = calculateTimeLogic(date, start, end);
+                
+                const newRecord = { 
+                    type: 'hour', 
+                    userId: currentUser.id, 
+                    date, 
+                    startTime: start, 
+                    endTime: end, 
+                    client, 
+                    total: calc.total, 
+                    regular: calc.regular, 
+                    extra: calc.extra, 
+                    status: 'pending' 
+                };
+
+                if(id) { 
+                    newRecord.id = id;
+                    await updateRecord(newRecord, 'hour'); 
+                } else { 
+                    await saveRecord(newRecord); 
+                }
+            } catch (error) {
+                console.error("Error guardando hora:", error);
+                Utils.showToast('Error al guardar: ' + error.message, 'error');
+            }
+        });
+
+        document.getElementById('expense-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const id = document.getElementById('expense-id').value;
+                const newRecord = {
+                    type: 'expense',
+                    userId: currentUser.id,
+                    invoiceNum: document.getElementById('exp-invoice').value,
+                    store: document.getElementById('exp-store').value,
+                    amount: document.getElementById('exp-amount').value,
+                    date: document.getElementById('exp-date').value,
+                    client: document.getElementById('exp-client').value,
+                    description: document.getElementById('exp-desc').value,
+                    status: 'pending'
+                };
+                
+                if(id) { 
+                    newRecord.id = id;
+                    await updateRecord(newRecord, 'expense'); 
+                } else { 
+                    await saveRecord(newRecord); 
+                }
+            } catch (error) {
+                console.error("Error guardando gasto:", error);
+                Utils.showToast('Error al guardar: ' + error.message, 'error');
+            }
+        });
+
+        async function saveRecord(record) {
+            const docRef = await addDoc(collection(db, "records"), record);
+            await logAudit('CREATE', record.type, docRef.id, 'Registro creado');
+            loadTechData();
+            window.closeModal('modal-' + record.type);
+            Utils.showToast('Guardado exitosamente', 'success');
+        }
+
+        async function updateRecord(newRecord, type) {
+            const docRef = doc(db, "records", newRecord.id);
+            const oldSnap = await getDoc(docRef);
+            const oldRecord = oldSnap.data();
+            
+            const updateData = { ...newRecord };
+            delete updateData.id;
+
+            let changes = [];
+            if(type === 'hour') {
+                if(newRecord.client !== oldRecord.client) changes.push(`Cliente: ${oldRecord.client} -> ${newRecord.client}`);
+                if(newRecord.startTime !== oldRecord.startTime) changes.push(`Inicio: ${oldRecord.startTime} -> ${newRecord.startTime}`);
+                if(newRecord.endTime !== oldRecord.endTime) changes.push(`Fin: ${oldRecord.endTime} -> ${newRecord.endTime}`);
+                if(newRecord.extra !== oldRecord.extra) changes.push(`Extra: ${oldRecord.extra} -> ${newRecord.extra}`);
+            } else {
+                if(newRecord.amount !== oldRecord.amount) changes.push(`Monto: ${oldRecord.amount} -> ${newRecord.amount}`);
+                if(newRecord.store !== oldRecord.store) changes.push(`Comercio: ${oldRecord.store} -> ${newRecord.store}`);
+                if(newRecord.invoiceNum !== oldRecord.invoiceNum) changes.push(`Factura: ${oldRecord.invoiceNum} -> ${newRecord.invoiceNum}`);
+                if(newRecord.description !== oldRecord.description) changes.push(`Desc actualizada.`);
+            }
+            await updateDoc(docRef, updateData);
+            await logAudit('EDIT', type, newRecord.id, changes.join('; '));
+            loadTechData();
+            window.closeModal('modal-' + type);
+            Utils.showToast('Actualizado exitosamente', 'success');
+        }
+
+        // --- ADMIN ---
+        async function loadAdminData() {
+            try {
+                const q = query(collection(db, "users"), where("role", "==", "tech"));
+                const querySnapshot = await getDocs(q);
+                const tbody = document.getElementById('users-table-body');
+                const filterSelect = document.getElementById('filter-tech-select');
+                const reportSelect = document.getElementById('report-tech-select');
+                
+                let usersHtml = '';
+                let filterOptions = '<option value="all">Todos</option>';
+                let reportOptions = '<option value="">Seleccione Técnico...</option>';
+                
+                tbody.innerHTML = '';
+                filterSelect.innerHTML = filterOptions;
+                reportSelect.innerHTML = reportOptions;
+                usersData = [];
+
+                querySnapshot.forEach((doc) => {
+                    const u = doc.data();
+                    usersData.push({ id: doc.id, ...u });
+                    
+                    usersHtml += `<tr><td>${u.fullName}</td><td>${Utils.formatCurrency(u.salary)}</td><td>${u.email}</td><td>Técnico</td><td><button type="button" class="btn btn-sm btn-warning" onclick="window.openTechEditModal('${doc.id}')">Editar</button><button type="button" class="btn btn-sm btn-danger" onclick="window.deleteUser('${doc.id}')">Eliminar</button></td></tr>`;
+                    
+                    filterOptions += `<option value="${doc.id}">${u.fullName}</option>`;
+                    reportOptions += `<option value="${doc.id}">${u.fullName}</option>`;
+                });
+                
+                tbody.innerHTML = usersHtml;
+                filterSelect.innerHTML = filterOptions;
+                reportSelect.innerHTML = reportOptions;
+            } catch(e) {
+                console.error(e);
+                Utils.showToast("Error cargando admin", "error");
+            }
+        }
+
+        async function createUserViaAPI(email, password) {
+            const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`;
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    returnSecureToken: true
+                })
+            });
+            return response.json();
+        }
+
+        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-fullname').value;
+            const email = document.getElementById('new-email').value;
+            const pass = document.getElementById('new-password').value;
+            const salary = document.getElementById('new-salary').value;
+            
+            try {
+                const data = await createUserViaAPI(email, pass);
+                if (data.error) throw new Error(data.error.message);
+                const uid = data.localId;
+                await setDoc(doc(db, "users", uid), { 
+                    fullName: name, 
+                    email, 
+                    salary, 
+                    role: 'tech', 
+                    createdAt: new Date() 
+                });
+                Utils.showToast('Técnico creado exitosamente', 'success');
+                e.target.reset();
+                loadAdminData();
+            } catch (error) {
+                console.error(error);
+                let msg = error.message;
+                if (msg.includes('EMAIL_EXISTS')) msg = 'El correo ya está en uso.';
+                if (msg.includes('WEAK_PASSWORD')) msg = 'La contraseña es muy débil.';
+                Utils.showToast('Error: ' + msg, 'error');
+            }
+        });
+
+        window.openTechEditModal = function(userId) {
+            const u = usersData.find(x => x.id === userId);
+            if(u) {
+                document.getElementById('edit-tech-id').value = userId;
+                document.getElementById('edit-tech-fullname').value = u.fullName;
+                document.getElementById('edit-tech-salary').value = u.salary;
+                window.openModal('modal-tech-edit');
+            }
+        };
+
+        document.getElementById('tech-edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('edit-tech-id').value;
+            const name = document.getElementById('edit-tech-fullname').value;
+            const salary = document.getElementById('edit-tech-salary').value;
+            await updateDoc(doc(db, "users", userId), { fullName: name, salary: salary });
+            window.closeModal('modal-tech-edit');
+            loadAdminData();
+            Utils.showToast('Actualizado', 'success');
+        });
+
+        window.deleteUser = async function(userId) {
+            const q = query(collection(db, "records"), where("userId", "==", userId));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+                Utils.showToast('No se puede borrar. Tiene registros activos.', 'error');
+                return;
+            }
+            if(!confirm('¿Borrar técnico?')) return;
+            await deleteDoc(doc(db, "users", userId));
+            loadAdminData();
+            Utils.showToast('Eliminado', 'success');
+        };
+
+        // --- VALIDACIÓN Y PAGOS ---
+        window.renderValidationTable = async function() {
+            const filterId = document.getElementById('filter-tech-select').value;
+            const startDate = document.getElementById('filter-start-date').value;
+            const endDate = document.getElementById('filter-end-date').value;
+            const tbody = document.querySelector('#validation-table tbody');
+            
+            let q = query(collection(db, "records"));
+            if (filterId !== 'all') q = query(q, where("userId", "==", filterId));
+            if (startDate) q = query(q, where("date", ">=", startDate));
+            if (endDate) q = query(q, where("date", "<=", endDate));
+            
+            const snap = await getDocs(q);
+            
+            const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            let rows = '';
+            records.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            records.forEach(r => {
+                const u = usersData.find(x => x.id === r.userId);
+                const userName = u ? u.fullName : '?';
+                const isPaid = r.status === 'paid';
+                const id = r.id; 
+                let detail = '', amount = '';
+                if (r.type === 'hour') {
+                    detail = `${Utils.formatDate(r.date)} - ${r.client}`;
+                    amount = `Extra: ${r.extra}h`;
+                } else {
+                    detail = `${r.invoiceNum} - ${r.store} (${r.client})`;
+                    amount = Utils.formatCurrency(r.amount);
+                }
+                let actionHtml = isPaid ? `<input type="checkbox" class="pay-check" value="${id}" title="PDF"><button type="button" class="btn btn-warning btn-sm" onclick="window.revertToPending('${id}')">Volver</button>` : `<input type="checkbox" class="pay-check" value="${id}">`;
+                
+                rows += `<tr><td><input type="checkbox" class="row-select" value="${id}"></td><td>${userName}</td><td>${r.type === 'hour' ? 'Hora' : 'Gasto'}</td><td>${detail}</td><td>${amount}</td><td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td><td>${actionHtml}</td></tr>`;
+            });
+            tbody.innerHTML = rows;
+        }
+
+        window.toggleSelectAllValidation = function() {
+            const master = document.getElementById('select-all-validation');
+            document.querySelectorAll('#validation-table .row-select').forEach(cb => cb.checked = master.checked);
+        };
+
+        window.revertToPending = async function(id) {
+            if(!confirm('¿Volver a pendiente?')) return;
+            await updateDoc(doc(db, "records", id), { status: 'pending' });
+            window.renderValidationTable();
+        };
+
+        window.markSelectedAsPaid = async function() {
+            const checkboxes = document.querySelectorAll('#validation-table .pay-check:checked');
+            if(checkboxes.length === 0) return;
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            if(!confirm(`¿Marcar ${ids.length} como pagado?`)) return;
+            
+            const batch = writeBatch(db);
+            ids.forEach(id => {
+                batch.update(doc(db, "records", id), { status: 'paid' });
+            });
+            await batch.commit();
+            window.renderValidationTable();
+            Utils.showToast('Procesados', 'success');
+        }
+
+        window.generateValidationPDF = async function() {
+            const checkboxes = document.querySelectorAll('#validation-table .row-select:checked');
+            const actionCheckboxes = document.querySelectorAll('#validation-table .pay-check:checked');
+            const idSet = new Set();
+            checkboxes.forEach(cb => idSet.add(cb.value));
+            actionCheckboxes.forEach(cb => idSet.add(cb.value));
+            
+            if(idSet.size === 0) return;
+            const q = query(collection(db, "records"), where(documentId(), "in", Array.from(idSet)));
+            const snap = await getDocs(q);
+            const records = snap.docs.map(d => d.data());
+            printGenericRecords(records);
+        }
+
+        // --- REPORTES ---
+        window.updateReportSelection = async function() {
+            const techId = document.getElementById('report-tech-select').value;
+            const tbody = document.querySelector('#report-selection-table tbody');
+            tbody.innerHTML = '';
+            if (!techId) return;
+
+            try {
+                const q = query(collection(db, "records"), where("userId", "==", techId));
+                const snap = await getDocs(q);
+                const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                records.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                let rows = '';
+
+                records.forEach(r => {
+                    let detail = '', amountStr = '';
+                    let statusBadge = r.status === 'paid' ? '<span style="color:green; font-size:0.8em">(Pagado)</span>' : '';
+                    
+                    if (r.type === 'hour') {
+                        detail = `${Utils.formatDate(r.date)} - ${r.client} (${r.extra}h)`;
+                        amountStr = r.type;
+                    } else {
+                        detail = `${r.invoiceNum} - ${r.store} (${r.client}) ${statusBadge}`;
+                        amountStr = Utils.formatCurrency(r.amount);
+                    }
+                    rows += `<tr><td><input type="checkbox" class="report-check" data-id="${r.id}" onchange="window.calcReportTotals()"></td><td>${Utils.formatDate(r.date)}</td><td>${r.type === 'hour' ? 'Hora' : 'Gasto'}</td><td>${detail}</td><td>${amountStr}</td></tr>`;
+                });
+                tbody.innerHTML = rows;
+            } catch (error) {
+                console.error("Error cargando reportes:", error);
+                Utils.showToast("Error cargando reportes", "error");
+            }
+        }
+
+        window.calcReportTotals = function() { }
+
+        window.generatePrintView = async function() {
+            const checkboxes = document.querySelectorAll('.report-check:checked');
+            if(checkboxes.length === 0) return;
+            const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+            const q = query(collection(db, "records"), where(documentId(), "in", ids));
+            const snap = await getDocs(q);
+            const records = snap.docs.map(d => d.data());
+            printGenericRecords(records);
+        }
+
+        // --- IMPRESIÓN ---
+        async function printGenericRecords(recordList) {
+            // 1. ORDENAR GLOBALMENTE POR FECHA (Ascendente: Antiguo a Nuevo)
+            recordList.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            const techIds = [...new Set(recordList.map(r => r.userId))];
+            let techName = "Varios";
+            let paymentData = null;
+            let totalExpenses = 0;
+
+            if(techIds.length ===1) {
+                const u = usersData.find(x => x.id === techIds[0]);
+                techName = u ? u.fullName : '?';
+                const hours = recordList.filter(r => r.type === 'hour');
+                if(hours.length > 0) paymentData = calculatePaymentForRecords(techIds[0], hours);
+                
+                const expenses = recordList.filter(r => r.type === 'expense');
+                expenses.forEach(e => totalExpenses += parseFloat(e.amount));
+            }
+
+            document.getElementById('print-tech-name').textContent = techName;
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString();
+
+            let html = '';
+            
+            const expenses = recordList.filter(r => r.type === 'expense');
+            const hours = recordList.filter(r => r.type === 'hour');
+
+            // --- SEPARAR DATOS ---
+
+            // 1. TABLA DE GASTOS (Con columnas detalladas)
+            if (expenses.length > 0) {
+                // Cálculo del rango de fechas para Gastos
+                const expDates = expenses.map(r => {
+                    const [y, m, d] = r.date.split('-');
+                    return new Date(y, m-1, d); // Objeto fecha local
+                });
+                
+                const firstExpDate = expDates[0];
+                const lastExpDate = expDates[expenses.length - 1];
+                
+                const fmtDate = (d) => {
+                    const dy = String(d.getDate()).padStart(2, '0');
+                    const dm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = d.getFullYear();
+                    return `${dy}/${dm}/${dd}`;
+                };
+                
+                const expRangeText = `<div style="text-align: center; margin-top: 10px; margin-bottom: 10px; font-size: 12px; color: #555;">Período: Desde <strong>${fmtDate(firstExpDate)}</strong> hasta <strong>${fmtDate(lastExpDate)}</strong></div>`;
+
+                html += `<h3 style="margin-top: 20px; border-bottom: 2px solid #000; padding-bottom: 5px;">Reembolso de Gastos</h3>`;
+                html += expRangeText; // Rango de fechas de gastos
+
+                html += `<table class="pdf-table" style="font-size: 12px;">
+                            <thead>
+                                <tr style="background-color: #f0f0f0;">
+                                    <th style="width: 10%;">Fecha</th>
+                                    <th style="width: 12%;">Factura #</th>
+                                    <th style="width: 15%;">Comercio</th>
+                                    <th style="width: 15%;">Cliente</th>
+                                    <th style="width: 33%;">Descripción</th>
+                                    <th style="width: 15%; text-align: right;">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                expenses.forEach(r => {
+                    html += `<tr>
+                        <td>${Utils.formatDate(r.date)}</td>
+                        <td>${r.invoiceNum}</td>
+                        <td>${r.store}</td>
+                        <td>${r.client}</td>
+                        <td>${r.description || '-'}</td>
+                        <td style="text-align: right;">${Utils.formatCurrency(r.amount)}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+            }
+
+            // 2. TABLA DE HORAS EXTRA (Si las hay)
+            if (hours.length > 0) {
+                // Cálculo de la suma de horas extra para mostrarla
+                let totalHorasExtra = 0;
+                hours.forEach(r => {
+                    totalHorasExtra += parseFloat(r.extra);
+                });
+
+                // Cálculo del rango de fechas para Horas
+                const dates = hours.map(r => {
+                    const [y, m, d] = r.date.split('-');
+                    return new Date(y, m-1, d);
+                });
+                const firstDate = dates[0];
+                const lastDate = dates[dates.length - 1];
+                
+                const fmtDateHours = (d) => {
+                    const dy = String(d.getDate()).padStart(2, '0');
+                    const dm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = d.getFullYear();
+                    return `${dy}/${dm}/${dd}`;
+                };
+                
+                const rangeTextHours = `<div style="text-align: center; margin-top: 10px; margin-bottom: 10px; font-size: 12px; color: #555;">Período: Desde <strong>${fmtDateHours(firstDate)}</strong> hasta <strong>${fmtDateHours(lastDate)}</strong></div>`;
+
+                html += `<h3 style="margin-top: 30px; border-bottom: 2px solid #000; padding-bottom: 5px;">Detalle de Horas Extra</h3>`;
+                html += rangeTextHours; // Rango de fechas de horas
+                
+                html += `<table class="pdf-table" style="font-size: 12px;">
+                            <thead>
+                                <tr style="background-color: #f0f0f0;">
+                                    <th style="width: 15%;">Fecha</th>
+                                    <th style="width: 25%;">Cliente</th>
+                                    <th style="width: 15%;">Inicio</th>
+                                    <th style="width: 15%;">Fin</th>
+                                    <th style="width: 15%;">Total (h)</th>
+                                    <th style="width: 15%; text-align: right;">Extra (h)</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                hours.forEach(r => {
+                    // Lógica para determinar el día de la semana (Sab/Dom)
+                    const [y, m, d] = r.date.split('-');
+                    const dateObj = new Date(y, m-1, d);
+                    const day = dateObj.getDay();
+                    
+                    let dayLabel = '';
+                    if (day === 0) dayLabel = ' <small style="color:var(--primary-color)">(Dom)</small>';
+                    else if (day === 6) dayLabel = ' <small style="color:var(--primary-color)">(Sáb)</small>';
+
+                    html += `<tr>
+                        <td>${Utils.formatDate(r.date)}${dayLabel}</td>
+                        <td>${r.client}</td>
+                        <td>${r.startTime}</td>
+                        <td>${r.endTime}</td>
+                        <td style="text-align: center;">${r.total}</td>
+                        <td style="text-align: center; font-weight: bold;">${r.extra}</td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+
+                // --- NUEVA LÍNEA DE TOTAL DE HORAS ---
+                html += `<div style="text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; border-top:1px solid #ddd; padding-top: 5px;">Total Horas Extra: ${totalHorasExtra.toFixed(1)}h</div>`;
+            }
+
+            // 3. CAJAS DE CÁLCULO Y TOTALES
+            // Caja de Nómina (Solo si hay horas)
+            if(paymentData) {
+                html += `<div class="pdf-payment-box">
+                            <div class="pdf-payment-title">Cálculo de Nómina</div>
+                            <div class="pdf-payment-row"><div>Salario Base:</div><div>${Utils.formatCurrency(paymentData.salary)}</div></div>
+                            <div class="pdf-payment-row"><div>Total Horas Extra (Bruto):</div><div>${Utils.formatCurrency(paymentData.gross)}</div></div>
+                            <div class="pdf-payment-row"><div>CCSS (10.83%):</div><div>${Utils.formatCurrency(paymentData.ccss)}</div></div>
+                            <div class="pdf-payment-row"><div>Renta Estimada:</div><div>${Utils.formatCurrency(paymentData.renta)}</div></div>
+                            <div class="pdf-payment-row"><div>Neto a Pagar (Horas):</div><div>${Utils.formatCurrency(paymentData.neto)}</div></div>
+                        </div>`;
+            }
+
+            // Caja de Resumen Gastos
+            if(totalExpenses > 0) {
+                html += `<div class="pdf-payment-box" style="margin-top: 20px;">
+                            <div class="pdf-payment-title">Reembolso de Gastos (Total)</div>
+                            <div class="pdf-payment-row total"><div>Total a Reembolsar:</div><div>${Utils.formatCurrency(totalExpenses)}</div></div>
+                        </div>`;
+            }
+
+            // 4. TOTAL FINAL
+            let totalFinal = 0;
+            if(paymentData) totalFinal += parseFloat(paymentData.neto);
+            totalFinal += totalExpenses;
+
+            document.getElementById('print-tables-container').innerHTML = html;
+            document.getElementById('print-totals-wrapper').innerHTML = `<div style="font-size: 1.3rem; margin-top: 20px;">Total a Pagar: <span style="text-decoration: underline;">${Utils.formatCurrency(totalFinal)}</span></div>`;
+            
+            document.getElementById('app-view').style.display = 'none';
+            document.getElementById('print-area').style.display = 'block';
+            window.print();
+            document.getElementById('print-area').style.display = 'none';
+            document.getElementById('app-view').style.display = 'block';
+        }
+
+        // --- HELPERS ---
+        window.switchTab = (id) => { 
+            document.querySelectorAll('#technician-panel .card').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('#technician-panel .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        window.switchAdminTab = (id) => {
+            document.querySelectorAll('#admin-panel .card').forEach(el => el.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('#admin-panel .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if(id === 'admin-validation') window.renderValidationTable();
+        }
+        
+        window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // --- INICIALIZACIÓN ---
+        checkSession();
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('SW fail', err));
+        }
+    </script>
+</body>
+</html>
