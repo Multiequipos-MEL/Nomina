@@ -324,8 +324,7 @@
                         <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Periodo</label><select id="report-period" class="form-control"><option value="monthly">Mensual</option><option value="biweekly">Quincenal</option></select></div>
                     </div>
                     <div class="mt-2">
-                        <h3>Registros Disponibles (Pendientes y Pagados)</h3>
-                        <p class="text-sm text-sm" style="color:#666;">Seleccione los registros (gastos/horas) para incluir en este vale de pago.</p>
+                        <h3>Registros Disponibles</h3>
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table id="report-selection-table"><thead><tr><th><input type="checkbox" id="select-all-reports" onclick="window.toggleSelectAllReports()"></th><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Cantidad</th></tr></thead><tbody></tbody></table>
                         </div>
@@ -579,11 +578,13 @@
             };
         }
 
-        // Nueva lógica: Recibe el periodo para prorratear salario
+        // LÓGICA DE PAGO ACTUALIZADA: Permite horas vacías
         function calculatePaymentForRecords(techId, hoursList, periodType = 'monthly') {
             const tech = usersData.find(u => u.id === techId);
-            if (!tech || !tech.salary) return null;
-            if (!hoursList || hoursList.length === 0) return null;
+            
+            // Solo frenamos si no hay datos del técnico
+            if (!tech || !tech.salary) return null; 
+            
             const salary = parseFloat(tech.salary);
             
             // Prorrateo de salario base
@@ -595,18 +596,21 @@
             
             let satHours = 0;
             let sunHours = 0;
-            hoursList.forEach(r => {
-                const day = new Date(r.date + 'T00:00:00').getDay();
-                const extra = parseFloat(r.extra);
-                if (day === 0) { sunHours += extra; } else { satHours += extra; }
-            });
+            
+            // Si hoursList viene vacío, este loop simplemente no se ejecuta y se queda en 0
+            if(hoursList && hoursList.length > 0) {
+                hoursList.forEach(r => {
+                    const day = new Date(r.date + 'T00:00:00').getDay();
+                    const extra = parseFloat(r.extra);
+                    if (day === 0) { sunHours += extra; } else { satHours += extra; }
+                });
+            }
             
             const grossSat = satHours * satRate;
             const grossSun = sunHours * sunRate;
             const grossExtra = grossSat + grossSun;
             
             // Cálculo de deducciones sobre (Salario Base + Horas Extra)
-            // En CR, CCSS y Renta suelen calcularse sobre el total devengado
             const totalIncome = baseSalary + grossExtra;
             const ccss = totalIncome * 0.1083;
             
@@ -619,10 +623,46 @@
                 gross: grossExtra, 
                 ccss, 
                 renta, 
-                neto: totalIncome - ccss - renta,
+                neto: totalIncome - ccss - renta, // Esto dará el neto aunque extra sea 0
                 satHours, 
                 sunHours 
             };
+        }
+
+        // FUNCIÓN ACTUALIZADA: Calcular rango de fechas estándar (15 o 30/Fin de mes)
+        function getPayrollPeriodRange(periodType) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = now.getMonth(); // 0-11
+            const d = now.getDate();
+
+            let startDate, endDate;
+
+            if (periodType === 'monthly') {
+                // Mensual: Siempre del 1 al último día del mes actual
+                startDate = new Date(y, m, 1);
+                endDate = new Date(y, m + 1, 0); // Último día del mes (30, 31, 28)
+            } else {
+                // Quincenal
+                if (d <= 15) {
+                    // Primera quincena: 01 al 15 del mes actual
+                    startDate = new Date(y, m, 1);
+                    endDate = new Date(y, m, 15);
+                } else {
+                    // Segunda quincena: 16 al último día del mes
+                    startDate = new Date(y, m, 16);
+                    endDate = new Date(y, m + 1, 0);
+                }
+            }
+
+            const fmt = (dateObj) => {
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const year = dateObj.getFullYear();
+                return `${day}/${month}/${year}`;
+            };
+
+            return `Del ${fmt(startDate)} al ${fmt(endDate)}`;
         }
 
         // --- LOG DE AUDITORÍA ---
@@ -1073,7 +1113,6 @@
             const q = query(collection(db, "records"), where(documentId(), "in", Array.from(idSet)));
             const snap = await getDocs(q);
             const records = snap.docs.map(d => d.data());
-            // Forzar impresión simple de lista (usa lógica genérica pero no calc nómina completa)
             printGenericRecords(records, 'validation_list'); 
         }
 
@@ -1086,6 +1125,7 @@
 
             try {
                 const q = query(collection(db, "records"), where("userId", "==", techId));
+                
                 const snap = await getDocs(q);
                 const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
@@ -1115,24 +1155,36 @@
         window.calcReportTotals = function() { }
 
         window.generatePrintView = async function() {
+            const techId = document.getElementById('report-tech-select').value;
+            if(!techId) return Utils.showToast('Seleccione un técnico', 'warning');
+
+            const period = document.getElementById('report-period').value;
+            
             const checkboxes = document.querySelectorAll('.report-check:checked');
-            if(checkboxes.length === 0) return Utils.showToast('Seleccione al menos un registro', 'warning');
-            
-            const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
-            const period = document.getElementById('report-period').value; // monthly or biweekly
-            const q = query(collection(db, "records"), where(documentId(), "in", ids));
-            const snap = await getDocs(q);
-            const records = snap.docs.map(d => d.data());
-            
-            printGenericRecords(records, 'payroll_vale', period);
+            let records = [];
+
+            if(checkboxes.length > 0) {
+                const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+                const q = query(collection(db, "records"), where(documentId(), "in", ids));
+                const snap = await getDocs(q);
+                records = snap.docs.map(d => d.data());
+            } 
+            else {
+                // Si no hay seleccionados, array vacío (se calculará solo salario)
+            }
+
+            printGenericRecords(records, 'payroll_vale', period, techId);
         }
 
         // --- IMPRESIÓN ---
-        async function printGenericRecords(recordList, mode = 'payroll_vale', periodType = 'monthly') {
+        async function printGenericRecords(recordList, mode = 'payroll_vale', periodType = 'monthly', techIdParam = null) {
             // 1. ORDENAR GLOBALMENTE POR FECHA (Ascendente: Antiguo a Nuevo)
             recordList.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-            const techIds = [...new Set(recordList.map(r => r.userId))];
+            // Determinar el ID del técnico
+            let techIds = [...new Set(recordList.map(r => r.userId))];
+            if (techIdParam) techIds.push(techIdParam);
+
             let techName = "Varios";
             let paymentData = null;
             let totalExpenses = 0;
@@ -1141,7 +1193,7 @@
                 const u = usersData.find(x => x.id === techIds[0]);
                 techName = u ? u.fullName : '?';
                 const hours = recordList.filter(r => r.type === 'hour');
-                if(hours.length > 0) paymentData = calculatePaymentForRecords(techIds[0], hours, periodType);
+                paymentData = calculatePaymentForRecords(techIds[0], hours, periodType);
                 
                 const expenses = recordList.filter(r => r.type === 'expense');
                 expenses.forEach(e => totalExpenses += parseFloat(e.amount));
@@ -1150,15 +1202,14 @@
             document.getElementById('print-tech-name').textContent = techName;
             document.getElementById('print-date').textContent = 'Fecha Emisión: ' + new Date().toLocaleDateString();
 
+            // ACTUALIZACIÓN DEL PERIODO
+            const periodText = getPayrollPeriodRange(periodType);
+            document.getElementById('print-period-text').textContent = periodText;
+
             let html = '';
             
             const expenses = recordList.filter(r => r.type === 'expense');
             const hours = recordList.filter(r => r.type === 'hour');
-
-            // Rango de fechas
-            let minDate = recordList.length > 0 ? recordList[0].date : '';
-            let maxDate = recordList.length > 0 ? recordList[recordList.length-1].date : '';
-            document.getElementById('print-period-text').textContent = `Del ${Utils.formatDate(minDate)} al ${Utils.formatDate(maxDate)}`;
 
             // Título Documento
             document.getElementById('print-doc-type').textContent = periodType === 'biweekly' ? 'VALE QUINCENAL' : 'LIQUIDACIÓN MENSUAL';
@@ -1228,23 +1279,19 @@
             }
 
             // --- DESGLOSE DE PAGO (VALE) ---
-            if(mode === 'payroll_vale') {
+            if(mode === 'payroll_vale' && paymentData) {
                 html += `<div class="payroll-box">`;
                 html += `<div class="payroll-title">Desglose de Pago</div>`;
                 
-                if(paymentData) {
-                    html += `<div class="payroll-row earning"><span>Salario Base (${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}):</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
-                    html += `<div class="payroll-row earning"><span>Horas Extra (Bruto):</span> <span>${Utils.formatCurrency(paymentData.gross)}</span></div>`;
-                    html += `<div style="border-top: 1px dashed #ccc; margin: 5px 0;"></div>`;
-                    
-                    html += `<div class="payroll-row deduction"><span>CCSS (10.83%):</span> <span>-${Utils.formatCurrency(paymentData.ccss)}</span></div>`;
-                    html += `<div class="payroll-row deduction"><span>Renta Estimada:</span> <span>-${Utils.formatCurrency(paymentData.renta)}</span></div>`;
-                    html += `<div style="border-top: 1px solid #000; margin: 5px 0;"></div>`;
-                    
-                    html += `<div class="payroll-row total" style="color: var(--primary-color);"><span>Neto Salario:</span> <span>${Utils.formatCurrency(paymentData.neto)}</span></div>`;
-                } else {
-                    html += `<p style="text-align: center; color: #777;">Sin cálculo de salario (Solo gastos o sin datos de empleado)</p>`;
-                }
+                html += `<div class="payroll-row earning"><span>Salario Base (${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}):</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
+                html += `<div class="payroll-row earning"><span>Horas Extra (Bruto):</span> <span>${Utils.formatCurrency(paymentData.gross)}</span></div>`;
+                html += `<div style="border-top: 1px dashed #ccc; margin: 5px 0;"></div>`;
+                
+                html += `<div class="payroll-row deduction"><span>CCSS (10.83%):</span> <span>-${Utils.formatCurrency(paymentData.ccss)}</span></div>`;
+                html += `<div class="payroll-row deduction"><span>Renta Estimada:</span> <span>-${Utils.formatCurrency(paymentData.renta)}</span></div>`;
+                html += `<div style="border-top: 1px solid #000; margin: 5px 0;"></div>`;
+                
+                html += `<div class="payroll-row total" style="color: var(--primary-color);"><span>Neto Salario:</span> <span>${Utils.formatCurrency(paymentData.neto)}</span></div>`;
 
                 if(totalExpenses > 0) {
                     html += `<div class="payroll-row earning" style="margin-top: 10px;"><span>Reembolso Gastos:</span> <span>${Utils.formatCurrency(totalExpenses)}</span></div>`;
