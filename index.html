@@ -139,22 +139,61 @@
         .stat-card p { color: #666; margin: 0; }
 
         /* Estilos PDF */
-        #print-area { display: none; background: white; padding: 40px; position: absolute; top: 0; left: 0; width: 100%; z-index: 9999; }
-        .pdf-table { width: 100%; border: 1px solid #000; margin-bottom: 30px; border-collapse: collapse; }
-        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 5px; text-align: left; }
-        .pdf-table th { background-color: #ddd; font-weight: bold; }
-        /* Estilo para celdas anchas en PDF */
-        th.narrow-cell { width: 1%; }
-        td.narrow-cell { width: 1%; }
+        #print-area { 
+            display: none; 
+            background: white; 
+            padding: 40px; 
+            position: absolute; 
+            top: 0; left: 0; width: 100%; 
+            z-index: 9999; 
+            color: #000;
+        }
+        .pdf-header {
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px;
+        }
+        .pdf-company h1 { font-size: 24px; color: var(--primary-color); margin-bottom: 5px; }
+        .pdf-company p { font-size: 14px; color: #555; }
+        .pdf-doc-info { text-align: right; }
+        .pdf-doc-info h2 { font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .pdf-grid-info { display: flex; gap: 40px; margin-bottom: 20px; font-size: 14px; }
+        .pdf-col-info strong { display: block; color: #555; font-size: 12px; text-transform: uppercase; }
 
-        .calc-result { background-color: #e7f3ff; border: 1px solid #b8daff; padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .calc-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ccc; }
-        .calc-total { font-size: 1.2rem; font-weight: bold; color: var(--primary-color); margin-top: 10px; border-top: 2px solid var(--primary-color); padding-top: 10px; }
+        .pdf-table { width: 100%; border: 1px solid #000; margin-bottom: 20px; border-collapse: collapse; }
+        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 12px; }
+        .pdf-table th { background-color: #eee; font-weight: bold; text-align: center; }
+        .pdf-table td.num { text-align: right; }
+        .pdf-table tr.subtotal td { background-color: #f9f9f9; font-weight: bold; }
 
-        .pdf-payment-box { border: 2px solid #000; padding: 15px; margin-bottom: 20px; background-color: #fff; }
-        .pdf-payment-title { text-align: center; font-weight: bold; text-decoration: underline; margin-bottom: 10px; font-size: 1.1rem; }
-        .pdf-payment-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
-        .pdf-payment-row.total { font-weight: bold; font-size: 1.1rem; border-top: 1px solid #000; padding-top: 5px; margin-top: 10px; }
+        .payroll-box { border: 2px solid #0056b3; padding: 20px; margin-bottom: 20px; border-radius: 5px; background: #fdfdfd; }
+        .payroll-title { background: #0056b3; color: white; padding: 5px 10px; margin: -20px -20px 15px -20px; font-weight: bold; font-size: 14px; text-align: center; }
+        
+        .payroll-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+        .payroll-row.total { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 5px; font-weight: bold; font-size: 15px; }
+        .payroll-row.deduction { color: #d9534f; }
+        .payroll-row.earning { color: #333; }
+        
+        .grand-total { 
+            text-align: right; 
+            font-size: 18px; 
+            font-weight: bold; 
+            border: 2px solid #000; 
+            display: inline-block; 
+            padding: 10px 30px; 
+            background: #eee; 
+            float: right; 
+            margin-bottom: 40px;
+        }
+
+        .signature-section { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
+        .sig-block { width: 40%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-size: 12px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+            .grand-total { float: none; display: block; text-align: right; margin-top: 20px; margin-left: auto; margin-right: auto;}
+        }
     </style>
 </head>
 <body>
@@ -240,7 +279,7 @@
                 <div class="tabs">
                     <button class="tab-btn active" onclick="window.switchAdminTab('admin-users')">Gestión Técnicos</button>
                     <button class="tab-btn" onclick="window.switchAdminTab('admin-validation')">Validación y Pagos</button>
-                    <button class="tab-btn" onclick="window.switchAdminTab('admin-reports')">Generar Reporte</button>
+                    <button class="tab-btn" onclick="window.switchAdminTab('admin-reports')">Generar Vale de Pago</button>
                 </div>
 
                 <!-- Gestión de Usuarios -->
@@ -263,6 +302,7 @@
                 <div id="admin-validation" class="card hidden">
                     <h2>Validar Registros</h2>
                     <div class="flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Tipo</label><select id="filter-type-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option><option value="hour">Horas</option><option value="expense">Gastos</option></select></div>
                         <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Técnico</label><select id="filter-tech-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option></select></div>
                         <div class="form-group" style="margin-bottom: 0;"><label>Fecha Inicio</label><input type="date" id="filter-start-date" class="form-control" onchange="window.renderValidationTable()"></div>
                         <div class="form-group" style="margin-bottom: 0;"><label>Fecha Fin</label><input type="date" id="filter-end-date" class="form-control" onchange="window.renderValidationTable()"></div>
@@ -271,25 +311,27 @@
                         <table id="validation-table"><thead><tr><th style="width: 30px;"><input type="checkbox" id="select-all-validation" onclick="window.toggleSelectAllValidation()"></th><th>Técnico</th><th>Tipo</th><th>Detalle</th><th>Monto/Horas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
                     </div>
                     <div class="mt-2 flex justify-between items-center">
-                        <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">Generar PDF</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">Generar PDF Lista</button>
                         <button type="button" class="btn btn-primary" onclick="window.markSelectedAsPaid()">Procesar como Pagado</button>
                     </div>
                 </div>
 
-                <!-- Reportes -->
+                <!-- Reportes (Vale de Pago) -->
                 <div id="admin-reports" class="card hidden">
-                    <h2>Generar Reporte de Nómina</h2>
-                    <div class="flex gap-2 mt-2">
-                        <select id="report-tech-select" class="form-control" onchange="window.updateReportSelection()"><option value="">Seleccione Técnico...</option></select>
+                    <h2>Generar Vale de Pago</h2>
+                    <div class="flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 2;"><label>Técnico</label><select id="report-tech-select" class="form-control" onchange="window.updateReportSelection()"><option value="">Seleccione Técnico...</option></select></div>
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Periodo</label><select id="report-period" class="form-control"><option value="monthly">Mensual</option><option value="biweekly">Quincenal</option></select></div>
                     </div>
                     <div class="mt-2">
                         <h3>Registros Disponibles (Pendientes y Pagados)</h3>
+                        <p class="text-sm text-sm" style="color:#666;">Seleccione los registros (gastos/horas) para incluir en este vale de pago.</p>
                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                             <table id="report-selection-table"><thead><tr><th><input type="checkbox" id="select-all-reports" onclick="window.toggleSelectAllReports()"></th><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Cantidad</th></tr></thead><tbody></tbody></table>
                         </div>
                     <div class="mt-2 flex justify-between items-center" style="background: #eee; padding: 15px; border-radius: 8px;">
                         <div><p>Total Horas Extra: <strong id="report-total-hours">0</strong></p><p>Total Gastos: <strong id="report-total-amount">₡0</strong></p></div>
-                        <button class="btn btn-primary btn-lg" onclick="window.generatePrintView()">Generar Reporte PDF</button>
+                        <button class="btn btn-primary btn-lg" onclick="window.generatePrintView()">Generar Vale de Pago</button>
                     </div>
                 </div>
             </div>
@@ -309,7 +351,7 @@
         <div class="modal-header"><h3>Editar Perfil Técnico</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-tech-edit')">X</button></div>
         <form id="tech-edit-form"><input type="hidden" id="edit-tech-id"><div class="form-group"><label>Nombre Completo</label><input type="text" id="edit-tech-fullname" class="form-control" required></div><div class="form-group"><label>Salario Mensual (₡)</label><input type="number" id="edit-tech-salary" class="form-control" required min="0"></div><button type="submit" class="btn btn-success w-full">Actualizar</button></form></div></div>
 
-    <!-- Modal de Confirmación de Borrado (Nuevo) -->
+    <!-- Modal de Confirmación de Borrado -->
     <div id="modal-confirm-delete" class="modal-overlay hidden">
         <div class="modal" style="text-align: center;">
             <div class="modal-header" style="justify-content: center;">
@@ -327,13 +369,44 @@
 
     <!-- Área de Impresión -->
     <div id="print-area">
-        <div class="report-header"><h1>Multiequipos</h1><h2>Reporte de Nómina y Reembolso de Gastos</h2></div>
-        <div class="report-details"><div><p><strong>Técnico:</strong> <span id="print-tech-name"></span></p><p><strong>Fecha de Reporte:</strong> <span id="print-date"></span></p></div></div>
-        <div id="print-tables-container"></div>
-        <div class="report-total" id="print-totals-wrapper" style="text-align: right; margin-top: 20px; font-size: 1.2rem; font-weight: bold;"></div>
-        <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center;">
-            <div style="border-top: 1px solid #000; width: 40%; padding-top: 10px;">Firma Administrador</div>
-            <div style="border-top: 1px solid #000; width: 40%; padding-top: 10px;">Firma Técnico</div>
+        <div class="pdf-header">
+            <div class="pdf-company">
+                <h1>Multiequipos</h1>
+                <p>Documento de Pago de Planilla</p>
+            </div>
+            <div class="pdf-doc-info">
+                <h2 id="print-doc-type">VALE DE PAGO</h2>
+                <p id="print-date">Fecha: 01/01/2024</p>
+            </div>
+        </div>
+
+        <div class="pdf-grid-info">
+            <div class="pdf-col-info">
+                <strong>Empleado:</strong>
+                <span id="print-tech-name" style="font-weight: bold; font-size: 16px;">Nombre Técnico</span>
+            </div>
+            <div class="pdf-col-info">
+                <strong>Periodo:</strong>
+                <span id="print-period-text">Del 01 al 15</span>
+            </div>
+            <div class="pdf-col-info">
+                <strong>Moneda:</strong>
+                <span>Colones (₡)</span>
+            </div>
+        </div>
+
+        <div id="print-tables-container">
+            <!-- Contenido dinámico -->
+        </div>
+
+        <div class="grand-total">
+            TOTAL A PAGAR: <span id="print-final-total">₡0</span>
+        </div>
+        <div style="clear: both;"></div>
+
+        <div class="signature-section">
+            <div class="sig-block">Firma Recibido<br><br>___________________</div>
+            <div class="sig-block">Firma Autorizada<br><br>___________________</div>
         </div>
     </div>
 
@@ -506,14 +579,20 @@
             };
         }
 
-        function calculatePaymentForRecords(techId, hoursList) {
+        // Nueva lógica: Recibe el periodo para prorratear salario
+        function calculatePaymentForRecords(techId, hoursList, periodType = 'monthly') {
             const tech = usersData.find(u => u.id === techId);
             if (!tech || !tech.salary) return null;
             if (!hoursList || hoursList.length === 0) return null;
             const salary = parseFloat(tech.salary);
-            const hourlyRate = salary / 240;
+            
+            // Prorrateo de salario base
+            const baseSalary = periodType === 'biweekly' ? salary / 2 : salary;
+            
+            const hourlyRate = salary / 240; // Tasa basada en mensual
             const satRate = hourlyRate * 1.5;
             const sunRate = hourlyRate * 2.0;
+            
             let satHours = 0;
             let sunHours = 0;
             hoursList.forEach(r => {
@@ -521,18 +600,32 @@
                 const extra = parseFloat(r.extra);
                 if (day === 0) { sunHours += extra; } else { satHours += extra; }
             });
+            
             const grossSat = satHours * satRate;
             const grossSun = sunHours * sunRate;
             const grossExtra = grossSat + grossSun;
-            const ccss = grossExtra * 0.1083;
+            
+            // Cálculo de deducciones sobre (Salario Base + Horas Extra)
+            // En CR, CCSS y Renta suelen calcularse sobre el total devengado
+            const totalIncome = baseSalary + grossExtra;
+            const ccss = totalIncome * 0.1083;
+            
             let renta = 0;
-            const totalIncome = salary + grossExtra;
             const exemption = 864000;
             if (totalIncome > exemption) renta = (totalIncome - exemption) * 0.10; 
-            return { salary, gross: grossExtra, ccss, renta, neto: grossExtra - ccss - renta, satHours, sunHours };
+            
+            return { 
+                baseSalary, // Salario prorrateado
+                gross: grossExtra, 
+                ccss, 
+                renta, 
+                neto: totalIncome - ccss - renta,
+                satHours, 
+                sunHours 
+            };
         }
 
-        // --- LOG DE AUDITORÍA (SE MANTIENE PERO NO SE USA) ---
+        // --- LOG DE AUDITORÍA ---
         async function logAudit(action, recordType, recordId, details) {
             try {
                 await addDoc(collection(db, "auditLog"), {
@@ -905,20 +998,21 @@
 
         // --- VALIDACIÓN Y PAGOS ---
         window.renderValidationTable = async function() {
+            const typeFilter = document.getElementById('filter-type-select').value;
             const filterId = document.getElementById('filter-tech-select').value;
             const startDate = document.getElementById('filter-start-date').value;
             const endDate = document.getElementById('filter-end-date').value;
             const tbody = document.querySelector('#validation-table tbody');
             
             let q = query(collection(db, "records"));
+            
+            if (typeFilter !== 'all') q = query(q, where("type", "==", typeFilter));
             if (filterId !== 'all') q = query(q, where("userId", "==", filterId));
             if (startDate) q = query(q, where("date", ">=", startDate));
             if (endDate) q = query(q, where("date", "<=", endDate));
             
             const snap = await getDocs(q);
-            
             const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
             let rows = '';
             records.sort((a,b) => new Date(b.date) - new Date(a.date));
 
@@ -979,7 +1073,8 @@
             const q = query(collection(db, "records"), where(documentId(), "in", Array.from(idSet)));
             const snap = await getDocs(q);
             const records = snap.docs.map(d => d.data());
-            printGenericRecords(records);
+            // Forzar impresión simple de lista (usa lógica genérica pero no calc nómina completa)
+            printGenericRecords(records, 'validation_list'); 
         }
 
         // --- REPORTES ---
@@ -995,7 +1090,6 @@
                 const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 
                 records.sort((a,b) => new Date(b.date) - new Date(a.date));
-
                 let rows = '';
 
                 records.forEach(r => {
@@ -1022,16 +1116,19 @@
 
         window.generatePrintView = async function() {
             const checkboxes = document.querySelectorAll('.report-check:checked');
-            if(checkboxes.length === 0) return;
+            if(checkboxes.length === 0) return Utils.showToast('Seleccione al menos un registro', 'warning');
+            
             const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+            const period = document.getElementById('report-period').value; // monthly or biweekly
             const q = query(collection(db, "records"), where(documentId(), "in", ids));
             const snap = await getDocs(q);
             const records = snap.docs.map(d => d.data());
-            printGenericRecords(records);
+            
+            printGenericRecords(records, 'payroll_vale', period);
         }
 
         // --- IMPRESIÓN ---
-        async function printGenericRecords(recordList) {
+        async function printGenericRecords(recordList, mode = 'payroll_vale', periodType = 'monthly') {
             // 1. ORDENAR GLOBALMENTE POR FECHA (Ascendente: Antiguo a Nuevo)
             recordList.sort((a,b) => new Date(a.date) - new Date(b.date));
 
@@ -1040,58 +1137,79 @@
             let paymentData = null;
             let totalExpenses = 0;
 
-            if(techIds.length ===1) {
+            if(techIds.length === 1) {
                 const u = usersData.find(x => x.id === techIds[0]);
                 techName = u ? u.fullName : '?';
                 const hours = recordList.filter(r => r.type === 'hour');
-                if(hours.length > 0) paymentData = calculatePaymentForRecords(techIds[0], hours);
+                if(hours.length > 0) paymentData = calculatePaymentForRecords(techIds[0], hours, periodType);
                 
                 const expenses = recordList.filter(r => r.type === 'expense');
                 expenses.forEach(e => totalExpenses += parseFloat(e.amount));
             }
 
             document.getElementById('print-tech-name').textContent = techName;
-            document.getElementById('print-date').textContent = new Date().toLocaleDateString();
+            document.getElementById('print-date').textContent = 'Fecha Emisión: ' + new Date().toLocaleDateString();
 
             let html = '';
             
             const expenses = recordList.filter(r => r.type === 'expense');
             const hours = recordList.filter(r => r.type === 'hour');
 
-            // --- SEPARAR DATOS ---
+            // Rango de fechas
+            let minDate = recordList.length > 0 ? recordList[0].date : '';
+            let maxDate = recordList.length > 0 ? recordList[recordList.length-1].date : '';
+            document.getElementById('print-period-text').textContent = `Del ${Utils.formatDate(minDate)} al ${Utils.formatDate(maxDate)}`;
 
-            // 1. TABLA DE GASTOS (Con columnas detalladas)
-            if (expenses.length > 0) {
-                // Cálculo del rango de fechas para Gastos
-                const expDates = expenses.map(r => {
-                    const [y, m, d] = r.date.split('-');
-                    return new Date(y, m-1, d); // Objeto fecha local
-                });
-                
-                const firstExpDate = expDates[0];
-                const lastExpDate = expDates[expenses.length - 1];
-                
-                const fmtDate = (d) => {
-                    const dy = String(d.getDate()).padStart(2, '0');
-                    const dm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = d.getFullYear();
-                    return `${dy}/${dm}/${dd}`;
-                };
-                
-                const expRangeText = `<div style="text-align: center; margin-top: 10px; margin-bottom: 10px; font-size: 12px; color: #555;">Período: Desde <strong>${fmtDate(firstExpDate)}</strong> hasta <strong>${fmtDate(lastExpDate)}</strong></div>`;
+            // Título Documento
+            document.getElementById('print-doc-type').textContent = periodType === 'biweekly' ? 'VALE QUINCENAL' : 'LIQUIDACIÓN MENSUAL';
 
-                html += `<h3 style="margin-top: 20px; border-bottom: 2px solid #000; padding-bottom: 5px;">Reembolso de Gastos</h3>`;
-                html += expRangeText; // Rango de fechas de gastos
+            // --- SECCIÓN HORAS ---
+            if (hours.length > 0) {
+                let totalHorasExtra = 0;
+                hours.forEach(r => totalHorasExtra += parseFloat(r.extra));
 
-                html += `<table class="pdf-table" style="font-size: 12px;">
+                html += `<h3 style="margin-top: 15px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Detalle Horas Extra</h3>`;
+                html += `<table class="pdf-table">
                             <thead>
-                                <tr style="background-color: #f0f0f0;">
-                                    <th style="width: 10%;">Fecha</th>
-                                    <th style="width: 12%;">Factura #</th>
-                                    <th style="width: 15%;">Comercio</th>
-                                    <th style="width: 15%;">Cliente</th>
-                                    <th style="width: 33%;">Descripción</th>
-                                    <th style="width: 15%; text-align: right;">Monto</th>
+                                <tr>
+                                    <th style="width: 15%;">Fecha</th>
+                                    <th style="width: 25%;">Cliente</th>
+                                    <th style="width: 15%;">Día</th>
+                                    <th style="width: 15%;">Total</th>
+                                    <th style="width: 15%;">Extra</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                hours.forEach(r => {
+                    const [y, m, d] = r.date.split('-');
+                    const dateObj = new Date(y, m-1, d);
+                    const day = dateObj.getDay();
+                    let dayName = day === 0 ? 'Dom' : (day === 6 ? 'Sáb' : 'Lun-Vie');
+                    
+                    html += `<tr>
+                        <td>${Utils.formatDate(r.date)}</td>
+                        <td>${r.client}</td>
+                        <td style="text-align: center;">${dayName}</td>
+                        <td style="text-align: center;">${r.total}h</td>
+                        <td style="text-align: center; font-weight: bold;">${r.extra}h</td>
+                    </tr>`;
+                });
+                html += `<tr class="subtotal"><td colspan="4" style="text-align: right;">Total Horas:</td><td style="text-align: center;">${totalHorasExtra.toFixed(1)}h</td></tr>`;
+                html += `</tbody></table>`;
+            }
+
+            // --- SECCIÓN GASTOS ---
+            if (expenses.length > 0) {
+                html += `<h3 style="margin-top: 20px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Reembolso de Gastos</h3>`;
+                html += `<table class="pdf-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 15%;">Fecha</th>
+                                    <th style="width: 15%;">Factura</th>
+                                    <th style="width: 20%;">Comercio</th>
+                                    <th style="width: 30%;">Descripción</th>
+                                    <th style="width: 20%;">Monto</th>
                                 </tr>
                             </thead>
                             <tbody>`;
@@ -1101,108 +1219,47 @@
                         <td>${Utils.formatDate(r.date)}</td>
                         <td>${r.invoiceNum}</td>
                         <td>${r.store}</td>
-                        <td>${r.client}</td>
                         <td>${r.description || '-'}</td>
-                        <td style="text-align: right;">${Utils.formatCurrency(r.amount)}</td>
+                        <td class="num">${Utils.formatCurrency(r.amount)}</td>
                     </tr>`;
                 });
+                html += `<tr class="subtotal"><td colspan="4" style="text-align: right;">Total Gastos:</td><td class="num">${Utils.formatCurrency(totalExpenses)}</td></tr>`;
                 html += `</tbody></table>`;
             }
 
-            // 2. TABLA DE HORAS EXTRA (Si las hay)
-            if (hours.length > 0) {
-                // Cálculo de la suma de horas extra para mostrarla
-                let totalHorasExtra = 0;
-                hours.forEach(r => {
-                    totalHorasExtra += parseFloat(r.extra);
-                });
-
-                // Cálculo del rango de fechas para Horas
-                const dates = hours.map(r => {
-                    const [y, m, d] = r.date.split('-');
-                    return new Date(y, m-1, d);
-                });
-                const firstDate = dates[0];
-                const lastDate = dates[dates.length - 1];
+            // --- DESGLOSE DE PAGO (VALE) ---
+            if(mode === 'payroll_vale') {
+                html += `<div class="payroll-box">`;
+                html += `<div class="payroll-title">Desglose de Pago</div>`;
                 
-                const fmtDateHours = (d) => {
-                    const dy = String(d.getDate()).padStart(2, '0');
-                    const dm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = d.getFullYear();
-                    return `${dy}/${dm}/${dd}`;
-                };
-                
-                const rangeTextHours = `<div style="text-align: center; margin-top: 10px; margin-bottom: 10px; font-size: 12px; color: #555;">Período: Desde <strong>${fmtDateHours(firstDate)}</strong> hasta <strong>${fmtDateHours(lastDate)}</strong></div>`;
-
-                html += `<h3 style="margin-top: 30px; border-bottom: 2px solid #000; padding-bottom: 5px;">Detalle de Horas Extra</h3>`;
-                html += rangeTextHours; // Rango de fechas de horas
-                
-                html += `<table class="pdf-table" style="font-size: 12px;">
-                            <thead>
-                                <tr style="background-color: #f0f0f0;">
-                                    <th style="width: 15%;">Fecha</th>
-                                    <th style="width: 25%;">Cliente</th>
-                                    <th style="width: 15%;">Inicio</th>
-                                    <th style="width: 15%;">Fin</th>
-                                    <th style="width: 15%;">Total (h)</th>
-                                    <th style="width: 15%; text-align: right;">Extra (h)</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                
-                hours.forEach(r => {
-                    // Lógica para determinar el día de la semana (Sab/Dom)
-                    const [y, m, d] = r.date.split('-');
-                    const dateObj = new Date(y, m-1, d);
-                    const day = dateObj.getDay();
+                if(paymentData) {
+                    html += `<div class="payroll-row earning"><span>Salario Base (${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}):</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
+                    html += `<div class="payroll-row earning"><span>Horas Extra (Bruto):</span> <span>${Utils.formatCurrency(paymentData.gross)}</span></div>`;
+                    html += `<div style="border-top: 1px dashed #ccc; margin: 5px 0;"></div>`;
                     
-                    let dayLabel = '';
-                    if (day === 0) dayLabel = ' <small style="color:var(--primary-color)">(Dom)</small>';
-                    else if (day === 6) dayLabel = ' <small style="color:var(--primary-color)">(Sáb)</small>';
+                    html += `<div class="payroll-row deduction"><span>CCSS (10.83%):</span> <span>-${Utils.formatCurrency(paymentData.ccss)}</span></div>`;
+                    html += `<div class="payroll-row deduction"><span>Renta Estimada:</span> <span>-${Utils.formatCurrency(paymentData.renta)}</span></div>`;
+                    html += `<div style="border-top: 1px solid #000; margin: 5px 0;"></div>`;
+                    
+                    html += `<div class="payroll-row total" style="color: var(--primary-color);"><span>Neto Salario:</span> <span>${Utils.formatCurrency(paymentData.neto)}</span></div>`;
+                } else {
+                    html += `<p style="text-align: center; color: #777;">Sin cálculo de salario (Solo gastos o sin datos de empleado)</p>`;
+                }
 
-                    html += `<tr>
-                        <td>${Utils.formatDate(r.date)}${dayLabel}</td>
-                        <td>${r.client}</td>
-                        <td>${r.startTime}</td>
-                        <td>${r.endTime}</td>
-                        <td style="text-align: center;">${r.total}</td>
-                        <td style="text-align: center; font-weight: bold;">${r.extra}</td>
-                    </tr>`;
-                });
-                html += `</tbody></table>`;
-
-                // --- NUEVA LÍNEA DE TOTAL DE HORAS ---
-                html += `<div style="text-align: right; font-weight: bold; font-size: 14px; margin-top: 10px; border-top:1px solid #ddd; padding-top: 5px;">Total Horas Extra: ${totalHorasExtra.toFixed(1)}h</div>`;
+                if(totalExpenses > 0) {
+                    html += `<div class="payroll-row earning" style="margin-top: 10px;"><span>Reembolso Gastos:</span> <span>${Utils.formatCurrency(totalExpenses)}</span></div>`;
+                }
+                
+                html += `</div>`;
             }
-
-            // 3. CAJAS DE CÁLCULO Y TOTALES
-            // Caja de Nómina (Solo si hay horas)
-            if(paymentData) {
-                html += `<div class="pdf-payment-box">
-                            <div class="pdf-payment-title">Cálculo de Nómina</div>
-                            <div class="pdf-payment-row"><div>Salario Base:</div><div>${Utils.formatCurrency(paymentData.salary)}</div></div>
-                            <div class="pdf-payment-row"><div>Total Horas Extra (Bruto):</div><div>${Utils.formatCurrency(paymentData.gross)}</div></div>
-                            <div class="pdf-payment-row"><div>CCSS (10.83%):</div><div>${Utils.formatCurrency(paymentData.ccss)}</div></div>
-                            <div class="pdf-payment-row"><div>Renta Estimada:</div><div>${Utils.formatCurrency(paymentData.renta)}</div></div>
-                            <div class="pdf-payment-row"><div>Neto a Pagar (Horas):</div><div>${Utils.formatCurrency(paymentData.neto)}</div></div>
-                        </div>`;
-            }
-
-            // Caja de Resumen Gastos
-            if(totalExpenses > 0) {
-                html += `<div class="pdf-payment-box" style="margin-top: 20px;">
-                            <div class="pdf-payment-title">Reembolso de Gastos (Total)</div>
-                            <div class="pdf-payment-row total"><div>Total a Reembolsar:</div><div>${Utils.formatCurrency(totalExpenses)}</div></div>
-                        </div>`;
-            }
-
-            // 4. TOTAL FINAL
-            let totalFinal = 0;
-            if(paymentData) totalFinal += parseFloat(paymentData.neto);
-            totalFinal += totalExpenses;
 
             document.getElementById('print-tables-container').innerHTML = html;
-            document.getElementById('print-totals-wrapper').innerHTML = `<div style="font-size: 1.3rem; margin-top: 20px;">Total a Pagar: <span style="text-decoration: underline;">${Utils.formatCurrency(totalFinal)}</span></div>`;
+            
+            let finalTotal = 0;
+            if(paymentData) finalTotal += parseFloat(paymentData.neto);
+            finalTotal += totalExpenses;
+
+            document.getElementById('print-final-total').textContent = Utils.formatCurrency(finalTotal);
             
             document.getElementById('app-view').style.display = 'none';
             document.getElementById('print-area').style.display = 'block';
