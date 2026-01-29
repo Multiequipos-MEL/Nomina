@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nómina Multiequipos</title>
+    <title>Sistema de Gestión de Nómina - Multiequipos</title>
     <!-- PWA Setup -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0056b3">
@@ -108,8 +108,8 @@
 
         .card { background: var(--white); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 1.5rem; }
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th, td { padding: 0.8rem; text-align: left; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
+        th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
         th { background-color: #f8f9fa; font-weight: 600; color: #444; }
         tr:hover { background-color: #f1f1f1; }
         
@@ -159,8 +159,8 @@
         .pdf-grid-info { display: flex; gap: 40px; margin-bottom: 20px; font-size: 14px; }
         .pdf-col-info strong { display: block; color: #555; font-size: 12px; text-transform: uppercase; }
 
-        .pdf-table { width: 100%; border: 1px solid #000; margin-bottom: 20px; border-collapse: collapse; }
-        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 12px; }
+        .pdf-table { width: 100%; border: 1px solid #000; margin-bottom: 20px; border-collapse: collapse; table-layout: fixed; }
+        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 12px; word-wrap: break-word; }
         .pdf-table th { background-color: #eee; font-weight: bold; text-align: center; }
         .pdf-table td.num { text-align: right; }
         .pdf-table tr.subtotal td { background-color: #f9f9f9; font-weight: bold; }
@@ -172,7 +172,7 @@
         .payroll-row.total { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 5px; font-weight: bold; font-size: 15px; }
         .payroll-row.deduction { color: #d9534f; }
         .payroll-row.earning { color: #333; }
-        
+
         .grand-total { 
             text-align: right; 
             font-size: 18px; 
@@ -279,7 +279,6 @@
                 <div class="tabs">
                     <button class="tab-btn active" onclick="window.switchAdminTab('admin-users')">Gestión Técnicos</button>
                     <button class="tab-btn" onclick="window.switchAdminTab('admin-validation')">Validación y Pagos</button>
-                    <button class="tab-btn" onclick="window.switchAdminTab('admin-reports')">Generar Vale de Pago</button>
                 </div>
 
                 <!-- Gestión de Usuarios -->
@@ -300,37 +299,35 @@
 
                 <!-- Validación y Pagos -->
                 <div id="admin-validation" class="card hidden">
-                    <h2>Validar Registros</h2>
+                    <h2>Validación y Pagos</h2>
                     <div class="flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
                         <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Tipo</label><select id="filter-type-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option><option value="hour">Horas</option><option value="expense">Gastos</option></select></div>
                         <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Técnico</label><select id="filter-tech-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option></select></div>
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Periodo</label><select id="filter-period-select" class="form-control"><option value="biweekly">Quincenal</option><option value="monthly">Mensual</option></select></div>
                         <div class="form-group" style="margin-bottom: 0;"><label>Fecha Inicio</label><input type="date" id="filter-start-date" class="form-control" onchange="window.renderValidationTable()"></div>
                         <div class="form-group" style="margin-bottom: 0;"><label>Fecha Fin</label><input type="date" id="filter-end-date" class="form-control" onchange="window.renderValidationTable()"></div>
                     </div>
                     <div class="table-responsive mt-2">
-                        <table id="validation-table"><thead><tr><th style="width: 30px;"><input type="checkbox" id="select-all-validation" onclick="window.toggleSelectAllValidation()"></th><th>Técnico</th><th>Tipo</th><th>Detalle</th><th>Monto/Horas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+                        <table id="validation-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 30px;"><input type="checkbox" id="select-all-validation" onclick="window.toggleSelectAllValidation()"></th>
+                                    <th>Técnico</th>
+                                    <th>Tipo</th>
+                                    <th>Fecha</th>
+                                    <th>Cliente</th>
+                                    <th>Detalle</th>
+                                    <th>Monto/Horas</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                     <div class="mt-2 flex justify-between items-center">
-                        <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">Generar PDF Lista</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">Generar PDF</button>
                         <button type="button" class="btn btn-primary" onclick="window.markSelectedAsPaid()">Procesar como Pagado</button>
-                    </div>
-                </div>
-
-                <!-- Reportes (Vale de Pago) -->
-                <div id="admin-reports" class="card hidden">
-                    <h2>Generar Vale de Pago</h2>
-                    <div class="flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
-                        <div class="form-group" style="margin-bottom: 0; flex: 2;"><label>Técnico</label><select id="report-tech-select" class="form-control" onchange="window.updateReportSelection()"><option value="">Seleccione Técnico...</option></select></div>
-                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Periodo</label><select id="report-period" class="form-control"><option value="monthly">Mensual</option><option value="biweekly">Quincenal</option></select></div>
-                    </div>
-                    <div class="mt-2">
-                        <h3>Registros Disponibles</h3>
-                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                            <table id="report-selection-table"><thead><tr><th><input type="checkbox" id="select-all-reports" onclick="window.toggleSelectAllReports()"></th><th>Fecha</th><th>Tipo</th><th>Detalle</th><th>Cantidad</th></tr></thead><tbody></tbody></table>
-                        </div>
-                    <div class="mt-2 flex justify-between items-center" style="background: #eee; padding: 15px; border-radius: 8px;">
-                        <div><p>Total Horas Extra: <strong id="report-total-hours">0</strong></p><p>Total Gastos: <strong id="report-total-amount">₡0</strong></p></div>
-                        <button class="btn btn-primary btn-lg" onclick="window.generatePrintView()">Generar Vale de Pago</button>
                     </div>
                 </div>
             </div>
@@ -371,10 +368,10 @@
         <div class="pdf-header">
             <div class="pdf-company">
                 <h1>Multiequipos</h1>
-                <p>Documento de Pago de Planilla</p>
+                <p>Documento de Pago</p>
             </div>
             <div class="pdf-doc-info">
-                <h2 id="print-doc-type">VALE DE PAGO</h2>
+                <h2 id="print-doc-type">LISTA DE PAGO</h2>
                 <p id="print-date">Fecha: 01/01/2024</p>
             </div>
         </div>
@@ -382,7 +379,7 @@
         <div class="pdf-grid-info">
             <div class="pdf-col-info">
                 <strong>Empleado:</strong>
-                <span id="print-tech-name" style="font-weight: bold; font-size: 16px;">Nombre Técnico</span>
+                <span id="print-tech-name" style="font-weight: bold; font-size: 16px;"></span>
             </div>
             <div class="pdf-col-info">
                 <strong>Periodo:</strong>
@@ -578,26 +575,22 @@
             };
         }
 
-        // LÓGICA DE PAGO ACTUALIZADA: Permite horas vacías
         function calculatePaymentForRecords(techId, hoursList, periodType = 'monthly') {
             const tech = usersData.find(u => u.id === techId);
             
-            // Solo frenamos si no hay datos del técnico
             if (!tech || !tech.salary) return null; 
             
             const salary = parseFloat(tech.salary);
             
-            // Prorrateo de salario base
             const baseSalary = periodType === 'biweekly' ? salary / 2 : salary;
             
-            const hourlyRate = salary / 240; // Tasa basada en mensual
+            const hourlyRate = salary / 240; 
             const satRate = hourlyRate * 1.5;
             const sunRate = hourlyRate * 2.0;
             
             let satHours = 0;
             let sunHours = 0;
             
-            // Si hoursList viene vacío, este loop simplemente no se ejecuta y se queda en 0
             if(hoursList && hoursList.length > 0) {
                 hoursList.forEach(r => {
                     const day = new Date(r.date + 'T00:00:00').getDay();
@@ -610,7 +603,6 @@
             const grossSun = sunHours * sunRate;
             const grossExtra = grossSat + grossSun;
             
-            // Cálculo de deducciones sobre (Salario Base + Horas Extra)
             const totalIncome = baseSalary + grossExtra;
             const ccss = totalIncome * 0.1083;
             
@@ -619,53 +611,16 @@
             if (totalIncome > exemption) renta = (totalIncome - exemption) * 0.10; 
             
             return { 
-                baseSalary, // Salario prorrateado
+                baseSalary, 
                 gross: grossExtra, 
                 ccss, 
                 renta, 
-                neto: totalIncome - ccss - renta, // Esto dará el neto aunque extra sea 0
+                neto: totalIncome - ccss - renta, 
                 satHours, 
                 sunHours 
             };
         }
 
-        // FUNCIÓN ACTUALIZADA: Calcular rango de fechas estándar (15 o 30/Fin de mes)
-        function getPayrollPeriodRange(periodType) {
-            const now = new Date();
-            const y = now.getFullYear();
-            const m = now.getMonth(); // 0-11
-            const d = now.getDate();
-
-            let startDate, endDate;
-
-            if (periodType === 'monthly') {
-                // Mensual: Siempre del 1 al último día del mes actual
-                startDate = new Date(y, m, 1);
-                endDate = new Date(y, m + 1, 0); // Último día del mes (30, 31, 28)
-            } else {
-                // Quincenal
-                if (d <= 15) {
-                    // Primera quincena: 01 al 15 del mes actual
-                    startDate = new Date(y, m, 1);
-                    endDate = new Date(y, m, 15);
-                } else {
-                    // Segunda quincena: 16 al último día del mes
-                    startDate = new Date(y, m, 16);
-                    endDate = new Date(y, m + 1, 0);
-                }
-            }
-
-            const fmt = (dateObj) => {
-                const day = String(dateObj.getDate()).padStart(2, '0');
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                const year = dateObj.getFullYear();
-                return `${day}/${month}/${year}`;
-            };
-
-            return `Del ${fmt(startDate)} al ${fmt(endDate)}`;
-        }
-
-        // --- LOG DE AUDITORÍA ---
         async function logAudit(action, recordType, recordId, details) {
             try {
                 await addDoc(collection(db, "auditLog"), {
@@ -928,15 +883,12 @@
                 const querySnapshot = await getDocs(q);
                 const tbody = document.getElementById('users-table-body');
                 const filterSelect = document.getElementById('filter-tech-select');
-                const reportSelect = document.getElementById('report-tech-select');
                 
                 let usersHtml = '';
                 let filterOptions = '<option value="all">Todos</option>';
-                let reportOptions = '<option value="">Seleccione Técnico...</option>';
                 
                 tbody.innerHTML = '';
                 filterSelect.innerHTML = filterOptions;
-                reportSelect.innerHTML = reportOptions;
                 usersData = [];
 
                 querySnapshot.forEach((doc) => {
@@ -946,12 +898,10 @@
                     usersHtml += `<tr><td>${u.fullName}</td><td>${Utils.formatCurrency(u.salary)}</td><td>${u.email}</td><td>Técnico</td><td><button type="button" class="btn btn-sm btn-warning" onclick="window.openTechEditModal('${doc.id}')">Editar</button><button type="button" class="btn btn-sm btn-danger" onclick="window.deleteUser('${doc.id}')">Eliminar</button></td></tr>`;
                     
                     filterOptions += `<option value="${doc.id}">${u.fullName}</option>`;
-                    reportOptions += `<option value="${doc.id}">${u.fullName}</option>`;
                 });
                 
                 tbody.innerHTML = usersHtml;
                 filterSelect.innerHTML = filterOptions;
-                reportSelect.innerHTML = reportOptions;
             } catch(e) {
                 console.error(e);
                 Utils.showToast("Error cargando admin", "error");
@@ -986,7 +936,7 @@
                 await setDoc(doc(db, "users", uid), { 
                     fullName: name, 
                     email, 
-                    salary, 
+                    salary: salary, 
                     role: 'tech', 
                     createdAt: new Date() 
                 });
@@ -1002,25 +952,53 @@
             }
         });
 
+        // --- MODIFICADO: Abrir modal (Ahora abrimos primero el modal y luego llenamos datos) ---
         window.openTechEditModal = function(userId) {
-            const u = usersData.find(x => x.id === userId);
-            if(u) {
-                document.getElementById('edit-tech-id').value = userId;
-                document.getElementById('edit-tech-fullname').value = u.fullName;
-                document.getElementById('edit-tech-salary').value = u.salary;
+            try {
+                const u = usersData.find(x => x.id === userId);
+                if(!u) {
+                    Utils.showToast('No se encontró el técnico', 'error');
+                    return;
+                }
+                
+                // 1. Abrir modal (esto limpia el formulario)
                 window.openModal('modal-tech-edit');
+                
+                // 2. Llenar datos DESPUÉS de abrir el modal
+                document.getElementById('edit-tech-id').value = userId;
+                document.getElementById('edit-tech-fullname').value = u.fullName || '';
+                document.getElementById('edit-tech-salary').value = u.salary || '';
+            } catch (error) {
+                console.error(error);
+                Utils.showToast('Error al preparar edición', 'error');
             }
         };
 
         document.getElementById('tech-edit-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const userId = document.getElementById('edit-tech-id').value;
-            const name = document.getElementById('edit-tech-fullname').value;
-            const salary = document.getElementById('edit-tech-salary').value;
-            await updateDoc(doc(db, "users", userId), { fullName: name, salary: salary });
-            window.closeModal('modal-tech-edit');
-            loadAdminData();
-            Utils.showToast('Actualizado', 'success');
+            try {
+                const userId = document.getElementById('edit-tech-id').value;
+                const name = document.getElementById('edit-tech-fullname').value;
+                const salaryInput = document.getElementById('edit-tech-salary').value;
+                
+                if (!userId) throw new Error("ID de técnico no encontrado");
+                if (!name || name.trim() === "") throw new Error("El nombre es obligatorio");
+                
+                const salaryNumber = parseFloat(salaryInput);
+                if (isNaN(salaryNumber) || salaryNumber < 0) throw new Error("El salario debe ser un número válido");
+
+                await updateDoc(doc(db, "users", userId), { 
+                    fullName: name, 
+                    salary: salaryNumber 
+                });
+
+                window.closeModal('modal-tech-edit');
+                loadAdminData();
+                Utils.showToast('Actualizado', 'success');
+            } catch (error) {
+                console.error("Error editando técnico:", error);
+                Utils.showToast('Error al actualizar: ' + error.message, 'error');
+            }
         });
 
         window.deleteUser = async function(userId) {
@@ -1031,9 +1009,13 @@
                 return;
             }
             if(!confirm('¿Borrar técnico?')) return;
-            await deleteDoc(doc(db, "users", userId));
-            loadAdminData();
-            Utils.showToast('Eliminado', 'success');
+            try {
+                await deleteDoc(doc(db, "users", userId));
+                loadAdminData();
+                Utils.showToast('Eliminado', 'success');
+            } catch(e) {
+                Utils.showToast('Error al borrar: ' + e.message, 'error');
+            }
         };
 
         // --- VALIDACIÓN Y PAGOS ---
@@ -1062,16 +1044,29 @@
                 const isPaid = r.status === 'paid';
                 const id = r.id; 
                 let detail = '', amount = '';
+
                 if (r.type === 'hour') {
-                    detail = `${Utils.formatDate(r.date)} - ${r.client}`;
                     amount = `Extra: ${r.extra}h`;
+                    detail = `De ${r.startTime} a ${r.endTime}`;
                 } else {
-                    detail = `${r.invoiceNum} - ${r.store} (${r.client})`;
                     amount = Utils.formatCurrency(r.amount);
+                    detail = `${r.invoiceNum} - ${r.store} - ${r.description}`;
                 }
+
                 let actionHtml = isPaid ? `<input type="checkbox" class="pay-check" value="${id}" title="PDF"><button type="button" class="btn btn-warning btn-sm" onclick="window.revertToPending('${id}')">Volver</button>` : `<input type="checkbox" class="pay-check" value="${id}">`;
                 
-                rows += `<tr><td><input type="checkbox" class="row-select" value="${id}"></td><td>${userName}</td><td>${r.type === 'hour' ? 'Hora' : 'Gasto'}</td><td>${detail}</td><td>${amount}</td><td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td><td>${actionHtml}</td></tr>`;
+                rows += `
+                    <tr>
+                        <td><input type="checkbox" class="row-select" value="${id}"></td>
+                        <td>${userName}</td>
+                        <td>${r.type === 'hour' ? 'Hora' : 'Gasto'}</td>
+                        <td>${Utils.formatDate(r.date)}</td>
+                        <td>${r.client}</td>
+                        <td>${detail}</td>
+                        <td>${amount}</td>
+                        <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td>
+                        <td>${actionHtml}</td>
+                    </tr>`;
             });
             tbody.innerHTML = rows;
         }
@@ -1102,6 +1097,34 @@
             Utils.showToast('Procesados', 'success');
         }
 
+        function getPayrollPeriodString(periodType) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = now.getDate();
+
+            let startDay, endDay;
+            const daysInMonth = new Date(y, now.getMonth() + 1, 0).getDate();
+            
+            if (periodType === 'monthly') {
+                startDay = '01';
+                endDay = String(daysInMonth).padStart(2, '0');
+            } else { // biweekly
+                if (d <= 15) {
+                    startDay = '01';
+                    endDay = '15';
+                } else {
+                    startDay = '16';
+                    endDay = String(daysInMonth).padStart(2, '0');
+                }
+            }
+
+            const startDateStr = `${startDay}/${m}/${y}`;
+            const endDateStr = `${endDay}/${m}/${y}`;
+
+            return `${startDateStr} al ${endDateStr}`;
+        }
+
         window.generateValidationPDF = async function() {
             const checkboxes = document.querySelectorAll('#validation-table .row-select:checked');
             const actionCheckboxes = document.querySelectorAll('#validation-table .pay-check:checked');
@@ -1109,157 +1132,154 @@
             checkboxes.forEach(cb => idSet.add(cb.value));
             actionCheckboxes.forEach(cb => idSet.add(cb.value));
             
-            if(idSet.size === 0) return;
+            const currentFilterTechId = document.getElementById('filter-tech-select').value;
+            const periodType = document.getElementById('filter-period-select').value;
+            const filterType = document.getElementById('filter-type-select').value;
+
+            if(idSet.size === 0) {
+                if (currentFilterTechId === 'all') {
+                    return Utils.showToast("Seleccione un técnico específico o registros de la tabla", "warning");
+                }
+                printGenericRecords([], 'auto', periodType, currentFilterTechId, filterType);
+                return;
+            }
+
             const q = query(collection(db, "records"), where(documentId(), "in", Array.from(idSet)));
             const snap = await getDocs(q);
             const records = snap.docs.map(d => d.data());
-            printGenericRecords(records, 'validation_list'); 
-        }
-
-        // --- REPORTES ---
-        window.updateReportSelection = async function() {
-            const techId = document.getElementById('report-tech-select').value;
-            const tbody = document.querySelector('#report-selection-table tbody');
-            tbody.innerHTML = '';
-            if (!techId) return;
-
-            try {
-                const q = query(collection(db, "records"), where("userId", "==", techId));
-                
-                const snap = await getDocs(q);
-                const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                
-                records.sort((a,b) => new Date(b.date) - new Date(a.date));
-                let rows = '';
-
-                records.forEach(r => {
-                    let detail = '', amountStr = '';
-                    let statusBadge = r.status === 'paid' ? '<span style="color:green; font-size:0.8em">(Pagado)</span>' : '';
-                    
-                    if (r.type === 'hour') {
-                        detail = `${Utils.formatDate(r.date)} - ${r.client} (${r.extra}h)`;
-                        amountStr = r.type;
-                    } else {
-                        detail = `${r.invoiceNum} - ${r.store} (${r.client}) ${statusBadge}`;
-                        amountStr = Utils.formatCurrency(r.amount);
-                    }
-                    rows += `<tr><td><input type="checkbox" class="report-check" data-id="${r.id}" onchange="window.calcReportTotals()"></td><td>${Utils.formatDate(r.date)}</td><td>${r.type === 'hour' ? 'Hora' : 'Gasto'}</td><td>${detail}</td><td>${amountStr}</td></tr>`;
-                });
-                tbody.innerHTML = rows;
-            } catch (error) {
-                console.error("Error cargando reportes:", error);
-                Utils.showToast("Error cargando reportes", "error");
-            }
-        }
-
-        window.calcReportTotals = function() { }
-
-        window.generatePrintView = async function() {
-            const techId = document.getElementById('report-tech-select').value;
-            if(!techId) return Utils.showToast('Seleccione un técnico', 'warning');
-
-            const period = document.getElementById('report-period').value;
             
-            const checkboxes = document.querySelectorAll('.report-check:checked');
-            let records = [];
-
-            if(checkboxes.length > 0) {
-                const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
-                const q = query(collection(db, "records"), where(documentId(), "in", ids));
-                const snap = await getDocs(q);
-                records = snap.docs.map(d => d.data());
-            } 
-            else {
-                // Si no hay seleccionados, array vacío (se calculará solo salario)
-            }
-
-            printGenericRecords(records, 'payroll_vale', period, techId);
+            printGenericRecords(records, 'auto', periodType, currentFilterTechId, filterType); 
         }
 
-        // --- IMPRESIÓN ---
-        async function printGenericRecords(recordList, mode = 'payroll_vale', periodType = 'monthly', techIdParam = null) {
-            // 1. ORDENAR GLOBALMENTE POR FECHA (Ascendente: Antiguo a Nuevo)
+        // --- IMPRESIÓN (PDF DIVIDIDO: GASTOS vs NÓMINA) ---
+        async function printGenericRecords(recordList, mode = 'auto', periodType = 'monthly', techIdParam = null, filterType = 'all') {
             recordList.sort((a,b) => new Date(a.date) - new Date(b.date));
 
-            // Determinar el ID del técnico
-            let techIds = [...new Set(recordList.map(r => r.userId))];
-            if (techIdParam) techIds.push(techIdParam);
+            const expenses = recordList.filter(r => r.type === 'expense');
+            const hours = recordList.filter(r => r.type === 'hour');
+            
+            let totalExpenses = 0;
+            expenses.forEach(e => totalExpenses += parseFloat(e.amount));
+
+            let isExpenseReport = false;
+            if (filterType === 'expense' || (hours.length === 0 && expenses.length > 0)) {
+                isExpenseReport = true;
+            }
 
             let techName = "Varios";
-            let paymentData = null;
-            let totalExpenses = 0;
+            if (techIdParam && techIdParam !== 'all') {
+                const u = usersData.find(x => x.id === techIdParam);
+                if (u) techName = u.fullName;
+            } else {
+                let techIds = [...new Set(recordList.map(r => r.userId))];
+                if (techIds.length === 1) {
+                    const u = usersData.find(x => x.id === techIds[0]);
+                    if (u) techName = u.fullName;
+                }
+            }
 
-            if(techIds.length === 1) {
-                const u = usersData.find(x => x.id === techIds[0]);
-                techName = u ? u.fullName : '?';
-                const hours = recordList.filter(r => r.type === 'hour');
-                paymentData = calculatePaymentForRecords(techIds[0], hours, periodType);
+            let docType = "";
+            let periodText = "";
+            let paymentData = null;
+
+            if (isExpenseReport) {
+                docType = "LIQUIDACIÓN DE GASTOS";
+                const startInput = document.getElementById('filter-start-date').value;
+                const endInput = document.getElementById('filter-end-date').value;
                 
-                const expenses = recordList.filter(r => r.type === 'expense');
-                expenses.forEach(e => totalExpenses += parseFloat(e.amount));
+                if(startInput && endInput) {
+                    periodText = `${Utils.formatDate(startInput)} al ${Utils.formatDate(endInput)}`;
+                } else if (recordList.length > 0) {
+                     const minDate = recordList[0].date;
+                    const maxDate = recordList[recordList.length-1].date;
+                    periodText = `Del ${Utils.formatDate(minDate)} al ${Utils.formatDate(maxDate)}`;
+                } else {
+                    const now = new Date();
+                    const m = String(now.getMonth() + 1).padStart(2, '0');
+                    const y = now.getFullYear();
+                    periodText = `Mes: ${m}/${y}`;
+                }
+            } else {
+                docType = "VALE DE PAGO";
+                paymentData = calculatePaymentForRecords(techIdParam, hours, periodType); 
+                periodText = getPayrollPeriodString(periodType);
             }
 
             document.getElementById('print-tech-name').textContent = techName;
             document.getElementById('print-date').textContent = 'Fecha Emisión: ' + new Date().toLocaleDateString();
-
-            // ACTUALIZACIÓN DEL PERIODO
-            const periodText = getPayrollPeriodRange(periodType);
             document.getElementById('print-period-text').textContent = periodText;
+            document.getElementById('print-doc-type').textContent = docType;
 
             let html = '';
             
-            const expenses = recordList.filter(r => r.type === 'expense');
-            const hours = recordList.filter(r => r.type === 'hour');
+            if (!isExpenseReport) {
+                if (hours.length > 0) {
+                    let totalHorasExtra = 0;
+                    hours.forEach(r => totalHorasExtra += parseFloat(r.extra));
 
-            // Título Documento
-            document.getElementById('print-doc-type').textContent = periodType === 'biweekly' ? 'VALE QUINCENAL' : 'LIQUIDACIÓN MENSUAL';
-
-            // --- SECCIÓN HORAS ---
-            if (hours.length > 0) {
-                let totalHorasExtra = 0;
-                hours.forEach(r => totalHorasExtra += parseFloat(r.extra));
-
-                html += `<h3 style="margin-top: 15px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Detalle Horas Extra</h3>`;
-                html += `<table class="pdf-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 15%;">Fecha</th>
-                                    <th style="width: 25%;">Cliente</th>
-                                    <th style="width: 15%;">Día</th>
-                                    <th style="width: 15%;">Total</th>
-                                    <th style="width: 15%;">Extra</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                
-                hours.forEach(r => {
-                    const [y, m, d] = r.date.split('-');
-                    const dateObj = new Date(y, m-1, d);
-                    const day = dateObj.getDay();
-                    let dayName = day === 0 ? 'Dom' : (day === 6 ? 'Sáb' : 'Lun-Vie');
+                    html += `<h3 style="margin-top: 15px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Detalle Horas Extra</h3>`;
+                    html += `<table class="pdf-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 18%;">Fecha</th>
+                                        <th style="width: 32%;">Cliente</th>
+                                        <th style="width: 12%;">Día</th>
+                                        <th style="width: 19%;">Total</th>
+                                        <th style="width: 19%;">Extra</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
                     
-                    html += `<tr>
-                        <td>${Utils.formatDate(r.date)}</td>
-                        <td>${r.client}</td>
-                        <td style="text-align: center;">${dayName}</td>
-                        <td style="text-align: center;">${r.total}h</td>
-                        <td style="text-align: center; font-weight: bold;">${r.extra}h</td>
-                    </tr>`;
-                });
-                html += `<tr class="subtotal"><td colspan="4" style="text-align: right;">Total Horas:</td><td style="text-align: center;">${totalHorasExtra.toFixed(1)}h</td></tr>`;
-                html += `</tbody></table>`;
+                    hours.forEach(r => {
+                        const [y, m, d] = r.date.split('-');
+                        const dateObj = new Date(y, m-1, d);
+                        const day = dateObj.getDay();
+                        let dayName = day === 0 ? 'Dom' : (day === 6 ? 'Sáb' : 'Lun-Vie');
+                        
+                        html += `<tr>
+                            <td>${Utils.formatDate(r.date)}</td>
+                            <td>${r.client}</td>
+                            <td style="text-align: center;">${dayName}</td>
+                            <td style="text-align: center;">${r.total}h</td>
+                            <td style="text-align: center; font-weight: bold;">${r.extra}h</td>
+                        </tr>`;
+                    });
+                    html += `<tr class="subtotal"><td colspan="4" style="text-align: right;">Total Horas:</td><td style="text-align: center;">${totalHorasExtra.toFixed(1)}h</td></tr>`;
+                    html += `</tbody></table>`;
+                }
+
+                if (paymentData) {
+                    html += `<div class="payroll-box">`;
+                    html += `<div class="payroll-title">Desglose de Pago</div>`;
+                    
+                    html += `<div class="payroll-row earning"><span>Salario Base ${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}:</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
+                    html += `<div class="payroll-row earning"><span>Horas Extra (Bruto):</span> <span>${Utils.formatCurrency(paymentData.gross)}</span></div>`;
+                    html += `<div style="border-top: 1px dashed #ccc; margin: 5px 0;"></div>`;
+                    
+                    html += `<div class="payroll-row deduction"><span>CCSS (10.83%):</span> <span>-${Utils.formatCurrency(paymentData.ccss)}</span></div>`;
+                    html += `<div class="payroll-row deduction"><span>Renta Estimada:</span> <span>-${Utils.formatCurrency(paymentData.renta)}</span></div>`;
+                    html += `<div style="border-top: 1px solid #000; margin: 5px 0;"></div>`;
+                    
+                    html += `<div class="payroll-row total" style="color: var(--primary-color);"><span>Neto Salario:</span> <span>${Utils.formatCurrency(paymentData.neto)}</span></div>`;
+
+                    if(totalExpenses > 0) {
+                        html += `<div class="payroll-row earning" style="margin-top: 10px;"><span>Reembolso Gastos:</span> <span>${Utils.formatCurrency(totalExpenses)}</span></div>`;
+                    }
+                    
+                    html += `</div>`;
+                }
             }
 
-            // --- SECCIÓN GASTOS ---
             if (expenses.length > 0) {
                 html += `<h3 style="margin-top: 20px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Reembolso de Gastos</h3>`;
                 html += `<table class="pdf-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 15%;">Fecha</th>
-                                    <th style="width: 15%;">Factura</th>
-                                    <th style="width: 20%;">Comercio</th>
-                                    <th style="width: 30%;">Descripción</th>
+                                    <th style="width: 12%;">Fecha</th>
+                                    <th style="width: 12%;">Factura</th>
+                                    <th style="width: 15%;">Comercio</th>
+                                    <th style="width: 15%;">Cliente</th>
+                                    <th style="width: 26%;">Descripción</th>
                                     <th style="width: 20%;">Monto</th>
                                 </tr>
                             </thead>
@@ -1270,41 +1290,27 @@
                         <td>${Utils.formatDate(r.date)}</td>
                         <td>${r.invoiceNum}</td>
                         <td>${r.store}</td>
-                        <td>${r.description || '-'}</td>
+                        <td>${r.client}</td>
+                        <td style="vertical-align: top;">${r.description || '-'}</td>
                         <td class="num">${Utils.formatCurrency(r.amount)}</td>
                     </tr>`;
                 });
-                html += `<tr class="subtotal"><td colspan="4" style="text-align: right;">Total Gastos:</td><td class="num">${Utils.formatCurrency(totalExpenses)}</td></tr>`;
+                html += `<tr class="subtotal"><td colspan="5" style="text-align: right;">Total Gastos:</td><td class="num">${Utils.formatCurrency(totalExpenses)}</td></tr>`;
                 html += `</tbody></table>`;
-            }
-
-            // --- DESGLOSE DE PAGO (VALE) ---
-            if(mode === 'payroll_vale' && paymentData) {
-                html += `<div class="payroll-box">`;
-                html += `<div class="payroll-title">Desglose de Pago</div>`;
-                
-                html += `<div class="payroll-row earning"><span>Salario Base (${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}):</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
-                html += `<div class="payroll-row earning"><span>Horas Extra (Bruto):</span> <span>${Utils.formatCurrency(paymentData.gross)}</span></div>`;
-                html += `<div style="border-top: 1px dashed #ccc; margin: 5px 0;"></div>`;
-                
-                html += `<div class="payroll-row deduction"><span>CCSS (10.83%):</span> <span>-${Utils.formatCurrency(paymentData.ccss)}</span></div>`;
-                html += `<div class="payroll-row deduction"><span>Renta Estimada:</span> <span>-${Utils.formatCurrency(paymentData.renta)}</span></div>`;
-                html += `<div style="border-top: 1px solid #000; margin: 5px 0;"></div>`;
-                
-                html += `<div class="payroll-row total" style="color: var(--primary-color);"><span>Neto Salario:</span> <span>${Utils.formatCurrency(paymentData.neto)}</span></div>`;
-
-                if(totalExpenses > 0) {
-                    html += `<div class="payroll-row earning" style="margin-top: 10px;"><span>Reembolso Gastos:</span> <span>${Utils.formatCurrency(totalExpenses)}</span></div>`;
-                }
-                
-                html += `</div>`;
             }
 
             document.getElementById('print-tables-container').innerHTML = html;
             
             let finalTotal = 0;
-            if(paymentData) finalTotal += parseFloat(paymentData.neto);
-            finalTotal += totalExpenses;
+            
+            if (isExpenseReport) {
+                finalTotal += totalExpenses;
+            } else {
+                if (paymentData) {
+                    finalTotal += parseFloat(paymentData.neto);
+                }
+                finalTotal += totalExpenses;
+            }
 
             document.getElementById('print-final-total').textContent = Utils.formatCurrency(finalTotal);
             
