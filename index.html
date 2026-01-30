@@ -290,13 +290,13 @@
                         <input type="email" id="new-email" class="form-control" placeholder="Correo Electrónico" style="flex: 1;" required>
                         <input type="password" id="new-password" class="form-control" placeholder="Contraseña Temporal" style="flex: 1;" required>
                         <input type="number" id="new-salary" class="form-control" placeholder="Salario Mensual (₡)" style="flex: 1;" required>
-                        <!-- NUEVO: Fecha de Ingreso -->
+                        <!-- Inputs para vacaciones -->
                         <input type="date" id="new-start-date" class="form-control" placeholder="Fecha Ingreso" style="flex: 1;" required>
+                        <input type="number" id="new-vacation-days" class="form-control" placeholder="Días Vacaciones" style="flex: 0.8;" required min="0">
                         <button type="submit" class="btn btn-success">Crear</button>
                     </form>
                     <div class="table-responsive mt-2">
                         <h3>Lista de Técnicos</h3>
-                        <!-- TABLA ACTUALIZADA: Agregado "Fecha Ingreso" -->
                         <table><thead><tr><th>Nombre</th><th>Salario</th><th>Días Vacac.</th><th>Fecha Ingreso</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="users-table-body"></tbody></table>
                     </div>
                 </div>
@@ -347,16 +347,15 @@
         <div class="modal-header"><h3 id="expense-modal-title">Registro de Gastos</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-expense')">X</button></div>
         <form id="expense-form"><input type="hidden" id="expense-id"><div class="form-group"><label>Fecha</label><input type="date" id="exp-date" class="form-control" required></div><div class="form-group"><label>Factura #</label><input type="text" id="exp-invoice" class="form-control" required></div><div class="form-group"><label>Comercio</label><input type="text" id="exp-store" class="form-control" required></div><div class="form-group"><label>Cliente</label><input type="text" id="exp-client" class="form-control" required></div><div class="form-group"><label>Descripción</label><textarea id="exp-desc" class="form-control" rows="2"></textarea></div><div class="form-group"><label>Monto</label><input type="number" id="exp-amount" class="form-control" required min="0"></div><button type="submit" class="btn btn-success w-full">Guardar</button></form></div></div>
 
-    <!-- Modal Editar Técnico (Actualizado con campos de vacaciones) -->
+    <!-- Modal Editar Técnico -->
     <div id="modal-tech-edit" class="modal-overlay hidden"><div class="modal">
         <div class="modal-header"><h3>Editar Perfil Técnico</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-tech-edit')">X</button></div>
         <form id="tech-edit-form">
             <input type="hidden" id="edit-tech-id">
             <div class="form-group"><label>Nombre Completo</label><input type="text" id="edit-tech-fullname" class="form-control" required></div>
             <div class="form-group"><label>Salario Mensual (₡)</label><input type="number" id="edit-tech-salary" class="form-control" required min="0"></div>
-            <!-- Campos Nuevos -->
             <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="edit-start-date" class="form-control"></div>
-            <div class="form-group"><label>Saldo Vacaciones (Días) <small style="font-weight:normal; color:#666;">(Editable)</small></label><input type="number" id="edit-vacation-days" class="form-control" required min="0"></div>
+            <div class="form-group"><label>Días Vacaciones (Cantidad Actual)</label><input type="number" id="edit-vacation-days" class="form-control" required min="0"></div>
             <button type="submit" class="btn btn-success w-full">Actualizar</button>
         </form>
     </div></div>
@@ -453,7 +452,6 @@
 
         // --- UTILIDADES ---
         const Utils = {
-            // CAMBIO SOLICITADO: Máximo de decimales cambiado de 0 a 2
             formatCurrency: (amount) => '₡' + parseFloat(amount).toLocaleString('es-CR', {minimumFractionDigits: 2, maximumFractionDigits: 2}),
             formatDate: (dateStr) => {
                 if(!dateStr) return '';
@@ -477,12 +475,12 @@
                     setTimeout(() => toast.remove(), 300);
                 }, 3000);
             },
-            calculateInitialVacations: (startDateStr) => {
+            // Calcula la diferencia en meses completos entre dos fechas
+            getMonthsDifference: (startDateStr) => {
                 if(!startDateStr) return 0;
                 const start = new Date(startDateStr + 'T00:00:00');
                 const now = new Date();
                 
-                // Calcular diferencia de meses completos
                 let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
                 
                 // Si el día de hoy es menor al día de ingreso, restar un mes (aún no cumple ese mes)
@@ -490,7 +488,7 @@
                     months--;
                 }
                 
-                return months < 0 ? 0 : months; // 1 mes = 1 día según requerimiento
+                return months < 0 ? 0 : months; 
             }
         };
 
@@ -645,7 +643,6 @@
             const exemption = 864000;
             if (totalIncome > exemption) renta = (totalIncome - exemption) * 0.10; 
             
-            // CAMBIO SOLICITADO: Retornamos los montos separados para el PDF
             return { 
                 baseSalary, 
                 gross: grossExtra, 
@@ -654,8 +651,8 @@
                 neto: totalIncome - ccss - renta, 
                 satHours, 
                 sunHours,
-                amountSat: grossSat, // Nuevo campo para monto de sábados/días ordinarios
-                amountSun: grossSun  // Nuevo campo para monto de domingos
+                amountSat: grossSat, 
+                amountSun: grossSun 
             };
         }
 
@@ -741,7 +738,6 @@
             }
         }
 
-        // --- GESTIÓN DE MODALES Y FORMULARIOS ---
         window.openEditModal = async function(type, id) {
             const modalId = type === 'hour' ? 'modal-hour' : 'modal-expense';
             window.openModal(modalId); 
@@ -929,32 +925,69 @@
                 filterSelect.innerHTML = filterOptions;
                 usersData = [];
 
-                querySnapshot.forEach((doc) => {
-                    const u = doc.data();
-                    usersData.push({ id: doc.id, ...u });
+                // Array para guardar las promesas de actualización automática
+                const updatePromises = [];
+
+                querySnapshot.forEach((docRef) => {
+                    const u = docRef.data();
+                    const docId = docRef.id;
+
+                    // --- LÓGICA AUTOMÁTICA DE VACACIONES (Sumar 1 día cada mes) ---
+                    const currentTotalVacDays = u.vacationDays || 0;
+                    const currentMonthsPassed = Utils.getMonthsDifference(u.startDate);
                     
-                    const vacDays = u.vacationDays ? u.vacationDays : 0;
-                    const startDateFormatted = u.startDate ? Utils.formatDate(u.startDate) : '-'; // Formatear fecha
+                    // Este campo tracking nos dice cuántos meses ya hemos sumado a la base de datos.
+                    // Si no existe, asumimos 0.
+                    const alreadyCreditedMonths = u.vacationCreditedMonths || 0;
                     
+                    let finalVacDays = currentTotalVacDays;
+
+                    // Si han pasado más meses que los que hemos contabilizado, sumamos la diferencia
+                    if (currentMonthsPassed > alreadyCreditedMonths) {
+                        const monthsToAdd = currentMonthsPassed - alreadyCreditedMonths;
+                        finalVacDays = currentTotalVacDays + monthsToAdd;
+                        
+                        // Programar actualización a BD
+                        updatePromises.push(
+                            updateDoc(doc(db, "users", docId), { 
+                                vacationDays: finalVacDays,
+                                vacationCreditedMonths: currentMonthsPassed 
+                            }).then(() => {
+                                // Actualizar localmente para la tabla
+                                u.vacationDays = finalVacDays;
+                                u.vacationCreditedMonths = currentMonthsPassed;
+                            }).catch(err => console.error("Error auto-sumando vacaciones", err))
+                        );
+                    }
+                    // ----------------------------------------------
+
+                    usersData.push({ id: docId, ...u });
+                    
+                    const startDateFormatted = u.startDate ? Utils.formatDate(u.startDate) : '-'; 
+                    
+                    // Usamos finalVacDays (que ya contiene el valor actualizado si hubo cambio)
                     usersHtml += `<tr>
                         <td>${u.fullName}</td>
                         <td>${Utils.formatCurrency(u.salary)}</td>
-                        <td style="text-align:center; font-weight:bold;">${vacDays}</td>
-                        <!-- NUEVA COLUMNA FECHA -->
+                        <td style="text-align:center; font-weight:bold;">${finalVacDays}</td>
                         <td style="text-align:center;">${startDateFormatted}</td>
                         <td>${u.email}</td>
                         <td>Técnico</td>
                         <td>
-                            <button type="button" class="btn btn-sm btn-warning" onclick="window.openTechEditModal('${doc.id}')">Editar</button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteUser('${doc.id}')">Eliminar</button>
+                            <button type="button" class="btn btn-sm btn-warning" onclick="window.openTechEditModal('${docId}')">Editar</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteUser('${docId}')">Eliminar</button>
                         </td>
                     </tr>`;
                     
-                    filterOptions += `<option value="${doc.id}">${u.fullName}</option>`;
+                    filterOptions += `<option value="${docId}">${u.fullName}</option>`;
                 });
-                
+
                 tbody.innerHTML = usersHtml;
                 filterSelect.innerHTML = filterOptions;
+
+                // Ejecutar actualizaciones automáticas en segundo plano
+                await Promise.all(updatePromises);
+                
             } catch(e) {
                 console.error(e);
                 Utils.showToast("Error cargando admin", "error");
@@ -981,22 +1014,25 @@
             const email = document.getElementById('new-email').value;
             const pass = document.getElementById('new-password').value;
             const salary = document.getElementById('new-salary').value;
-            const startDate = document.getElementById('new-start-date').value; // Nuevo
+            const startDate = document.getElementById('new-start-date').value; 
+            const manualVacations = document.getElementById('new-vacation-days').value || 0; 
             
             try {
-                // Calcular vacaciones iniciales
-                const initialVacations = Utils.calculateInitialVacations(startDate);
-
                 const data = await createUserViaAPI(email, pass);
                 if (data.error) throw new Error(data.error.message);
                 const uid = data.localId;
+                
+                // Al crear, calculamos los meses pasados para setear el tracking inicial
+                const monthsPassed = Utils.getMonthsDifference(startDate);
+                
                 await setDoc(doc(db, "users", uid), { 
                     fullName: name, 
                     email, 
                     salary: salary, 
                     role: 'tech', 
                     startDate: startDate,
-                    vacationDays: initialVacations,
+                    vacationDays: parseFloat(manualVacations),
+                    vacationCreditedMonths: monthsPassed, // Para no sumar desde el inicio del tiempo inmediatamente
                     createdAt: new Date() 
                 });
                 Utils.showToast('Técnico creado exitosamente', 'success');
@@ -1019,15 +1055,14 @@
                     return;
                 }
                 
-                // Abrir modal primero (limpia)
                 window.openModal('modal-tech-edit');
                 
-                // Llenar datos después
                 document.getElementById('edit-tech-id').value = userId;
                 document.getElementById('edit-tech-fullname').value = u.fullName || '';
                 document.getElementById('edit-tech-salary').value = u.salary || '';
                 document.getElementById('edit-start-date').value = u.startDate || '';
                 document.getElementById('edit-vacation-days').value = u.vacationDays || 0;
+                
             } catch (error) {
                 console.error(error);
                 Utils.showToast('Error al preparar edición', 'error');
@@ -1041,7 +1076,7 @@
                 const name = document.getElementById('edit-tech-fullname').value;
                 const salaryInput = document.getElementById('edit-tech-salary').value;
                 const startDate = document.getElementById('edit-start-date').value;
-                const vacationDays = document.getElementById('edit-vacation-days').value;
+                const manualVacationsInput = document.getElementById('edit-vacation-days').value;
                 
                 if (!userId) throw new Error("ID de técnico no encontrado");
                 if (!name || name.trim() === "") throw new Error("El nombre es obligatorio");
@@ -1049,14 +1084,18 @@
                 const salaryNumber = parseFloat(salaryInput);
                 if (isNaN(salaryNumber) || salaryNumber < 0) throw new Error("El salario debe ser un número válido");
 
-                const vacNumber = parseFloat(vacationDays);
+                const vacNumber = parseFloat(manualVacationsInput);
                 if (isNaN(vacNumber) || vacNumber < 0) throw new Error("Los días de vacaciones deben ser válidos");
 
+                // Importante: NO cambiar el vacationCreditedMonths si solo se edita la cantidad manual,
+                // para que el sistema siga sumando desde donde quedó.
+                // Si el usuario cambia la fecha de inicio, podríamos reiniciar, pero por simplicidad lo dejamos así.
+                
                 await updateDoc(doc(db, "users", userId), { 
                     fullName: name, 
                     salary: salaryNumber,
                     startDate: startDate,
-                    vacationDays: vacNumber // Editable manualmente
+                    vacationDays: vacNumber 
                 });
 
                 window.closeModal('modal-tech-edit');
@@ -1283,10 +1322,8 @@
             document.getElementById('print-date').textContent = 'Fecha Emisión: ' + new Date().toLocaleDateString();
             document.getElementById('print-period-text').textContent = periodText;
             
-            // Mostrar vacaciones en la parte superior
             document.getElementById('print-vacation-days').textContent = `${vacationDays} días`;
             
-            // Solo mostrar saldo de vacaciones en nómina
             if (isExpenseReport) {
                 document.querySelector('.pdf-col-info:nth-child(3)').style.display = 'none';
             } else {
@@ -1339,7 +1376,6 @@
                     
                     html += `<div class="payroll-row earning"><span>Salario Base ${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}:</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
                     
-                    // CAMBIO SOLICITADO: Desglose separado de Domingos
                     if (paymentData.amountSun > 0) {
                         html += `<div class="payroll-row earning"><span>Horas dobles (Domingos):</span> <span>${Utils.formatCurrency(paymentData.amountSun)}</span></div>`;
                     }
