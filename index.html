@@ -189,6 +189,39 @@
         .signature-section { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
         .sig-block { width: 40%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-size: 12px; }
 
+        /* --- ESTILOS CAJA CHICA (AGREGADO) --- */
+        .petty-cash-box {
+            border: 2px dashed #555;
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .petty-cash-header {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .petty-cash-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .petty-cash-excess {
+            color: #d9534f; /* Rojo para dinero del técnico */
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .petty-cash-ok {
+            color: #28a745; /* Verde para saldo disponible */
+            font-weight: bold;
+        }
+
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
@@ -1426,6 +1459,36 @@
                 });
                 html += `<tr class="subtotal"><td colspan="5" style="text-align: right;">Total Gastos:</td><td class="num">${Utils.formatCurrency(totalExpenses)}</td></tr>`;
                 html += `</tbody></table>`;
+
+                // --- LÓGICA CAJA CHICA (AGREGADO) ---
+                const CAJA_CHICA_LIMIT = 200000;
+                
+                html += `<div class="petty-cash-box">`;
+                html += `    <div class="petty-cash-header">`;
+                html += `        <span>Resumen Caja Chica (Límite: ₡200,000)</span>`;
+                html += `    </div>`;
+                
+                if (totalExpenses <= CAJA_CHICA_LIMIT) {
+                    const saldoDisponible = CAJA_CHICA_LIMIT - totalExpenses;
+                    html += `    <div class="petty-cash-row">`;
+                    html += `        <span>Saldo Restante Caja Chica:</span>`;
+                    html += `        <span class="petty-cash-ok">${Utils.formatCurrency(saldoDisponible)}</span>`;
+                    html += `    </div>`;
+                } else {
+                    const excedente = totalExpenses - CAJA_CHICA_LIMIT;
+                    
+                    html += `    <div class="petty-cash-row">`;
+                    html += `        <span>Fondo Caja Chica Utilizado:</span>`;
+                    html += `        <span>₡200,000.00</span>`;
+                    html += `    </div>`;
+                    
+                    html += `    <div class="petty-cash-row" style="margin-top: 5px; border-top: 1px solid #eee; padding-top:5px;">`;
+                    html += `        <span style="font-weight:bold;">Excedente (Dinero del Técnico):</span>`;
+                    html += `        <span class="petty-cash-excess">${Utils.formatCurrency(excedente)}</span>`;
+                    html += `    </div>`;
+                }
+                html += `</div>`;
+                // --- FIN LÓGICA CAJA CHICA ---
             }
 
             document.getElementById('print-tables-container').innerHTML = html;
