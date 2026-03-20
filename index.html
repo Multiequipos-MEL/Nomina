@@ -3,1544 +3,1955 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nómina Multiequipos</title>
-    <!-- PWA Setup -->
+    <title>Multiequipos — Nómina</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0056b3">
+    <meta name="theme-color" content="#1B2A4A">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    
-    <!-- Estilos -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
-            --primary-color: #0056b3;
-            --secondary-color: #004494;
-            --bg-color: #f4f7f6;
-            --text-color: #333;
-            --white: #ffffff;
-            --danger: #dc3545;
-            --success: #28a745;
-            --warning: #ffc107;
-            --border-radius: 8px;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --navy-900:  #0f1c30;
+            --navy-800:  #1B2A4A;
+            --navy-700:  #243558;
+            --navy-600:  #2e4270;
+            --navy-100:  #edf1f9;
+            --navy-50:   #f5f7fb;
+
+            --crimson:      #c0272d;
+            --crimson-dark: #9a1e23;
+            --crimson-bg:   #fdf0f0;
+
+            --bg:       #f0f3f8;
+            --surface:  #ffffff;
+            --border:   #dde4ef;
+            --border-mid:#c4cedf;
+
+            --text-1:   #1a2540;
+            --text-2:   #4a5878;
+            --text-3:   #8896b0;
+
+            --green:    #1d7a4f;
+            --green-bg: #e8f5ee;
+            --red:      #b83232;
+            --red-bg:   #fceaea;
+            --amber:    #9a5e10;
+            --amber-bg: #fef5e7;
+            --purple:   #5b3ea8;
+            --purple-bg:#f0ecfb;
+
+            --r-sm:4px; --r:10px; --r-lg:14px; --r-xl:18px;
+            --sh-sm:0 1px 4px rgba(27,42,74,0.08);
+            --sh:0 2px 10px rgba(27,42,74,0.10);
+            --sh-lg:0 6px 28px rgba(27,42,74,0.14);
+            --font:'DM Sans',system-ui,sans-serif;
+            --ease:all 0.2s cubic-bezier(0.4,0,0.2,1);
+        }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+        html{scroll-behavior:smooth;}
+        body{background:var(--bg);color:var(--text-1);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+        /* LOADING */
+        #loading-screen{position:fixed;inset:0;background:var(--navy-900);z-index:9999;display:flex;justify-content:center;align-items:center;flex-direction:column;gap:1.25rem;}
+        .loading-logo{font-size:1.7rem;font-weight:700;color:#fff;letter-spacing:.04em;}
+        .loading-logo em{font-style:normal;color:var(--crimson);}
+        .spinner{width:30px;height:30px;border:2.5px solid rgba(192,39,45,0.2);border-top-color:var(--crimson);border-radius:50%;animation:spin .7s linear infinite;}
+        .loading-sub{font-size:.7rem;color:rgba(255,255,255,.35);letter-spacing:.12em;text-transform:uppercase;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        /* UTILS */
+        .hidden{display:none!important;}
+        .flex{display:flex;}.items-center{align-items:center;}.justify-between{justify-content:space-between;}
+        .gap-2{gap:.75rem;}.mt-2{margin-top:1.25rem;}.w-full{width:100%;}.font-bold{font-weight:600;}
+        .text-sm{font-size:.8rem;}.text-right{text-align:right;}.flex-col{flex-direction:column;}
+
+        /* BUTTONS */
+        .btn{padding:.48rem 1.05rem;border:1px solid transparent;border-radius:var(--r-sm);cursor:pointer;font-family:var(--font);font-weight:500;font-size:.82rem;transition:var(--ease);display:inline-flex;align-items:center;justify-content:center;gap:.35rem;white-space:nowrap;line-height:1;text-decoration:none;}
+        .btn:active{transform:scale(.97);}
+        .btn-primary{background:var(--navy-800);color:#fff;border-color:var(--navy-800);box-shadow:0 1px 5px rgba(27,42,74,.3);}
+        .btn-primary:hover{background:var(--navy-700);border-color:var(--navy-700);}
+        .btn-accent{background:var(--crimson);color:#fff;border-color:var(--crimson);font-weight:600;box-shadow:0 1px 5px rgba(192,39,45,.3);}
+        .btn-accent:hover{background:var(--crimson-dark);border-color:var(--crimson-dark);}
+        .btn-secondary{background:var(--surface);color:var(--text-2);border-color:var(--border-mid);}
+        .btn-secondary:hover{background:var(--navy-100);color:var(--text-1);border-color:var(--navy-100);}
+        .btn-success{background:var(--green);color:#fff;border-color:var(--green);}
+        .btn-success:hover{background:#165e3b;}
+        .btn-danger{background:transparent;color:var(--red);border-color:rgba(184,50,50,.25);}
+        .btn-danger:hover{background:var(--red-bg);border-color:var(--red);}
+        .btn-warning{background:var(--amber-bg);color:var(--amber);border-color:rgba(154,94,16,.2);font-size:.78rem;}
+        .btn-warning:hover{background:#fdebd0;}
+        .btn-sm{padding:.3rem .7rem;font-size:.75rem;}
+        .btn-icon{width:28px;height:28px;padding:0;border-radius:50%;}
+
+        /* FORMS */
+        .form-group{margin-bottom:.95rem;}
+        .form-group label{display:block;margin-bottom:.3rem;font-size:.72rem;font-weight:600;color:var(--text-2);letter-spacing:.05em;text-transform:uppercase;}
+        .form-control{width:100%;padding:.58rem .8rem;background:var(--surface);border:1px solid var(--border-mid);border-radius:var(--r-sm);color:var(--text-1);font-family:var(--font);font-size:.875rem;transition:var(--ease);-webkit-appearance:none;}
+        .form-control::placeholder{color:var(--text-3);}
+        .form-control:focus{outline:none;border-color:var(--navy-600);box-shadow:0 0 0 3px rgba(27,42,74,.1);}
+        select.form-control{cursor:pointer;}
+        textarea.form-control{resize:vertical;min-height:70px;}
+
+        /* LOGIN */
+        #login-view{min-height:100vh;display:flex;justify-content:center;align-items:center;background:var(--navy-900);position:relative;overflow:hidden;}
+        #login-view::before{content:'';position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(192,39,45,.06) 0%,transparent 70%);top:-200px;right:-200px;pointer-events:none;}
+        #login-view::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(46,66,112,.4) 0%,transparent 70%);bottom:-150px;left:-100px;pointer-events:none;}
+        .login-card{background:var(--surface);border-radius:var(--r-xl);padding:2.5rem 2rem;width:100%;max-width:400px;margin:1rem;box-shadow:0 24px 80px rgba(0,0,0,.35);position:relative;z-index:1;animation:slideUp .4s ease;}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+        .login-header{text-align:center;margin-bottom:1.75rem;}
+        .login-brand-block{display:inline-flex;align-items:center;gap:.4rem;background:var(--navy-800);color:#fff;padding:.55rem 1.4rem;border-radius:var(--r);margin-bottom:.85rem;}
+        .login-brand-block .brand-dot{width:8px;height:8px;border-radius:50%;background:var(--crimson);}
+        .login-brand-text{font-size:1.3rem;font-weight:700;letter-spacing:.04em;}
+        .login-sub{font-size:.75rem;color:var(--text-3);letter-spacing:.07em;text-transform:uppercase;}
+        .login-divider{height:1px;background:var(--border);margin:1.5rem 0;}
+
+        /* HEADER */
+        header{background:var(--navy-800);padding:0 1.5rem;height:60px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(15,28,48,.4);}
+        .header-left{display:flex;align-items:center;gap:.9rem;}
+        .header-brand{font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:.03em;}
+        .header-brand em{font-style:normal;color:var(--crimson);}
+        .header-sep{width:1px;height:18px;background:rgba(255,255,255,.15);}
+        .header-tag{font-size:.7rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.09em;}
+        .user-info{display:flex;align-items:center;gap:.65rem;}
+        .user-chip{display:flex;align-items:center;gap:.45rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:.22rem .7rem .22rem .28rem;}
+        .user-avatar{width:26px;height:26px;border-radius:50%;background:var(--crimson);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;}
+        #user-display-name{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:500;}
+        #logout-btn{background:rgba(255,255,255,.08);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.15);font-size:.75rem;}
+        #logout-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+        /* CONTAINER */
+        .container{max-width:1320px;margin:0 auto;padding:1.75rem 1.5rem;}
+
+        /* TABS */
+        .tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:2px solid var(--border);overflow-x:auto;flex-shrink:0;}
+        .tab-btn{padding:.6rem 1.2rem;background:none;border:none;cursor:pointer;font-family:var(--font);font-weight:500;font-size:.84rem;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-2px;transition:var(--ease);white-space:nowrap;}
+        .tab-btn:hover{color:var(--navy-800);}
+        .tab-btn.active{color:var(--navy-800);border-bottom-color:var(--navy-800);font-weight:600;}
+
+        /* CARDS */
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--sh);}
+        .card-title{font-size:.97rem;font-weight:600;color:var(--text-1);}
+        .card-sub{font-size:.75rem;color:var(--text-3);margin-top:.15rem;margin-bottom:1rem;}
+
+        /* STATS */
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:1rem;margin-bottom:1.5rem;}
+        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.2rem 1.4rem;box-shadow:var(--sh-sm);transition:var(--ease);position:relative;overflow:hidden;}
+        .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--navy-800),var(--crimson));}
+        .stat-card:hover{transform:translateY(-2px);box-shadow:var(--sh);}
+        .stat-card p{font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;font-weight:500;margin-bottom:.35rem;}
+        .stat-card h3{font-size:1.6rem;font-weight:700;color:var(--text-1);line-height:1.2;}
+
+        /* TABLE */
+        .table-responsive{overflow-x:auto;}
+        table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:540px;}
+        thead th{padding:.55rem .8rem;text-align:left;font-size:.68rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;background:var(--navy-50);border-bottom:2px solid var(--border);white-space:nowrap;}
+        tbody td{padding:.68rem .8rem;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:middle;}
+        tbody tr:last-child td{border-bottom:none;}
+        tbody tr:hover td{background:var(--navy-50);color:var(--text-1);}
+        .actions-cell{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap;}
+
+        /* BADGES */
+        .badge{display:inline-flex;align-items:center;gap:.28rem;padding:.18rem .55rem;border-radius:999px;font-size:.67rem;font-weight:600;letter-spacing:.04em;}
+        .badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+        .badge-pending{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(154,94,16,.18);}
+        .badge-pending::before{background:var(--amber);}
+        .badge-paid{background:var(--green-bg);color:var(--green);border:1px solid rgba(29,122,79,.18);}
+        .badge-paid::before{background:var(--green);}
+        .badge-approved{background:var(--green-bg);color:var(--green);border:1px solid rgba(29,122,79,.18);}
+        .badge-approved::before{background:var(--green);}
+        .badge-cancelled{background:var(--red-bg);color:var(--red);border:1px solid rgba(184,50,50,.18);}
+        .badge-cancelled::before{background:var(--red);}
+        .badge-vacation{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(91,62,168,.18);}
+        .badge-vacation::before{background:var(--purple);}
+
+        /* SECTION HEADER */
+        .section-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem;}
+        .accent-rule{width:28px;height:3px;background:var(--crimson);border-radius:2px;margin-bottom:.5rem;}
+
+        /* FILTER BAR */
+        .filter-bar{display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;background:var(--navy-50);border:1px solid var(--border);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:0;}
+        .filter-bar .form-group{margin-bottom:0;min-width:120px;flex:1;}
+        .filter-bar .form-group label{margin-bottom:.22rem;}
+
+        /* VALIDATION LAYOUT */
+        .validation-table-area{overflow-y:auto;max-height:52vh;border:1px solid var(--border);border-radius:var(--r);margin-top:1rem;background:var(--surface);}
+        .validation-table-area .table-responsive{margin-top:0;}
+        .validation-table-area table thead th{position:sticky;top:0;z-index:10;}
+        .validation-footer{display:flex;justify-content:space-between;align-items:center;margin-top:1.1rem;padding-top:1.1rem;border-top:2px solid var(--border);flex-wrap:wrap;gap:.75rem;}
+
+        /* DIVIDER */
+        .divider{height:1px;background:var(--border);margin:1.4rem 0;}
+
+        /* CREATE FORM GRID */
+        .create-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:.7rem;align-items:end;}
+
+        /* CHECKBOX */
+        input[type="checkbox"]{width:14px;height:14px;accent-color:var(--navy-800);cursor:pointer;}
+
+        /* MODALS */
+        .modal-overlay{position:fixed;inset:0;background:rgba(10,20,40,.55);backdrop-filter:blur(5px);display:flex;justify-content:center;align-items:center;z-index:500;padding:1rem;animation:fadeIn .15s ease;}
+        @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+        .modal{background:var(--surface);border:1px solid var(--border-mid);padding:1.75rem;border-radius:var(--r-xl);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(10,20,40,.25);animation:modalPop .25s cubic-bezier(.34,1.4,.64,1);}
+        @keyframes modalPop{from{opacity:0;transform:scale(.93) translateY(14px);}to{opacity:1;transform:scale(1) translateY(0);}}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;padding-bottom:.85rem;border-bottom:2px solid var(--border);}
+        .modal-header h3{font-size:.97rem;font-weight:600;color:var(--text-1);}
+        .modal::-webkit-scrollbar{width:4px;}
+        .modal::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:2px;}
+
+        /* INFO BOX */
+        .info-box{background:var(--navy-50);border:1px solid var(--navy-100);border-left:3px solid var(--navy-800);border-radius:var(--r-sm);padding:.75rem 1rem;font-size:.82rem;color:var(--text-2);margin-bottom:1rem;}
+        .info-box strong{color:var(--text-1);}
+        .warn-box{background:var(--amber-bg);border:1px solid rgba(154,94,16,.2);border-left:3px solid var(--amber);border-radius:var(--r-sm);padding:.75rem 1rem;font-size:.82rem;color:var(--amber);margin-bottom:1rem;}
+
+        /* TOASTS */
+        #toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;display:flex;flex-direction:column;gap:.5rem;}
+        .toast{background:var(--surface);border:1px solid var(--border);color:var(--text-1);padding:.7rem 1rem;border-radius:var(--r);opacity:0;transform:translateX(14px);transition:all .25s ease;box-shadow:var(--sh-lg);font-size:.835rem;max-width:290px;font-weight:500;}
+        .toast.show{opacity:1;transform:translateX(0);}
+        .toast.error{border-left:3px solid var(--red);}
+        .toast.success{border-left:3px solid var(--green);}
+        .toast.warning{border-left:3px solid var(--amber);}
+        .toast.info{border-left:3px solid var(--navy-800);}
+
+        /* EMPTY STATE */
+        .empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-3);}
+        .empty-state .icon{font-size:1.8rem;margin-bottom:.5rem;opacity:.5;}
+        .empty-state p{font-size:.82rem;}
+
+        /* PDF / PRINT */
+        #print-area{display:none;background:white;padding:40px;position:absolute;top:0;left:0;width:100%;z-index:9999;color:#000;}
+        .pdf-header{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #333;padding-bottom:15px;margin-bottom:20px;}
+        .pdf-company h1{font-size:24px;color:#1B2A4A;margin-bottom:5px;}
+        .pdf-company p{font-size:14px;color:#555;}
+        .pdf-doc-info{text-align:right;}
+        .pdf-doc-info h2{font-size:18px;text-transform:uppercase;letter-spacing:1px;}
+        .pdf-grid-info{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;font-size:14px;}
+        .pdf-col-info strong{display:block;color:#555;font-size:12px;text-transform:uppercase;}
+        .pdf-table{width:100%;border:1px solid #000;margin-bottom:20px;border-collapse:collapse;table-layout:fixed;}
+        .pdf-table th,.pdf-table td{border:1px solid #000;padding:6px;text-align:left;font-size:12px;word-wrap:break-word;}
+        .pdf-table th{background-color:#eee;font-weight:bold;text-align:center;}
+        .pdf-table td.num{text-align:right;}
+        .pdf-table tr.subtotal td{background-color:#f9f9f9;font-weight:bold;}
+        .payroll-box{border:2px solid #1B2A4A;padding:20px;margin-bottom:20px;border-radius:5px;background:#fdfdfd;}
+        .payroll-title{background:#1B2A4A;color:white;padding:5px 10px;margin:-20px -20px 15px -20px;font-weight:bold;font-size:14px;text-align:center;}
+        .payroll-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px;}
+        .payroll-row.total{margin-top:10px;border-top:1px solid #ccc;padding-top:5px;font-weight:bold;font-size:15px;}
+        .payroll-row.deduction{color:#d9534f;}
+        .payroll-row.earning{color:#333;}
+        .grand-total{text-align:right;font-size:18px;font-weight:bold;border:2px solid #000;display:inline-block;padding:10px 30px;background:#eee;float:right;margin-bottom:40px;}
+        .signature-section{display:flex;justify-content:space-between;margin-top:60px;page-break-inside:avoid;}
+        .sig-block{width:40%;text-align:center;border-top:1px solid #000;padding-top:5px;font-size:12px;}
+        .petty-cash-box{border:2px dashed #555;background-color:#f8f9fa;padding:15px;margin-top:10px;margin-bottom:20px;border-radius:4px;font-size:13px;}
+        .petty-cash-header{font-weight:bold;color:#333;margin-bottom:8px;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:5px;}
+        .petty-cash-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+        .petty-cash-excess{color:#d9534f;font-weight:bold;font-size:14px;}
+        .petty-cash-ok{color:#28a745;font-weight:bold;}
+        /* Boleta vacaciones PDF */
+        .vac-box{border:2px solid #1B2A4A;padding:20px;border-radius:5px;background:#fdfdfd;margin-bottom:20px;}
+        .vac-title{background:#1B2A4A;color:white;padding:6px 10px;margin:-20px -20px 15px -20px;font-weight:bold;font-size:15px;text-align:center;letter-spacing:.05em;}
+        .vac-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;border-bottom:1px dashed #eee;padding-bottom:5px;}
+        .vac-row:last-child{border-bottom:none;}
+        .vac-row strong{color:#555;font-size:12px;text-transform:uppercase;display:block;margin-bottom:2px;}
+        @media print{body *{visibility:hidden;}#print-area,#print-area *{visibility:visible;}#print-area{position:absolute;left:0;top:0;width:100%;padding:20px;}.grand-total{float:none;display:block;text-align:right;margin-top:20px;}}
+
+        /* RESPONSIVE */
+        @media(max-width:900px){.create-form-grid{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:768px){.container{padding:1rem;}header{padding:0 1rem;}.card{padding:1.1rem;}.stats-grid{grid-template-columns:1fr 1fr;}.filter-bar{padding:.8rem;}.filter-bar .form-group{min-width:110px;}.modal{padding:1.25rem;}.create-form-grid{grid-template-columns:1fr;}.header-tag,.header-sep{display:none;}.validation-footer{flex-direction:column;}.validation-footer .btn{width:100%;justify-content:center;}.validation-table-area{max-height:45vh;}}
+        @media(max-width:480px){.stats-grid{grid-template-columns:1fr;}#user-display-name{display:none;}.stat-card h3{font-size:1.4rem;}}
+        ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:3px;}
+    
+        /* ═══════════════════════════════════════════════
+           STATISTICS — Executive Dashboard
+        ═══════════════════════════════════════════════ */
+
+        /* Wrapper — no .card wrapper, full bleed */
+        #admin-stats {
+            padding: 0;
+            margin-bottom: 1.5rem;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
-        body { background-color: var(--bg-color); color: var(--text-color); line-height:1.6; }
-        
-        /* Loading Screen */
-        #loading-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color); z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column;
-            transition: opacity 0.3s ease-out;
-        }
-        .spinner {
-            border: 4px solid rgba(0, 86, 179, 0.1);
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            border-left-color: var(--primary-color);
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Utilidades y Componentes */
-        .hidden { display: none !important; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .gap-2 { gap: 0.5rem; }
-        .mt-2 { margin-top: 1rem; }
-        .text-right { text-align: right; }
-        .font-bold { font-weight: bold; }
-        .text-sm { font-size: 0.875rem; }
-        .w-full { width: 100%; }
-
-        .btn {
-            padding: 0.6rem 1.2rem; border: none; border-radius: var(--border-radius);
-            cursor: pointer; font-weight: 600; transition: 0.2s;
-            display: inline-flex; align-items: center; justify-content: center;
-            text-decoration: none;
-        }
-        .btn-primary { background-color: var(--primary-color); color: var(--white); }
-        .btn-primary:hover { background-color: var(--secondary-color); }
-        .btn-secondary { background-color: #6c757d; color: var(--white); }
-        .btn-success { background-color: var(--success); color: var(--white); }
-        .btn-danger { background-color: var(--danger); color: var(--white); }
-        .btn-warning { background-color: var(--warning); color: #333; font-size: 0.8rem; }
-        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
-
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        
-        #login-view {
-            height: 100vh; display: flex; justify-content: center; align-items: center;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        }
-        .login-card {
-            background: var(--white); padding: 2rem; border-radius: var(--border-radius);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 400px;
-        }
-        .login-header { text-align: center; margin-bottom: 1.5rem; }
-        
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-        .form-control {
-            width: 100%; padding: 0.7rem; border: 1px solid #ccc; border-radius: var(--border-radius); font-size: 1rem;
-        }
-        .form-control:focus { outline: 2px solid var(--primary-color); border-color: transparent; }
-
-        header {
-            background: var(--white); padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); display: flex; align-items: center; gap: 10px; }
-        .user-info { display: flex; align-items: center; gap: 1rem; }
-
-        .tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 2px solid #ddd; }
-        .tab-btn {
-            padding: 0.8rem 1.5rem; background: none; border: none; cursor: pointer;
-            font-weight: 600; color: #666; border-bottom: 3px solid transparent;
-        }
-        .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-
-        .card { background: var(--white); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 1.5rem; }
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.9rem; }
-        th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; font-weight: 600; color: #444; }
-        tr:hover { background-color: #f1f1f1; }
-        
-        .badge { padding: 0.25rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: bold; }
-        .badge-pending { background-color: #ffeeba; color: #856404; }
-        .badge-paid { background-color: #d4edda; color: #155724; }
-        
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; }
-        .toast {
-            background: #333; color: #fff; padding: 1rem 1.5rem; border-radius: var(--border-radius);
-            margin-top: 10px; opacity: 0; transition: opacity 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .toast.show { opacity: 1; }
-        .toast.error { background-color: var(--danger); }
-        .toast.success { background-color: var(--success); }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 500;
-        }
-        .modal { background: var(--white); padding: 2rem; border-radius: var(--border-radius); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--white); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow); border-left: 4px solid var(--primary-color); }
-        .stat-card h3 { font-size: 2rem; margin: 0.5rem 0; }
-        .stat-card p { color: #666; margin: 0; }
-
-        /* Estilos PDF */
-        #print-area { 
-            display: none; 
-            background: white; 
-            padding: 40px; 
-            position: absolute; 
-            top: 0; left: 0; width: 100%; 
-            z-index: 9999; 
-            color: #000;
-        }
-        .pdf-header {
-            display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px;
-        }
-        .pdf-company h1 { font-size: 24px; color: var(--primary-color); margin-bottom: 5px; }
-        .pdf-company p { font-size: 14px; color: #555; }
-        .pdf-doc-info { text-align: right; }
-        .pdf-doc-info h2 { font-size: 18px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Ajuste para acomodar 4 columnas en la parte superior */
-        .pdf-grid-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; font-size: 14px; }
-        .pdf-col-info strong { display: block; color: #555; font-size: 12px; text-transform: uppercase; }
-
-        .pdf-table { width: 100%; border: 1px solid #000; margin-bottom: 20px; border-collapse: collapse; table-layout: fixed; }
-        .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 12px; word-wrap: break-word; }
-        .pdf-table th { background-color: #eee; font-weight: bold; text-align: center; }
-        .pdf-table td.num { text-align: right; }
-        .pdf-table tr.subtotal td { background-color: #f9f9f9; font-weight: bold; }
-
-        .payroll-box { border: 2px solid #0056b3; padding: 20px; margin-bottom: 20px; border-radius: 5px; background: #fdfdfd; }
-        .payroll-title { background: #0056b3; color: white; padding: 5px 10px; margin: -20px -20px 15px -20px; font-weight: bold; font-size: 14px; text-align: center; }
-        
-        .payroll-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
-        .payroll-row.total { margin-top: 10px; border-top: 1px solid #ccc; padding-top: 5px; font-weight: bold; font-size: 15px; }
-        .payroll-row.deduction { color: #d9534f; }
-        .payroll-row.earning { color: #333; }
-
-        .grand-total { 
-            text-align: right; 
-            font-size: 18px; 
-            font-weight: bold; 
-            border: 2px solid #000; 
-            display: inline-block; 
-            padding: 10px 30px; 
-            background: #eee; 
-            float: right; 
-            margin-bottom: 40px;
-        }
-
-        .signature-section { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
-        .sig-block { width: 40%; text-align: center; border-top: 1px solid #000; padding-top: 5px; font-size: 12px; }
-
-        /* --- ESTILOS CAJA CHICA (AGREGADO) --- */
-        .petty-cash-box {
-            border: 2px dashed #555;
-            background-color: #f8f9fa;
-            padding: 15px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        .petty-cash-header {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
-        }
-        .petty-cash-row {
+        /* ── Header Panel ── */
+        .s-header-panel {
+            background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 60%, #2e4270 100%);
+            border-radius: var(--r-xl);
+            padding: 2rem 2.25rem;
+            margin-bottom: 1.25rem;
             display: flex;
+            align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 4px;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
         }
-        .petty-cash-excess {
-            color: #d9534f; /* Rojo para dinero del técnico */
-            font-weight: bold;
-            font-size: 14px;
+        .s-header-panel::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(192,39,45,0.15) 0%, transparent 70%);
+            pointer-events: none;
         }
-        .petty-cash-ok {
-            color: #28a745; /* Verde para saldo disponible */
-            font-weight: bold;
+        .s-header-panel::after {
+            content: '';
+            position: absolute; top: -60px; right: -60px;
+            width: 200px; height: 200px; border-radius: 50%;
+            background: rgba(255,255,255,0.03);
+            pointer-events: none;
+        }
+        .s-header-left { position: relative; z-index: 1; }
+        .s-header-eyebrow {
+            font-size: .68rem; font-weight: 700; letter-spacing: .15em;
+            text-transform: uppercase; color: var(--crimson);
+            margin-bottom: .4rem;
+        }
+        .s-header-title {
+            font-size: 1.6rem; font-weight: 700; color: #fff;
+            line-height: 1.2; margin-bottom: .3rem;
+        }
+        .s-header-sub { font-size: .82rem; color: rgba(255,255,255,.5); }
+
+        .s-header-filters {
+            display: flex; gap: .75rem; align-items: flex-end;
+            flex-wrap: wrap; position: relative; z-index: 1;
+        }
+        .s-filter-group { display: flex; flex-direction: column; gap: .3rem; }
+        .s-filter-label {
+            font-size: .68rem; font-weight: 600; color: rgba(255,255,255,.5);
+            letter-spacing: .08em; text-transform: uppercase;
+        }
+        .s-select {
+            padding: .5rem .9rem; border-radius: var(--r-sm);
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
+            color: #fff; font-family: var(--font); font-size: .85rem;
+            cursor: pointer; min-width: 130px;
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .7rem center;
+            padding-right: 2rem;
+        }
+        .s-select:focus { outline: none; border-color: var(--crimson); box-shadow: 0 0 0 3px rgba(192,39,45,0.2); }
+        .s-select option { background: var(--navy-800); color: #fff; }
+
+        /* ── KPI Row ── */
+        .s-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .s-kpi {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 1.25rem 1.4rem;
+            display: flex; align-items: center; gap: 1rem;
+            box-shadow: var(--sh-sm);
+            transition: var(--ease);
+        }
+        .s-kpi:hover { transform: translateY(-2px); box-shadow: var(--sh); }
+        .s-kpi-icon {
+            width: 46px; height: 46px; border-radius: var(--r);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .s-kpi-body { min-width: 0; }
+        .s-kpi-label {
+            font-size: .68rem; font-weight: 700; color: var(--text-3);
+            text-transform: uppercase; letter-spacing: .07em; margin-bottom: .15rem;
+        }
+        .s-kpi-value {
+            font-size: 1.45rem; font-weight: 700; color: var(--text-1);
+            line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .s-kpi-sub { font-size: .68rem; color: var(--text-3); margin-top: .1rem; }
+
+        /* ── Legend ── */
+        .s-legend-wrap {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r-lg); padding: .9rem 1.25rem;
+            margin-bottom: 1.25rem; box-shadow: var(--sh-sm);
+        }
+        .s-legend {
+            display: flex; flex-wrap: wrap; gap: .75rem 1.5rem;
+            align-items: center;
+        }
+        .s-legend-item {
+            display: flex; align-items: center; gap: .45rem;
+            font-size: .78rem; font-weight: 600; color: var(--text-2);
+        }
+        .s-legend-swatch {
+            width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0;
         }
 
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
-            .grand-total { float: none; display: block; text-align: right; margin-top: 20px; margin-left: auto; margin-right: auto;}
+        /* ── Chart panels ── */
+        .s-charts-main {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
         }
-    </style>
+        .s-chart-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            box-shadow: var(--sh-sm);
+            display: flex; flex-direction: column;
+        }
+        .s-chart-panel.s-span-2 { grid-column: span 2; }
+        .s-chart-header {
+            padding: 1rem 1.4rem .75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        .s-chart-label {
+            font-size: .65rem; font-weight: 700; color: var(--text-3);
+            letter-spacing: .1em; text-transform: uppercase; margin-bottom: .2rem;
+        }
+        .s-chart-title {
+            font-size: .9rem; font-weight: 600; color: var(--text-1);
+        }
+        .s-chart-body {
+            padding: 1rem 1rem 1rem;
+            position: relative;
+            flex: 1;
+        }
+        .s-chart-body canvas { display: block; }
+
+        /* ── Rankings ── */
+        .s-rankings-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .s-rank-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 1.25rem 1.4rem;
+            box-shadow: var(--sh-sm);
+        }
+        .s-rank-list { list-style: none; padding: 0; margin: 0; }
+        .s-rank-list li {
+            display: flex; align-items: center; gap: .75rem;
+            padding: .6rem 0; border-bottom: 1px solid var(--border);
+        }
+        .s-rank-list li:last-child { border-bottom: none; padding-bottom: 0; }
+        .s-rank-num {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--navy-50); color: var(--text-3);
+            font-size: .7rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; border: 1px solid var(--border);
+        }
+        .s-rank-num.r1 { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .s-rank-num.r2 { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+        .s-rank-num.r3 { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+        .s-rank-info { flex: 1; min-width: 0; }
+        .s-rank-name {
+            font-size: .82rem; font-weight: 600; color: var(--text-1);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: .25rem;
+        }
+        .s-rank-bar-bg {
+            height: 5px; background: var(--border); border-radius: 3px; overflow: hidden;
+        }
+        .s-rank-bar-fill {
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, var(--navy-800), var(--crimson));
+            transition: width .7s cubic-bezier(0.4,0,0.2,1);
+        }
+        .s-rank-val {
+            font-size: .78rem; font-weight: 700; color: var(--text-2);
+            min-width: 80px; text-align: right; flex-shrink: 0;
+        }
+
+        /* ── Empty state ── */
+        .s-empty {
+            text-align: center; padding: 4rem 2rem;
+            color: var(--text-3); font-size: .9rem;
+        }
+        .s-empty div { font-size: 2.5rem; margin-bottom: .75rem; opacity: .5; }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .s-kpi-row { grid-template-columns: repeat(2,1fr); }
+            .s-charts-main { grid-template-columns: 1fr 1fr; }
+            .s-chart-panel.s-span-2 { grid-column: span 2; }
+            .s-rankings-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .s-header-panel { padding: 1.5rem 1.25rem; }
+            .s-header-title { font-size: 1.25rem; }
+            .s-kpi-row { grid-template-columns: 1fr 1fr; }
+            .s-charts-main { grid-template-columns: 1fr; }
+            .s-chart-panel.s-span-2 { grid-column: span 1; }
+            .s-rankings-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .s-kpi-row { grid-template-columns: 1fr; }
+        }
+
+
+        </style>
 </head>
 <body>
 
-    <!-- Pantalla de Carga -->
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <p style="margin-top: 1rem; font-weight: bold;">Cargando Multiequipos...</p>
-    </div>
+<!-- LOADING -->
+<div id="loading-screen">
+    <div class="loading-logo">Multi<em>equipos</em></div>
+    <div class="spinner"></div>
+    <p class="loading-sub">Iniciando sistema</p>
+</div>
+<div id="toast-container"></div>
 
-    <!-- Toasts -->
-    <div id="toast-container"></div>
-
-    <!-- Vista Login -->
-    <section id="login-view" class="hidden">
-        <div class="login-card">
-            <div class="login-header">
-                <h2>Multiequipos</h2>
-                <p>Gestión de Nómina y Gastos</p>
-            </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" id="login-email" class="form-control" required placeholder="admin@multiequipos.com">
-                </div>
-                <div class="form-group">
-                    <label>Contraseña</label>
-                    <input type="password" id="login-password" class="form-control" required placeholder="******">
-                </div>
-                <button type="submit" class="btn btn-primary w-full">Ingresar</button>
-            </form>
+<!-- LOGIN -->
+<section id="login-view" class="hidden">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-brand-block"><span class="brand-dot"></span><span class="login-brand-text">Multiequipos</span></div>
+            <p class="login-sub">Sistema de Nómina y Gastos</p>
         </div>
-    </section>
+        <div class="login-divider"></div>
+        <form id="login-form">
+            <div class="form-group"><label>Correo Electrónico</label><input type="email" id="login-email" class="form-control" required placeholder="correo@multiequiposla.net"></div>
+            <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" class="form-control" required placeholder="••••••••"></div>
+            <div style="height:.35rem"></div>
+            <button type="submit" class="btn btn-primary w-full" style="padding:.7rem;font-size:.9rem;font-weight:600">Iniciar Sesión</button>
+        </form>
+    </div>
+</section>
 
-    <!-- Aplicación Principal -->
-    <div id="app-view" class="hidden">
-        <header>
-            <div class="logo">Multiequipos</div>
-            <div class="user-info">
+<!-- APP -->
+<div id="app-view" class="hidden">
+    <header>
+        <div class="header-left">
+            <div class="header-brand">Multi<em>equipos</em></div>
+            <div class="header-sep"></div>
+            <span class="header-tag">Gestión de Nómina</span>
+        </div>
+        <div class="user-info">
+            <div class="user-chip">
+                <div class="user-avatar" id="user-avatar-initial">U</div>
                 <span id="user-display-name">Usuario</span>
-                <button id="logout-btn" class="btn btn-sm btn-secondary">Salir</button>
             </div>
-        </header>
+            <button id="logout-btn" class="btn btn-sm">Salir</button>
+        </div>
+    </header>
 
-        <main class="container">
-            <!-- Panel Técnico -->
-            <div id="technician-panel" class="hidden">
-                <div class="stats-grid">
-                    <div class="stat-card"><p>Horas Extra (Pendientes)</p><h3 id="tech-pending-hours">0</h3></div>
-                    <div class="stat-card"><p>Gastos (Pendientes)</p><h3 id="tech-pending-expenses">₡0</h3></div>
+    <main class="container">
+
+        <!-- ══ PANEL TÉCNICO ══ -->
+        <div id="technician-panel" class="hidden">
+            <div class="stats-grid">
+                <div class="stat-card"><p>Horas Extra Pendientes</p><h3 id="tech-pending-hours">0</h3></div>
+                <div class="stat-card"><p>Gastos Pendientes</p><h3 id="tech-pending-expenses">₡0</h3></div>
+                <div class="stat-card"><p>Días Vacaciones Disponibles</p><h3 id="tech-vac-days">0</h3></div>
+            </div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="window.switchTab('tech-hours')">Horas</button>
+                <button class="tab-btn" onclick="window.switchTab('tech-expenses')">Gastos</button>
+                <button class="tab-btn" onclick="window.switchTab('tech-vacations')">Vacaciones</button>
+            </div>
+
+            <!-- Horas -->
+            <div id="tech-hours" class="card">
+                <div class="section-header">
+                    <div><div class="accent-rule"></div><div class="card-title">Mis Horas Extra</div><div class="card-sub">Horas fuera del horario regular</div></div>
+                    <button class="btn btn-primary" onclick="window.openModal('modal-hour')">+ Nueva Entrada</button>
                 </div>
-
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="window.switchTab('tech-hours')">Registro Horas</button>
-                    <button class="tab-btn" onclick="window.switchTab('tech-expenses')">Registro Gastos</button>
-                </div>
-
-                <!-- Tabla Horas -->
-                <div id="tech-hours" class="card">
-                    <div class="flex justify-between items-center">
-                        <h2>Mis Horas Extra</h2>
-                        <button class="btn btn-primary" onclick="window.openModal('modal-hour')">+ Nueva Hora</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="tech-hours-table"><thead><tr><th>Fecha</th><th>Cliente</th><th>H. Inicio</th><th>H. Fin</th><th>Total</th><th>Extra</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
-                    </div>
-                </div>
-
-                <!-- Tabla Gastos -->
-                <div id="tech-expenses" class="card hidden">
-                    <div class="flex justify-between items-center">
-                        <h2>Mis Gastos / Facturas</h2>
-                        <button class="btn btn-primary" onclick="window.openModal('modal-expense')">+ Nuevo Gasto</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table id="tech-expenses-table"><thead><tr><th>Fecha</th><th>Factura #</th><th>Comercio</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
-                    </div>
+                <div class="table-responsive">
+                    <table id="tech-hours-table">
+                        <thead><tr><th>Fecha</th><th>Cliente</th><th>Inicio</th><th>Fin</th><th>Total</th><th>Extra</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Panel Administrador -->
-            <div id="admin-panel" class="hidden">
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="window.switchAdminTab('admin-users')">Gestión Técnicos</button>
-                    <button class="tab-btn" onclick="window.switchAdminTab('admin-validation')">Validación y Pagos</button>
+            <!-- Gastos -->
+            <div id="tech-expenses" class="card hidden">
+                <div class="section-header">
+                    <div><div class="accent-rule"></div><div class="card-title">Mis Gastos y Facturas</div><div class="card-sub">Reembolsos y liquidaciones pendientes</div></div>
+                    <button class="btn btn-primary" onclick="window.openModal('modal-expense')">+ Nuevo Gasto</button>
                 </div>
-
-                <!-- Gestión de Usuarios -->
-                <div id="admin-users" class="card">
-                    <h2>Crear Técnico</h2>
-                    <form id="create-user-form" class="flex gap-2 mt-2" style="flex-wrap: wrap;">
-                        <input type="text" id="new-fullname" class="form-control" placeholder="Nombre Completo" style="flex: 2;" required>
-                        <input type="email" id="new-email" class="form-control" placeholder="Correo Electrónico" style="flex: 1;" required>
-                        <input type="password" id="new-password" class="form-control" placeholder="Contraseña Temporal" style="flex: 1;" required>
-                        <input type="number" id="new-salary" class="form-control" placeholder="Salario Mensual (₡)" style="flex: 1;" required>
-                        <!-- Inputs para vacaciones -->
-                        <input type="date" id="new-start-date" class="form-control" placeholder="Fecha Ingreso" style="flex: 1;" required>
-                        <input type="number" id="new-vacation-days" class="form-control" placeholder="Días Vacaciones" style="flex: 0.8;" required min="0">
-                        <button type="submit" class="btn btn-success">Crear</button>
-                    </form>
-                    <div class="table-responsive mt-2">
-                        <h3>Lista de Técnicos</h3>
-                        <table><thead><tr><th>Nombre</th><th>Salario</th><th>Días Vacac.</th><th>Fecha Ingreso</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="users-table-body"></tbody></table>
-                    </div>
+                <div class="table-responsive">
+                    <table id="tech-expenses-table">
+                        <thead><tr><th>Fecha</th><th>Factura #</th><th>Comercio</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- Validación y Pagos -->
-                <div id="admin-validation" class="card hidden">
-                    <h2>Validación y Pagos</h2>
-                    <div class="flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
-                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Tipo</label><select id="filter-type-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option><option value="hour">Horas</option><option value="expense">Gastos</option></select></div>
-                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Técnico</label><select id="filter-tech-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option></select></div>
-                        <div class="form-group" style="margin-bottom: 0; flex: 1;"><label>Periodo</label><select id="filter-period-select" class="form-control"><option value="biweekly">Quincenal</option><option value="monthly">Mensual</option></select></div>
-                        <div class="form-group" style="margin-bottom: 0;"><label>Fecha Inicio</label><input type="date" id="filter-start-date" class="form-control" onchange="window.renderValidationTable()"></div>
-                        <div class="form-group" style="margin-bottom: 0;"><label>Fecha Fin</label><input type="date" id="filter-end-date" class="form-control" onchange="window.renderValidationTable()"></div>
+            <!-- Vacaciones -->
+            <div id="tech-vacations" class="card hidden">
+                <div class="section-header">
+                    <div><div class="accent-rule"></div><div class="card-title">Mis Solicitudes de Vacaciones</div><div class="card-sub">Solicita, revisa el estado y descarga tu boleta</div></div>
+                    <button class="btn btn-primary" onclick="window.openModal('modal-vac-request')">+ Solicitar Vacaciones</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="tech-vac-table">
+                        <thead><tr><th>Fecha Solicitud</th><th>Desde</th><th>Hasta</th><th>Días</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ PANEL ADMIN ══ -->
+        <div id="admin-panel" class="hidden">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="window.switchAdminTab('admin-users')">Técnicos</button>
+                <button class="tab-btn" onclick="window.switchAdminTab('admin-validation')">Validación y Pagos</button>
+                <button class="tab-btn" onclick="window.switchAdminTab('admin-vacations')">Vacaciones</button>
+                <button class="tab-btn" onclick="window.switchAdminTab('admin-stats')">Estadísticas</button>
+            </div>
+
+            <!-- Gestión usuarios -->
+            <div id="admin-users" class="card">
+                <div class="accent-rule"></div>
+                <div class="card-title">Crear Nuevo Técnico</div>
+                <div class="card-sub">Agregar un miembro al equipo de trabajo</div>
+                <form id="create-user-form">
+                    <div class="create-form-grid">
+                        <div class="form-group" style="grid-column:span 2"><label>Nombre Completo</label><input type="text" id="new-fullname" class="form-control" placeholder="Ej: Juan Pérez González" required></div>
+                        <div class="form-group"><label>Correo</label><input type="email" id="new-email" class="form-control" placeholder="correo@empresa.com" required></div>
+                        <div class="form-group"><label>Contraseña Temporal</label><input type="password" id="new-password" class="form-control" placeholder="••••••••" required></div>
+                        <div class="form-group"><label>Salario Mensual (₡)</label><input type="number" id="new-salary" class="form-control" placeholder="0" required></div>
+                        <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="new-start-date" class="form-control" required></div>
+                        <div class="form-group"><label>Días Vacaciones Iniciales</label><input type="number" id="new-vacation-days" class="form-control" placeholder="0" required min="0"></div>
+                        <div class="form-group" style="display:flex;align-items:flex-end"><button type="submit" class="btn btn-success w-full">Crear Técnico</button></div>
                     </div>
-                    <div class="table-responsive mt-2">
+                </form>
+                <div class="divider"></div>
+                <div class="card-title" style="margin-bottom:.9rem">Equipo Técnico Registrado</div>
+                <div class="table-responsive">
+                    <table><thead><tr><th>Nombre</th><th>Salario</th><th>Vacaciones</th><th>Fecha Ingreso</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="users-table-body"></tbody></table>
+                </div>
+            </div>
+
+            <!-- Validación -->
+            <div id="admin-validation" class="card hidden">
+                <div class="accent-rule"></div>
+                <div class="card-title">Validación y Pagos</div>
+                <div class="card-sub">Revisión, aprobación y generación de documentos de pago</div>
+                <div class="filter-bar">
+                    <div class="form-group"><label>Tipo</label><select id="filter-type-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option><option value="hour">Horas</option><option value="expense">Gastos</option></select></div>
+                    <div class="form-group"><label>Técnico</label><select id="filter-tech-select" class="form-control" onchange="window.renderValidationTable()"><option value="all">Todos</option></select></div>
+                    <div class="form-group"><label>Periodo</label><select id="filter-period-select" class="form-control"><option value="biweekly">Quincenal</option><option value="monthly">Mensual</option></select></div>
+                    <div class="form-group"><label>Fecha Inicio</label><input type="date" id="filter-start-date" class="form-control" onchange="window.renderValidationTable()"></div>
+                    <div class="form-group"><label>Fecha Fin</label><input type="date" id="filter-end-date" class="form-control" onchange="window.renderValidationTable()"></div>
+                </div>
+                <div class="validation-table-area">
+                    <div class="table-responsive">
                         <table id="validation-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 30px;"><input type="checkbox" id="select-all-validation" onclick="window.toggleSelectAllValidation()"></th>
-                                    <th>Técnico</th>
-                                    <th>Tipo</th>
-                                    <th>Fecha</th>
-                                    <th>Cliente</th>
-                                    <th>Detalle</th>
-                                    <th>Monto/Horas</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th style="width:36px"><input type="checkbox" id="select-all-validation" onclick="window.toggleSelectAllValidation()"></th><th>Técnico</th><th>Tipo</th><th>Fecha</th><th>Cliente</th><th>Detalle</th><th>Monto / Horas</th><th>Estado</th><th>Acciones</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
-                    <div class="mt-2 flex justify-between items-center">
-                        <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">Generar PDF</button>
-                        <button type="button" class="btn btn-primary" onclick="window.markSelectedAsPaid()">Procesar como Pagado</button>
+                </div>
+                <div class="validation-footer">
+                    <button type="button" class="btn btn-secondary" onclick="window.generateValidationPDF()">↓ Generar PDF</button>
+                    <button type="button" class="btn btn-accent" onclick="window.markSelectedAsPaid()">✓ Procesar como Pagado</button>
+                </div>
+            </div>
+
+            <!-- Admin Vacaciones -->
+            <div id="admin-vacations" class="card hidden">
+                <div class="accent-rule"></div>
+                <div class="card-title">Solicitudes de Vacaciones</div>
+                <div class="card-sub">Aprueba, rechaza y genera boletas. Los días aprobados se descuentan automáticamente del saldo del técnico.</div>
+                <div class="filter-bar" style="margin-bottom:0">
+                    <div class="form-group"><label>Estado</label><select id="vac-filter-status" class="form-control" onchange="window.renderAdminVacTable()"><option value="all">Todos</option><option value="pending">Pendientes</option><option value="approved">Aprobadas</option><option value="cancelled">Canceladas</option></select></div>
+                    <div class="form-group"><label>Técnico</label><select id="vac-filter-tech" class="form-control" onchange="window.renderAdminVacTable()"><option value="all">Todos</option></select></div>
+                </div>
+                <div class="validation-table-area">
+                    <div class="table-responsive">
+                        <table id="admin-vac-table">
+                            <thead><tr><th>Técnico</th><th>Solicitado</th><th>Desde</th><th>Hasta</th><th>Días</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
 
-    <!-- Modales -->
-    <div id="modal-hour" class="modal-overlay hidden"><div class="modal">
-        <div class="modal-header"><h3 id="hour-modal-title">Registro de Horas</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-hour')">X</button></div>
-        <form id="hour-form"><input type="hidden" id="hour-id"><div class="form-group"><label>Cliente</label><input type="text" id="hour-client" class="form-control" required></div><div class="form-group"><label>Fecha</label><input type="date" id="hour-date" class="form-control" required></div><div class="flex gap-2"><div class="form-group" style="flex:1;"><label>Hora Inicio</label><input type="time" id="hour-start" class="form-control" required></div><div class="form-group" style="flex:1;"><label>Hora Fin</label><input type="time" id="hour-end" class="form-control" required></div></div><button type="submit" class="btn btn-success w-full">Guardar</button></form></div></div>
-    
-    <div id="modal-expense" class="modal-overlay hidden"><div class="modal">
-        <div class="modal-header"><h3 id="expense-modal-title">Registro de Gastos</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-expense')">X</button></div>
-        <form id="expense-form"><input type="hidden" id="expense-id"><div class="form-group"><label>Fecha</label><input type="date" id="exp-date" class="form-control" required></div><div class="form-group"><label>Factura #</label><input type="text" id="exp-invoice" class="form-control" required></div><div class="form-group"><label>Comercio</label><input type="text" id="exp-store" class="form-control" required></div><div class="form-group"><label>Cliente</label><input type="text" id="exp-client" class="form-control" required></div><div class="form-group"><label>Descripción</label><textarea id="exp-desc" class="form-control" rows="2"></textarea></div><div class="form-group"><label>Monto</label><input type="number" id="exp-amount" class="form-control" required min="0"></div><button type="submit" class="btn btn-success w-full">Guardar</button></form></div></div>
+            <!-- Estadísticas -->
+            <div id="admin-stats" class="card hidden" style="padding:0;background:transparent;border:none;box-shadow:none;">
 
-    <!-- Modal Editar Técnico -->
-    <div id="modal-tech-edit" class="modal-overlay hidden"><div class="modal">
-        <div class="modal-header"><h3>Editar Perfil Técnico</h3><button type="button" class="btn btn-sm btn-danger" onclick="window.closeModal('modal-tech-edit')">X</button></div>
-        <form id="tech-edit-form">
-            <input type="hidden" id="edit-tech-id">
-            <div class="form-group"><label>Nombre Completo</label><input type="text" id="edit-tech-fullname" class="form-control" required></div>
-            <div class="form-group"><label>Salario Mensual (₡)</label><input type="number" id="edit-tech-salary" class="form-control" required min="0"></div>
+                <!-- HEADER PANEL -->
+                <div class="s-header-panel">
+                    <div class="s-header-left">
+                        <div class="s-header-eyebrow">Panel Ejecutivo</div>
+                        <h2 class="s-header-title">Estadísticas del Equipo</h2>
+                        <p class="s-header-sub">Análisis comparativo de gastos, horas extra y costos salariales</p>
+                    </div>
+                    <div class="s-header-filters">
+                        <div class="s-filter-group">
+                            <label class="s-filter-label">Año</label>
+                            <select id="stats-year" class="s-select" onchange="window.loadStats()"></select>
+                        </div>
+                        <div class="s-filter-group">
+                            <label class="s-filter-label">Mes</label>
+                            <select id="stats-month" class="s-select" onchange="window.loadStats()">
+                                <option value="all">Todo el año</option>
+                                <option value="1">Enero</option><option value="2">Febrero</option>
+                                <option value="3">Marzo</option><option value="4">Abril</option>
+                                <option value="5">Mayo</option><option value="6">Junio</option>
+                                <option value="7">Julio</option><option value="8">Agosto</option>
+                                <option value="9">Setiembre</option><option value="10">Octubre</option>
+                                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI ROW -->
+                <div class="s-kpi-row">
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#1B2A4A,#2e4270)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Total Gastos</div>
+                            <div class="s-kpi-value" id="kpi-expenses">₡0</div>
+                            <div class="s-kpi-sub">reembolsos del periodo</div>
+                        </div>
+                    </div>
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#c0272d,#9a1e23)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Total Horas Extra</div>
+                            <div class="s-kpi-value" id="kpi-hours">0 h</div>
+                            <div class="s-kpi-sub">fuera del horario regular</div>
+                        </div>
+                    </div>
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#1d7a4f,#155f39)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Costo Horas Extra</div>
+                            <div class="s-kpi-value" id="kpi-extra-cost">₡0</div>
+                            <div class="s-kpi-sub">estimado bruto</div>
+                        </div>
+                    </div>
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Técnicos Activos</div>
+                            <div class="s-kpi-value" id="kpi-techs">0</div>
+                            <div class="s-kpi-sub">con registros en el periodo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LEGEND (shared) -->
+                <div class="s-legend-wrap">
+                    <div class="s-legend" id="s-legend-global"></div>
+                </div>
+
+                <!-- MAIN CHARTS — 3 col -->
+                <div class="s-charts-main">
+                    <div class="s-chart-panel s-span-2">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">GASTOS MENSUALES</div>
+                                <div class="s-chart-title">Comparativa de reembolsos por técnico</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:260px"><canvas id="chart-expenses-monthly"></canvas></div>
+                    </div>
+                    <div class="s-chart-panel">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">DISTRIBUCIÓN</div>
+                                <div class="s-chart-title">Gastos por técnico</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:260px"><canvas id="chart-donut-expenses"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- SECOND ROW — hours line + cost bar -->
+                <div class="s-charts-main">
+                    <div class="s-chart-panel">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">HORAS EXTRA</div>
+                                <div class="s-chart-title">Evolución mensual</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:220px"><canvas id="chart-hours-monthly"></canvas></div>
+                    </div>
+                    <div class="s-chart-panel">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">COSTO SALARIAL</div>
+                                <div class="s-chart-title">Horas extra por técnico</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:220px"><canvas id="chart-cost-monthly"></canvas></div>
+                    </div>
+                    <div class="s-chart-panel">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">DISTRIBUCIÓN</div>
+                                <div class="s-chart-title">Costo extra</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:220px"><canvas id="chart-donut-cost"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- RANKINGS ROW -->
+                <div class="s-rankings-row">
+                    <div class="s-rank-panel">
+                        <div class="s-chart-label" style="margin-bottom:.75rem">🏆 RANKING GASTOS</div>
+                        <ul class="s-rank-list" id="rank-expenses"></ul>
+                    </div>
+                    <div class="s-rank-panel">
+                        <div class="s-chart-label" style="margin-bottom:.75rem">⏱ RANKING HORAS EXTRA</div>
+                        <ul class="s-rank-list" id="rank-hours"></ul>
+                    </div>
+                    <div class="s-rank-panel">
+                        <div class="s-chart-label" style="margin-bottom:.75rem">💰 RANKING COSTO EXTRA</div>
+                        <ul class="s-rank-list" id="rank-cost"></ul>
+                    </div>
+                </div>
+
+                <div id="stats-empty" class="s-empty hidden">
+                    <div>📊</div>
+                    <p>Sin registros para el periodo seleccionado</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ══ MODALES ══ -->
+
+<!-- Modal Horas -->
+<div id="modal-hour" class="modal-overlay hidden"><div class="modal">
+    <div class="modal-header"><h3 id="hour-modal-title">Registro de Horas</h3><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="window.closeModal('modal-hour')">✕</button></div>
+    <form id="hour-form">
+        <input type="hidden" id="hour-id">
+        <div class="form-group"><label>Cliente</label><input type="text" id="hour-client" class="form-control" required placeholder="Nombre del cliente"></div>
+        <div class="form-group"><label>Fecha</label><input type="date" id="hour-date" class="form-control" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+            <div class="form-group"><label>Hora Inicio</label><input type="time" id="hour-start" class="form-control" required></div>
+            <div class="form-group"><label>Hora Fin</label><input type="time" id="hour-end" class="form-control" required></div>
+        </div>
+        <button type="submit" class="btn btn-success w-full" style="margin-top:.35rem;padding:.65rem">Guardar Registro</button>
+    </form>
+</div></div>
+
+<!-- Modal Gastos -->
+<div id="modal-expense" class="modal-overlay hidden"><div class="modal">
+    <div class="modal-header"><h3 id="expense-modal-title">Registro de Gastos</h3><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="window.closeModal('modal-expense')">✕</button></div>
+    <form id="expense-form">
+        <input type="hidden" id="expense-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+            <div class="form-group"><label>Fecha</label><input type="date" id="exp-date" class="form-control" required></div>
+            <div class="form-group"><label>Factura #</label><input type="text" id="exp-invoice" class="form-control" required placeholder="001-000-000"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+            <div class="form-group"><label>Comercio</label><input type="text" id="exp-store" class="form-control" required placeholder="Nombre del comercio"></div>
+            <div class="form-group"><label>Cliente</label><input type="text" id="exp-client" class="form-control" required placeholder="Cliente relacionado"></div>
+        </div>
+        <div class="form-group"><label>Descripción</label><textarea id="exp-desc" class="form-control" rows="2" placeholder="Descripción del gasto…"></textarea></div>
+        <div class="form-group"><label>Monto (₡)</label><input type="number" id="exp-amount" class="form-control" required min="0" placeholder="0"></div>
+        <button type="submit" class="btn btn-success w-full" style="margin-top:.35rem;padding:.65rem">Guardar Gasto</button>
+    </form>
+</div></div>
+
+<!-- Modal Editar Técnico -->
+<div id="modal-tech-edit" class="modal-overlay hidden"><div class="modal">
+    <div class="modal-header"><h3>Editar Perfil del Técnico</h3><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="window.closeModal('modal-tech-edit')">✕</button></div>
+    <form id="tech-edit-form">
+        <input type="hidden" id="edit-tech-id">
+        <div class="form-group"><label>Nombre Completo</label><input type="text" id="edit-tech-fullname" class="form-control" required></div>
+        <div class="form-group"><label>Salario Mensual (₡)</label><input type="number" id="edit-tech-salary" class="form-control" required min="0"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
             <div class="form-group"><label>Fecha de Ingreso</label><input type="date" id="edit-start-date" class="form-control"></div>
-            <div class="form-group"><label>Días Vacaciones (Cantidad Actual)</label><input type="number" id="edit-vacation-days" class="form-control" required min="0"></div>
-            <button type="submit" class="btn btn-success w-full">Actualizar</button>
-        </form>
-    </div></div>
+            <div class="form-group"><label>Días Vacaciones</label><input type="number" id="edit-vacation-days" class="form-control" required min="0"></div>
+        </div>
+        <button type="submit" class="btn btn-success w-full" style="margin-top:.35rem;padding:.65rem">Actualizar Perfil</button>
+    </form>
+</div></div>
 
-    <!-- Modal de Confirmación de Borrado -->
-    <div id="modal-confirm-delete" class="modal-overlay hidden">
-        <div class="modal" style="text-align: center;">
-            <div class="modal-header" style="justify-content: center;">
-                <h3 style="color: var(--danger);">Confirmar Eliminación</h3>
-            </div>
-            <div style="margin: 2rem 0; font-size: 1.1rem;">
-                <p>¿Estás seguro que quieres eliminar este registro?</p>
-            </div>
-            <div class="flex gap-2" style="justify-content: center;">
-                <button type="button" class="btn btn-secondary" onclick="window.cancelDelete()">No</button>
-                <button type="button" class="btn btn-danger" onclick="window.confirmDeleteAction()">Eliminar</button>
-            </div>
+<!-- Modal Solicitud Vacaciones (Técnico) -->
+<div id="modal-vac-request" class="modal-overlay hidden"><div class="modal">
+    <div class="modal-header"><h3>Solicitar Vacaciones</h3><button type="button" class="btn btn-danger btn-sm btn-icon" onclick="window.closeModal('modal-vac-request')">✕</button></div>
+    <div id="vac-request-info" class="info-box"></div>
+    <form id="vac-request-form">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+            <div class="form-group"><label>Fecha Inicio</label><input type="date" id="vac-from" class="form-control" required oninput="window.calcVacDays()"></div>
+            <div class="form-group"><label>Fecha Fin</label><input type="date" id="vac-to" class="form-control" required oninput="window.calcVacDays()"></div>
+        </div>
+        <div id="vac-days-preview" class="info-box hidden"></div>
+        <div class="form-group"><label>Motivo / Observación (opcional)</label><textarea id="vac-reason" class="form-control" rows="2" placeholder="Ej: Vacaciones familiares…"></textarea></div>
+        <button type="submit" class="btn btn-success w-full" style="margin-top:.35rem;padding:.65rem">Enviar Solicitud</button>
+    </form>
+</div></div>
+
+<!-- Modal Confirmar Eliminar -->
+<div id="modal-confirm-delete" class="modal-overlay hidden">
+    <div class="modal" style="max-width:370px;text-align:center">
+        <div style="font-size:2rem;margin-bottom:.65rem">⚠️</div>
+        <h3 style="font-size:.97rem;font-weight:600;color:var(--red);margin-bottom:.5rem">Confirmar Eliminación</h3>
+        <p style="color:var(--text-2);font-size:.82rem;margin-bottom:1.4rem">Esta acción no se puede deshacer. ¿Deseas eliminar este registro?</p>
+        <div style="display:flex;gap:.7rem;justify-content:center">
+            <button type="button" class="btn btn-secondary" onclick="window.cancelDelete()" style="min-width:88px">Cancelar</button>
+            <button type="button" class="btn btn-sm" onclick="window.confirmDeleteAction()" style="min-width:88px;background:var(--red);color:#fff;border-color:var(--red);padding:.5rem 1rem;font-size:.82rem">Eliminar</button>
         </div>
     </div>
+</div>
 
-    <!-- Área de Impresión -->
-    <div id="print-area">
-        <div class="pdf-header">
-            <div class="pdf-company">
-                <h1>Multiequipos</h1>
-                <p>Documento de Pago</p>
-            </div>
-            <div class="pdf-doc-info">
-                <h2 id="print-doc-type">LISTA DE PAGO</h2>
-                <p id="print-date">Fecha: 01/01/2024</p>
-            </div>
-        </div>
-
-        <!-- Grid Superior Modificado: 4 Columnas para incluir Vacaciones -->
-        <div class="pdf-grid-info">
-            <div class="pdf-col-info">
-                <strong>Empleado:</strong>
-                <span id="print-tech-name" style="font-weight: bold; font-size: 16px;"></span>
-            </div>
-            <div class="pdf-col-info">
-                <strong>Periodo:</strong>
-                <span id="print-period-text">Del 01 al 15</span>
-            </div>
-            <div class="pdf-col-info">
-                <strong>Saldo Vacaciones:</strong>
-                <span id="print-vacation-days" style="font-weight: bold; color: var(--primary-color);">0 días</span>
-            </div>
-            <div class="pdf-col-info">
-                <strong>Moneda:</strong>
-                <span>Colones (₡)</span>
-            </div>
-        </div>
-
-        <div id="print-tables-container">
-            <!-- Contenido dinámico -->
-        </div>
-
-        <div class="grand-total">
-            TOTAL A PAGAR: <span id="print-final-total">₡0</span>
-        </div>
-        <div style="clear: both;"></div>
-
-        <div class="signature-section">
-            <div class="sig-block">Firma Recibido<br><br>___________________</div>
-            <div class="sig-block">Firma Autorizada<br><br>___________________</div>
-        </div>
+<!-- Print area -->
+<div id="print-area">
+    <div class="pdf-header">
+        <div class="pdf-company"><h1>Multiequipos</h1><p>Documento de Pago</p></div>
+        <div class="pdf-doc-info"><h2 id="print-doc-type">LISTA DE PAGO</h2><p id="print-date">Fecha: 01/01/2024</p></div>
     </div>
+    <div class="pdf-grid-info">
+        <div class="pdf-col-info"><strong>Empleado:</strong><span id="print-tech-name" style="font-weight:bold;font-size:16px"></span></div>
+        <div class="pdf-col-info"><strong>Periodo:</strong><span id="print-period-text">Del 01 al 15</span></div>
+        <div class="pdf-col-info"><strong>Saldo Vacaciones:</strong><span id="print-vacation-days" style="font-weight:bold;color:#1B2A4A">0 días</span></div>
+        <div class="pdf-col-info"><strong>Moneda:</strong><span>Colones (₡)</span></div>
+    </div>
+    <div id="print-tables-container"></div>
+    <div class="grand-total">TOTAL A PAGAR: <span id="print-final-total">₡0</span></div>
+    <div style="clear:both"></div>
+    <div class="signature-section">
+        <div class="sig-block">Firma Recibido<br><br>___________________</div>
+        <div class="sig-block">Firma Autorizada<br><br>___________________</div>
+    </div>
+</div>
 
-    <!-- Firebase SDKs (Modular v9) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, query, where, writeBatch, orderBy, documentId } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, query, where, writeBatch, documentId } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        // --- CONFIGURACIÓN FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyC_PhdokJhL4vNRr3uBPP7YXYBl4jkQs2A",
-            authDomain: "nominamultiequipos.firebaseapp.com",
-            projectId: "nominamultiequipos",
-            storageBucket: "nominamultiequipos.firebasestorage.app",
-            messagingSenderId: "687407000028",
-            appId: "1:687407000028:web:09a6b456ebae31d9cf0719"
-        };
+const firebaseConfig = {
+    apiKey:"AIzaSyC_PhdokJhL4vNRr3uBPP7YXYBl4jkQs2A",
+    authDomain:"nominamultiequipos.firebaseapp.com",
+    projectId:"nominamultiequipos",
+    storageBucket:"nominamultiequipos.firebasestorage.app",
+    messagingSenderId:"687407000028",
+    appId:"1:687407000028:web:09a6b456ebae31d9cf0719"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-        // Inicializar Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+let currentUser=null, usersData=[], pendingDelete={type:null,id:null};
 
-        // --- ESTADO ---
-        let currentUser = null;
-        let usersData = [];
-        let pendingDelete = { type: null, id: null };
+/* ── UTILS ── */
+const fmt=a=>'₡'+parseFloat(a).toLocaleString('es-CR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtDate=s=>{if(!s)return'';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;};
+const showToast=(msg,type='info')=>{
+    const c=document.getElementById('toast-container');
+    const t=document.createElement('div');
+    t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
+    setTimeout(()=>t.classList.add('show'),80);
+    setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3500);
+};
+const getMonthsDiff=s=>{
+    if(!s)return 0;
+    const st=new Date(s+'T00:00:00'),now=new Date();
+    let m=(now.getFullYear()-st.getFullYear())*12+(now.getMonth()-st.getMonth());
+    if(now.getDate()<st.getDate())m--;
+    return m<0?0:m;
+};
+// Count working days between two date strings (inclusive), excluding weekends
+const countWorkDays=(fromStr,toStr)=>{
+    const from=new Date(fromStr+'T00:00:00');
+    const to=new Date(toStr+'T00:00:00');
+    if(to<from)return 0;
+    let count=0;
+    const cur=new Date(from);
+    while(cur<=to){const d=cur.getDay();if(d!==0&&d!==6)count++;cur.setDate(cur.getDate()+1);}
+    return count;
+};
 
-        // --- UTILIDADES ---
-        const Utils = {
-            formatCurrency: (amount) => '₡' + parseFloat(amount).toLocaleString('es-CR', {minimumFractionDigits: 2, maximumFractionDigits: 2}),
-            formatDate: (dateStr) => {
-                if(!dateStr) return '';
-                const [y, m, d] = dateStr.split('-');
-                return `${d}/${m}/${y}`;
+/* ── SESSION ── */
+function checkSession(){
+    auth.signOut();
+    onAuthStateChanged(auth,async user=>{
+        document.getElementById('loading-screen').classList.add('hidden');
+        try{if(user){await loadUserProfile(user.uid);}else{showLogin();}}
+        catch(e){console.error(e);showLogin();}
+    });
+}
+async function loadUserProfile(uid){
+    try{
+        const snap=await getDoc(doc(db,'users',uid));
+        if(snap.exists()){currentUser={id:uid,...snap.data()};if(!currentUser.role)currentUser.role='tech';}
+        else{const u=auth.currentUser;currentUser={id:uid,email:u.email,fullName:u.displayName||u.email.split('@')[0],role:'admin'};}
+        showApp();
+    }catch(e){console.error(e);showToast('Error de conexión','error');auth.signOut();}
+}
+function showLogin(){
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('login-view').classList.remove('hidden');
+    document.getElementById('app-view').classList.add('hidden');
+}
+function showApp(){
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('app-view').classList.remove('hidden');
+    document.getElementById('user-display-name').textContent=`${currentUser.fullName} · ${currentUser.role==='admin'?'Admin':'Técnico'}`;
+    document.getElementById('user-avatar-initial').textContent=(currentUser.fullName||'U').charAt(0).toUpperCase();
+    if(currentUser.role==='admin'){
+        document.getElementById('admin-panel').classList.remove('hidden');
+        document.getElementById('technician-panel').classList.add('hidden');
+        loadAdminData();
+    }else{
+        document.getElementById('technician-panel').classList.remove('hidden');
+        document.getElementById('admin-panel').classList.add('hidden');
+        loadTechData();
+    }
+}
+document.getElementById('login-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    try{await signInWithEmailAndPassword(auth,document.getElementById('login-email').value,document.getElementById('login-password').value);showToast('Verificando…','info');}
+    catch(e){showToast('Credenciales incorrectas: '+e.message,'error');}
+});
+document.getElementById('logout-btn').addEventListener('click',()=>signOut(auth).then(()=>location.reload()));
+
+/* ── BUSINESS LOGIC ── */
+function calcTime(dateStr,startStr,endStr){
+    const stdS=7.5,stdE=17.0;
+    const day=new Date(dateStr+'T00:00:00').getDay();
+    const td=t=>{const[h,m]=t.split(':').map(Number);return h+m/60;};
+    const sH=td(startStr),eH=td(endStr);
+    let tot=(eH-sH)*60;
+    if(tot<=0)return{total:'0.0',regular:'0.0',extra:'0.0'};
+    let reg=0,ext=0;
+    if(day===0||day===6){ext=tot;}else{const ov=Math.max(0,(Math.min(eH,stdE)-Math.max(sH,stdS))*60);reg=ov;ext=tot-reg;}
+    return{total:(tot/60).toFixed(1),regular:(reg/60).toFixed(1),extra:(ext/60).toFixed(1)};
+}
+function calcPay(techId,hoursList,period='monthly'){
+    const tech=usersData.find(u=>u.id===techId);
+    if(!tech||!tech.salary)return null;
+    const sal=parseFloat(tech.salary);
+    const base=period==='biweekly'?sal/2:sal;
+    const hr=sal/240,satR=hr*1.5,sunR=hr*2;
+    let sat=0,sun=0;
+    (hoursList||[]).forEach(r=>{const d=new Date(r.date+'T00:00:00').getDay();const x=parseFloat(r.extra);if(d===0)sun+=x;else sat+=x;});
+    const gSat=sat*satR,gSun=sun*sunR,gEx=gSat+gSun,total=base+gEx;
+    const ccss=total*0.1083;
+    const renta=total>864000?(total-864000)*0.10:0;
+    return{baseSalary:base,gross:gEx,ccss,renta,neto:total-ccss-renta,satHours:sat,sunHours:sun,amountSat:gSat,amountSun:gSun};
+}
+async function logAudit(action,rtype,rid,details){
+    try{await addDoc(collection(db,'auditLog'),{timestamp:new Date().toISOString(),actor:currentUser?.fullName||'?',action,type:rtype,recordId:rid,details});}
+    catch(e){console.warn(e);}
+}
+
+/* ── TECH DATA ── */
+async function loadTechData(){
+    try{
+        // records
+        const recs=(await getDocs(query(collection(db,'records'),where('userId','==',currentUser.id)))).docs.map(d=>({id:d.id,...d.data()}));
+        const hours=recs.filter(r=>r.type==='hour').sort((a,b)=>new Date(b.date)-new Date(a.date));
+        let pendH=0,rowsH='';
+        hours.forEach(h=>{
+            const paid=h.status==='paid';
+            if(!paid)pendH+=parseFloat(h.extra);
+            rowsH+=`<tr><td>${fmtDate(h.date)}</td><td>${h.client}</td><td>${h.startTime}</td><td>${h.endTime}</td><td>${h.total}h</td><td>${h.extra}h</td>
+            <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
+            <td class="actions-cell">
+                ${!paid?`<button type="button" class="btn btn-sm btn-warning" onclick="window.openEditModal('hour','${h.id}')">Editar</button>`:''}
+                ${!paid?`<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('hour','${h.id}')">Eliminar</button>`:''}
+            </td></tr>`;
+        });
+        document.querySelector('#tech-hours-table tbody').innerHTML=rowsH||`<tr><td colspan="8"><div class="empty-state"><div class="icon">⏱</div><p>Sin registros</p></div></td></tr>`;
+        document.getElementById('tech-pending-hours').textContent=pendH.toFixed(1);
+
+        const exps=recs.filter(r=>r.type==='expense').sort((a,b)=>new Date(b.date)-new Date(a.date));
+        let pendE=0,rowsE='';
+        exps.forEach(ex=>{
+            const paid=ex.status==='paid';
+            if(!paid)pendE+=parseFloat(ex.amount);
+            rowsE+=`<tr><td>${fmtDate(ex.date)}</td><td>${ex.invoiceNum}</td><td>${ex.store}</td><td>${ex.client}</td><td>${ex.description}</td>
+            <td>${fmt(ex.amount)}</td>
+            <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
+            <td class="actions-cell">
+                ${!paid?`<button type="button" class="btn btn-sm btn-warning" onclick="window.openEditModal('expense','${ex.id}')">Editar</button>`:''}
+                ${!paid?`<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('expense','${ex.id}')">Eliminar</button>`:''}
+            </td></tr>`;
+        });
+        document.querySelector('#tech-expenses-table tbody').innerHTML=rowsE||`<tr><td colspan="8"><div class="empty-state"><div class="icon">🧾</div><p>Sin registros</p></div></td></tr>`;
+        document.getElementById('tech-pending-expenses').textContent=fmt(pendE);
+
+        // vacation days from user profile
+        const uSnap=await getDoc(doc(db,'users',currentUser.id));
+        const vacDays=uSnap.exists()?(uSnap.data().vacationDays||0):0;
+        document.getElementById('tech-vac-days').textContent=vacDays;
+
+        // vacation requests
+        await loadTechVacations();
+    }catch(e){console.error(e);showToast('Error cargando datos','error');}
+}
+
+async function loadTechVacations(){
+    const vacRecs=(await getDocs(query(collection(db,'vacationRequests'),where('userId','==',currentUser.id)))).docs.map(d=>({id:d.id,...d.data()}));
+    vacRecs.sort((a,b)=>new Date(b.requestedAt)-new Date(a.requestedAt));
+    let rows='';
+    vacRecs.forEach(v=>{
+        const statusMap={pending:'badge-pending pending',approved:'badge-approved approved',cancelled:'badge-cancelled cancelado'};
+        const [cls,lbl]=statusMap[v.status]?.split(' ')||['badge-pending','pendiente'];
+        const canCancel=v.status==='pending'; // Solo se puede cancelar si está pendiente; una vez aprobada solo el admin puede revertirla
+        rows+=`<tr>
+            <td>${fmtDate(v.requestedAt?.split('T')[0]||'')}</td>
+            <td>${fmtDate(v.fromDate)}</td><td>${fmtDate(v.toDate)}</td>
+            <td style="text-align:center;font-weight:600">${v.days}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">${v.reason||'—'}</td>
+            <td><span class="badge ${cls}">${lbl}</span></td>
+            <td class="actions-cell">
+                ${v.status==='approved'?`<button type="button" class="btn btn-sm btn-secondary" onclick="window.printVacationSlip('${v.id}')">Boleta</button>`:''}
+                ${canCancel?`<button type="button" class="btn btn-sm btn-danger" onclick="window.cancelVacRequest('${v.id}','${v.status}',${v.days})">Cancelar</button>`:''}
+            </td>
+        </tr>`;
+    });
+    document.querySelector('#tech-vac-table tbody').innerHTML=rows||`<tr><td colspan="7"><div class="empty-state"><div class="icon">🏖️</div><p>Sin solicitudes de vacaciones</p></div></td></tr>`;
+}
+
+/* Cancel vacation (tech side) */
+window.cancelVacRequest=async(id,status,days)=>{
+    if(!confirm('¿Cancelar esta solicitud de vacaciones?'))return;
+    try{
+        await updateDoc(doc(db,'vacationRequests',id),{status:'cancelled',cancelledAt:new Date().toISOString()});
+        // If it was approved, return days to the user
+        if(status==='approved'){
+            const uRef=doc(db,'users',currentUser.id);
+            const uSnap=await getDoc(uRef);
+            const cur=uSnap.data().vacationDays||0;
+            await updateDoc(uRef,{vacationDays:cur+days});
+        }
+        await loadTechData();
+        showToast('Solicitud cancelada. Los días han sido restituidos.','success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+};
+
+/* Vacation request modal helpers */
+window.calcVacDays=()=>{
+    const f=document.getElementById('vac-from').value;
+    const t=document.getElementById('vac-to').value;
+    const preview=document.getElementById('vac-days-preview');
+    if(f&&t&&t>=f){
+        const d=countWorkDays(f,t);
+        preview.classList.remove('hidden');
+        preview.innerHTML=`<strong>Días hábiles solicitados: ${d}</strong>`;
+    }else{preview.classList.add('hidden');}
+};
+
+/* Open vacation request modal — show current balance */
+const origOpenModal=window.openModal;
+window.openModal=id=>{
+    document.getElementById(id).classList.remove('hidden');
+    const form=document.getElementById(id)?.querySelector('form');
+    if(form){form.reset();const h=form.querySelector('input[type="hidden"]');if(h)h.value='';}
+    if(id==='modal-hour')document.getElementById('hour-modal-title').textContent='Registro de Horas';
+    if(id==='modal-expense')document.getElementById('expense-modal-title').textContent='Registro de Gastos';
+    if(id==='modal-vac-request'){
+        document.getElementById('vac-days-preview').classList.add('hidden');
+        // Show balance
+        const uSnap=getDoc(doc(db,'users',currentUser.id)).then(s=>{
+            const days=s.exists()?(s.data().vacationDays||0):0;
+            document.getElementById('vac-request-info').innerHTML=`Saldo disponible: <strong>${days} días hábiles</strong>`;
+        });
+    }
+};
+
+document.getElementById('vac-request-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const from=document.getElementById('vac-from').value;
+    const to=document.getElementById('vac-to').value;
+    const reason=document.getElementById('vac-reason').value;
+    if(!from||!to||to<from){showToast('Fechas inválidas','error');return;}
+    const days=countWorkDays(from,to);
+    if(days<=0){showToast('El rango no contiene días hábiles','error');return;}
+
+    // Check balance
+    const uSnap=await getDoc(doc(db,'users',currentUser.id));
+    const available=uSnap.exists()?(uSnap.data().vacationDays||0):0;
+    if(days>available){showToast(`No tiene suficientes días. Disponibles: ${available}. Solicitados: ${days}`,'error');return;}
+
+    try{
+        await addDoc(collection(db,'vacationRequests'),{
+            userId:currentUser.id,
+            userName:currentUser.fullName,
+            fromDate:from,toDate:to,
+            days,reason,
+            status:'pending',
+            requestedAt:new Date().toISOString()
+        });
+        window.closeModal('modal-vac-request');
+        await loadTechData();
+        showToast('Solicitud enviada. El administrador la revisará.','success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+});
+
+/* Print vacation slip */
+window.printVacationSlip=async(vacId)=>{
+    const snap=await getDoc(doc(db,'vacationRequests',vacId));
+    if(!snap.exists())return;
+    const v=snap.data();
+    const u=usersData.find(x=>x.id===v.userId)||{fullName:v.userName||'—'};
+    // Fetch current remaining balance — show what's left AFTER approval
+    const uSnap=await getDoc(doc(db,'users',v.userId));
+    const remainingDays=uSnap.exists()?(uSnap.data().vacationDays||0):0;
+    const container=document.getElementById('print-tables-container');
+    document.getElementById('print-doc-type').textContent='BOLETA DE VACACIONES';
+    document.getElementById('print-tech-name').textContent=u.fullName;
+    document.getElementById('print-date').textContent='Fecha Emisión: '+new Date().toLocaleDateString();
+    document.getElementById('print-period-text').textContent=`${fmtDate(v.fromDate)} al ${fmtDate(v.toDate)}`;
+    document.getElementById('print-vacation-days').textContent=`${remainingDays} días`;
+    document.querySelector('.pdf-col-info:nth-child(3)').style.display='block';
+    container.innerHTML=`
+        <div class="vac-box">
+            <div class="vac-title">SOLICITUD DE VACACIONES — APROBADA</div>
+            <div class="vac-row"><div><strong>Empleado</strong>${u.fullName}</div><div><strong>Fecha Solicitud</strong>${fmtDate(v.requestedAt?.split('T')[0]||'')}</div></div>
+            <div class="vac-row"><div><strong>Fecha Inicio</strong>${fmtDate(v.fromDate)}</div><div><strong>Fecha Fin</strong>${fmtDate(v.toDate)}</div></div>
+            <div class="vac-row"><div><strong>Días Hábiles</strong><span style="font-size:18px;font-weight:bold">${v.days}</span></div><div><strong>Motivo</strong>${v.reason||'—'}</div></div>
+            <div class="vac-row"><div><strong>Estado</strong><span style="color:#1d7a4f;font-weight:bold">APROBADA</span></div><div><strong>Aprobado por</strong>${v.approvedBy||'Administrador'}</div></div>
+        </div>
+        <div class="signature-section" style="margin-top:40px">
+            <div class="sig-block">Firma Empleado<br><br>___________________<br>${u.fullName}</div>
+            <div class="sig-block">Firma Autorizada<br><br>___________________<br>Multiequipos</div>
+        </div>`;
+    document.getElementById('print-final-total').textContent='';
+    document.querySelector('.grand-total').style.display='none';
+    document.getElementById('app-view').style.display='none';
+    document.getElementById('print-area').style.display='block';
+    window.print();
+    document.getElementById('print-area').style.display='none';
+    document.getElementById('app-view').style.display='block';
+    document.querySelector('.grand-total').style.display='';
+};
+
+/* ── EDIT / DELETE RECORDS ── */
+window.openEditModal=async(type,id)=>{
+    const mid=type==='hour'?'modal-hour':'modal-expense';
+    window.openModal(mid);
+    try{
+        const r=(await getDoc(doc(db,'records',id))).data();
+        if(type==='hour'){
+            document.getElementById('hour-id').value=id;
+            document.getElementById('hour-client').value=r.client;
+            document.getElementById('hour-date').value=r.date;
+            document.getElementById('hour-start').value=r.startTime;
+            document.getElementById('hour-end').value=r.endTime;
+            document.getElementById('hour-modal-title').textContent='Editar Hora Extra';
+        }else{
+            document.getElementById('expense-id').value=id;
+            document.getElementById('exp-date').value=r.date;
+            document.getElementById('exp-invoice').value=r.invoiceNum;
+            document.getElementById('exp-store').value=r.store;
+            document.getElementById('exp-amount').value=r.amount;
+            document.getElementById('exp-client').value=r.client;
+            document.getElementById('exp-desc').value=r.description;
+            document.getElementById('expense-modal-title').textContent='Editar Gasto';
+        }
+    }catch(e){showToast('Error cargando datos','error');}
+};
+window.openDeleteConfirm=(type,id)=>{pendingDelete={type,id};document.getElementById('modal-confirm-delete').classList.remove('hidden');};
+window.cancelDelete=()=>{document.getElementById('modal-confirm-delete').classList.add('hidden');pendingDelete={type:null,id:null};};
+window.confirmDeleteAction=async()=>{
+    if(!pendingDelete.id)return;
+    try{
+        await deleteDoc(doc(db,'records',pendingDelete.id));
+        try{await logAudit('DELETE',pendingDelete.type,pendingDelete.id,'Eliminado');}catch(e){}
+        await loadTechData();showToast('Registro eliminado','success');window.cancelDelete();
+    }catch(e){showToast('No se pudo borrar: '+e.message,'error');}
+};
+
+document.getElementById('hour-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    try{
+        const id=document.getElementById('hour-id').value;
+        const date=document.getElementById('hour-date').value;
+        const start=document.getElementById('hour-start').value;
+        const end=document.getElementById('hour-end').value;
+        const client=document.getElementById('hour-client').value;
+        const calc=calcTime(date,start,end);
+        const rec={type:'hour',userId:currentUser.id,date,startTime:start,endTime:end,client,total:calc.total,regular:calc.regular,extra:calc.extra,status:'pending'};
+        if(id){rec.id=id;await updateRecord(rec,'hour');}else{await saveRecord(rec);}
+    }catch(e){showToast('Error al guardar: '+e.message,'error');}
+});
+document.getElementById('expense-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    try{
+        const id=document.getElementById('expense-id').value;
+        const rec={type:'expense',userId:currentUser.id,invoiceNum:document.getElementById('exp-invoice').value,store:document.getElementById('exp-store').value,amount:document.getElementById('exp-amount').value,date:document.getElementById('exp-date').value,client:document.getElementById('exp-client').value,description:document.getElementById('exp-desc').value,status:'pending'};
+        if(id){rec.id=id;await updateRecord(rec,'expense');}else{await saveRecord(rec);}
+    }catch(e){showToast('Error al guardar: '+e.message,'error');}
+});
+async function saveRecord(rec){
+    const ref=await addDoc(collection(db,'records'),rec);
+    await logAudit('CREATE',rec.type,ref.id,'Creado');
+    loadTechData();window.closeModal('modal-'+rec.type);showToast('Guardado exitosamente','success');
+}
+async function updateRecord(nr,type){
+    const ref=doc(db,'records',nr.id);
+    const old=(await getDoc(ref)).data();
+    const upd={...nr};delete upd.id;
+    await updateDoc(ref,upd);
+    await logAudit('EDIT',type,nr.id,'Actualizado');
+    loadTechData();window.closeModal('modal-'+type);showToast('Actualizado exitosamente','success');
+}
+
+/* ── ADMIN DATA ── */
+async function loadAdminData(){
+    try{
+        const snap=await getDocs(query(collection(db,'users'),where('role','==','tech')));
+        const tbody=document.getElementById('users-table-body');
+        const fSel=document.getElementById('filter-tech-select');
+        const vFSel=document.getElementById('vac-filter-tech');
+        let html='',opts='<option value="all">Todos</option>';
+        usersData=[];
+        const upd=[];
+        snap.forEach(dRef=>{
+            const u=dRef.data(),id=dRef.id;
+            const vac=u.vacationDays||0,mp=getMonthsDiff(u.startDate),ac=u.vacationCreditedMonths||0;
+            let fv=vac;
+            if(mp>ac){
+                fv=vac+(mp-ac);
+                upd.push(updateDoc(doc(db,'users',id),{vacationDays:fv,vacationCreditedMonths:mp})
+                    .then(()=>{u.vacationDays=fv;u.vacationCreditedMonths=mp;})
+                    .catch(e=>console.error(e)));
+            }
+            usersData.push({id,...u,vacationDays:fv});
+            html+=`<tr>
+                <td style="font-weight:600;color:var(--text-1)">${u.fullName}</td>
+                <td>${fmt(u.salary)}</td>
+                <td style="text-align:center">${fv} días</td>
+                <td style="text-align:center">${u.startDate?fmtDate(u.startDate):'-'}</td>
+                <td style="color:var(--text-3);font-size:.78rem">${u.email}</td>
+                <td><span class="badge badge-vacation">Técnico</span></td>
+                <td class="actions-cell">
+                    <button type="button" class="btn btn-sm btn-warning" onclick="window.openTechEditModal('${id}')">Editar</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteUser('${id}')">Eliminar</button>
+                </td></tr>`;
+            opts+=`<option value="${id}">${u.fullName}</option>`;
+        });
+        tbody.innerHTML=html||`<tr><td colspan="7"><div class="empty-state"><div class="icon">👥</div><p>Sin técnicos</p></div></td></tr>`;
+        fSel.innerHTML=opts;
+        if(vFSel)vFSel.innerHTML=opts;
+        await Promise.all(upd);
+    }catch(e){console.error(e);showToast('Error cargando admin','error');}
+}
+async function createUserViaAPI(email,password){
+    const r=await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});
+    return r.json();
+}
+document.getElementById('create-user-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const name=document.getElementById('new-fullname').value;
+    const email=document.getElementById('new-email').value;
+    const pass=document.getElementById('new-password').value;
+    const salary=document.getElementById('new-salary').value;
+    const startDate=document.getElementById('new-start-date').value;
+    const vac=document.getElementById('new-vacation-days').value||0;
+    try{
+        const data=await createUserViaAPI(email,pass);
+        if(data.error)throw new Error(data.error.message);
+        const mp=getMonthsDiff(startDate);
+        await setDoc(doc(db,'users',data.localId),{fullName:name,email,salary,role:'tech',startDate,vacationDays:parseFloat(vac),vacationCreditedMonths:mp,createdAt:new Date()});
+        showToast('Técnico creado exitosamente','success');e.target.reset();loadAdminData();
+    }catch(e){
+        let m=e.message;
+        if(m.includes('EMAIL_EXISTS'))m='El correo ya está en uso.';
+        if(m.includes('WEAK_PASSWORD'))m='La contraseña es muy débil.';
+        showToast('Error: '+m,'error');
+    }
+});
+window.openTechEditModal=id=>{
+    const u=usersData.find(x=>x.id===id);
+    if(!u){showToast('No se encontró el técnico','error');return;}
+    window.openModal('modal-tech-edit');
+    document.getElementById('edit-tech-id').value=id;
+    document.getElementById('edit-tech-fullname').value=u.fullName||'';
+    document.getElementById('edit-tech-salary').value=u.salary||'';
+    document.getElementById('edit-start-date').value=u.startDate||'';
+    document.getElementById('edit-vacation-days').value=u.vacationDays||0;
+};
+document.getElementById('tech-edit-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    try{
+        const uid=document.getElementById('edit-tech-id').value;
+        const name=document.getElementById('edit-tech-fullname').value.trim();
+        const sal=parseFloat(document.getElementById('edit-tech-salary').value);
+        const sd=document.getElementById('edit-start-date').value;
+        const vac=parseFloat(document.getElementById('edit-vacation-days').value);
+        if(!uid)throw new Error('ID no encontrado');
+        if(!name)throw new Error('El nombre es obligatorio');
+        if(isNaN(sal)||sal<0)throw new Error('Salario inválido');
+        if(isNaN(vac)||vac<0)throw new Error('Vacaciones inválidas');
+        await updateDoc(doc(db,'users',uid),{fullName:name,salary:sal,startDate:sd,vacationDays:vac});
+        window.closeModal('modal-tech-edit');loadAdminData();showToast('Perfil actualizado','success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+});
+window.deleteUser=async id=>{
+    const s=await getDocs(query(collection(db,'records'),where('userId','==',id)));
+    if(!s.empty){showToast('No se puede borrar. Tiene registros activos.','error');return;}
+    if(!confirm('¿Borrar técnico?'))return;
+    try{await deleteDoc(doc(db,'users',id));loadAdminData();showToast('Eliminado','success');}
+    catch(e){showToast('Error: '+e.message,'error');}
+};
+
+/* ── VALIDATION TABLE ── */
+window.renderValidationTable=async()=>{
+    const type=document.getElementById('filter-type-select').value;
+    const tech=document.getElementById('filter-tech-select').value;
+    const sd=document.getElementById('filter-start-date').value;
+    const ed=document.getElementById('filter-end-date').value;
+    const tbody=document.querySelector('#validation-table tbody');
+    const all=(await getDocs(collection(db,'records'))).docs.map(d=>({id:d.id,...d.data()}));
+    const recs=all.filter(r=>{
+        if(type!=='all'&&r.type!==type)return false;
+        if(tech!=='all'&&r.userId!==tech)return false;
+        if(sd&&r.date<sd)return false;
+        if(ed&&r.date>ed)return false;
+        return true;
+    });
+    recs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    let rows='';
+    recs.forEach(r=>{
+        const u=usersData.find(x=>x.id===r.userId);
+        const name=u?u.fullName:'?';
+        const paid=r.status==='paid';
+        let det='',amt='';
+        if(r.type==='hour'){amt=`${r.extra}h extra`;det=`${r.startTime} – ${r.endTime}`;}
+        else{amt=fmt(r.amount);det=`${r.invoiceNum} · ${r.store} · ${r.description}`;}
+        const tbStyle=r.type==='hour'?'background:rgba(27,42,74,.07);color:var(--navy-800);border:1px solid rgba(27,42,74,.15)':'background:var(--amber-bg);color:var(--amber);border:1px solid rgba(154,94,16,.18)';
+        const act=paid?`<input type="checkbox" class="pay-check" value="${r.id}"><button type="button" class="btn btn-warning btn-sm" onclick="window.revertToPending('${r.id}')">Revertir</button>`:`<input type="checkbox" class="pay-check" value="${r.id}">`;
+        rows+=`<tr>
+            <td><input type="checkbox" class="row-select" value="${r.id}"></td>
+            <td style="font-weight:600;color:var(--text-1)">${name}</td>
+            <td><span class="badge" style="${tbStyle};padding:.17rem .52rem;border-radius:999px;font-size:.67rem;font-weight:600">${r.type==='hour'?'Hora':'Gasto'}</span></td>
+            <td>${fmtDate(r.date)}</td><td>${r.client}</td>
+            <td style="font-size:.76rem;color:var(--text-3);max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${det}">${det}</td>
+            <td style="font-weight:600">${amt}</td>
+            <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
+            <td class="actions-cell">${act}</td>
+        </tr>`;
+    });
+    tbody.innerHTML=rows||`<tr><td colspan="9"><div class="empty-state"><div class="icon">📋</div><p>Sin registros con los filtros seleccionados</p></div></td></tr>`;
+};
+window.toggleSelectAllValidation=()=>{const m=document.getElementById('select-all-validation');document.querySelectorAll('#validation-table .row-select').forEach(cb=>cb.checked=m.checked);};
+window.revertToPending=async id=>{if(!confirm('¿Volver a pendiente?'))return;await updateDoc(doc(db,'records',id),{status:'pending'});window.renderValidationTable();};
+window.markSelectedAsPaid=async()=>{
+    const cbs=document.querySelectorAll('#validation-table .pay-check:checked');
+    if(!cbs.length){showToast('Selecciona registros primero','warning');return;}
+    const ids=Array.from(cbs).map(c=>c.value);
+    if(!confirm(`¿Marcar ${ids.length} registro(s) como pagado?`))return;
+    const batch=writeBatch(db);
+    ids.forEach(id=>batch.update(doc(db,'records',id),{status:'paid'}));
+    await batch.commit();
+    window.renderValidationTable();showToast('Procesados exitosamente','success');
+};
+
+/* ── ADMIN VACACIONES ── */
+window.renderAdminVacTable=async()=>{
+    const status=document.getElementById('vac-filter-status').value;
+    const tech=document.getElementById('vac-filter-tech').value;
+    const all=(await getDocs(collection(db,'vacationRequests'))).docs.map(d=>({id:d.id,...d.data()}));
+    const recs=all.filter(r=>{
+        if(status!=='all'&&r.status!==status)return false;
+        if(tech!=='all'&&r.userId!==tech)return false;
+        return true;
+    });
+    recs.sort((a,b)=>new Date(b.requestedAt)-new Date(a.requestedAt));
+    const tbody=document.querySelector('#admin-vac-table tbody');
+    let rows='';
+    recs.forEach(v=>{
+        const statusCls={pending:'badge-pending',approved:'badge-approved',cancelled:'badge-cancelled'};
+        const statusLbl={pending:'Pendiente',approved:'Aprobada',cancelled:'Cancelada'};
+        const cls=statusCls[v.status]||'badge-pending';
+        const lbl=statusLbl[v.status]||v.status;
+        rows+=`<tr>
+            <td style="font-weight:600;color:var(--text-1)">${v.userName||'—'}</td>
+            <td>${fmtDate(v.requestedAt?.split('T')[0]||'')}</td>
+            <td>${fmtDate(v.fromDate)}</td><td>${fmtDate(v.toDate)}</td>
+            <td style="text-align:center;font-weight:600">${v.days}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">${v.reason||'—'}</td>
+            <td><span class="badge ${cls}">${lbl}</span></td>
+            <td class="actions-cell">
+                ${v.status==='pending'?`<button type="button" class="btn btn-sm btn-success" onclick="window.approveVac('${v.id}','${v.userId}',${v.days})">Aprobar</button>`:``}
+                ${v.status==='pending'?`<button type="button" class="btn btn-sm btn-danger" onclick="window.rejectVac('${v.id}')">Rechazar</button>`:``}
+                ${v.status==='approved'?`<button type="button" class="btn btn-sm btn-secondary" onclick="window.printVacationSlip('${v.id}')">Boleta</button>`:``}
+                ${v.status==='approved'?`<button type="button" class="btn btn-sm btn-warning" onclick="window.revertVac('${v.id}','${v.userId}',${v.days})">Revertir</button>`:``}
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML=rows||`<tr><td colspan="8"><div class="empty-state"><div class="icon">🏖️</div><p>Sin solicitudes</p></div></td></tr>`;
+};
+
+window.approveVac=async(vacId,userId,days)=>{
+    if(!confirm(`¿Aprobar esta solicitud? Se descontarán ${days} días del saldo del técnico.`))return;
+    try{
+        const uRef=doc(db,'users',userId);
+        const uSnap=await getDoc(uRef);
+        const cur=uSnap.data().vacationDays||0;
+        if(days>cur){showToast(`Saldo insuficiente. Disponible: ${cur} días.`,'error');return;}
+        await updateDoc(uRef,{vacationDays:cur-days});
+        await updateDoc(doc(db,'vacationRequests',vacId),{status:'approved',approvedAt:new Date().toISOString(),approvedBy:currentUser.fullName});
+        // Update local usersData cache
+        const ui=usersData.findIndex(x=>x.id===userId);
+        if(ui>=0)usersData[ui].vacationDays=cur-days;
+        await renderAdminVacTable_refresh();
+        showToast(`Aprobada. Se descontaron ${days} días.`,'success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+};
+
+window.rejectVac=async(vacId)=>{
+    if(!confirm('¿Rechazar esta solicitud?'))return;
+    try{
+        await updateDoc(doc(db,'vacationRequests',vacId),{status:'cancelled',cancelledAt:new Date().toISOString(),cancelledBy:currentUser.fullName});
+        await renderAdminVacTable_refresh();
+        showToast('Solicitud rechazada.','success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+};
+
+window.revertVac=async(vacId,userId,days)=>{
+    if(!confirm(`¿Revertir esta aprobación? Se devolverán ${days} días al saldo del técnico.`))return;
+    try{
+        const uRef=doc(db,'users',userId);
+        const uSnap=await getDoc(uRef);
+        const cur=uSnap.data().vacationDays||0;
+        await updateDoc(uRef,{vacationDays:cur+days});
+        await updateDoc(doc(db,'vacationRequests',vacId),{status:'pending',revertedAt:new Date().toISOString()});
+        const ui=usersData.findIndex(x=>x.id===userId);
+        if(ui>=0)usersData[ui].vacationDays=cur+days;
+        await renderAdminVacTable_refresh();
+        showToast(`Revertida. Se devolvieron ${days} días.`,'success');
+    }catch(e){showToast('Error: '+e.message,'error');}
+};
+
+async function renderAdminVacTable_refresh(){
+    // reload admin data to sync vacation balances in users table
+    await loadAdminData();
+    await window.renderAdminVacTable();
+}
+
+/* ── PDF / PRINT ── */
+function periodStr(ptype){
+    const now=new Date(),y=now.getFullYear(),m=String(now.getMonth()+1).padStart(2,'0'),d=now.getDate();
+    const dim=new Date(y,now.getMonth()+1,0).getDate();
+    let s,e;
+    if(ptype==='monthly'){s='01';e=String(dim).padStart(2,'0');}
+    else{if(d<=15){s='01';e='15';}else{s='16';e=String(dim).padStart(2,'0');}}
+    return`${s}/${m}/${y} al ${e}/${m}/${y}`;
+}
+window.generateValidationPDF=async()=>{
+    const idSet=new Set();
+    document.querySelectorAll('#validation-table .row-select:checked').forEach(c=>idSet.add(c.value));
+    document.querySelectorAll('#validation-table .pay-check:checked').forEach(c=>idSet.add(c.value));
+    const tid=document.getElementById('filter-tech-select').value;
+    const ptype=document.getElementById('filter-period-select').value;
+    const ftype=document.getElementById('filter-type-select').value;
+    if(!idSet.size){
+        if(tid==='all'){showToast('Seleccione un técnico o registros específicos','warning');return;}
+        printRecords([],ptype,tid,ftype);return;
+    }
+    const q=query(collection(db,'records'),where(documentId(),'in',Array.from(idSet)));
+    const recs=(await getDocs(q)).docs.map(d=>d.data());
+    printRecords(recs,ptype,tid,ftype);
+};
+async function printRecords(list,ptype,techId,ftype){
+    list.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const exps=list.filter(r=>r.type==='expense');
+    const hrs=list.filter(r=>r.type==='hour');
+    let totE=0;exps.forEach(e=>totE+=parseFloat(e.amount));
+    const isExp=ftype==='expense'||(hrs.length===0&&exps.length>0);
+    let name='Varios',vac=0;
+    if(techId&&techId!=='all'){const u=usersData.find(x=>x.id===techId);if(u){name=u.fullName;vac=u.vacationDays||0;}}
+    else{const ids=[...new Set(list.map(r=>r.userId))];if(ids.length===1){const u=usersData.find(x=>x.id===ids[0]);if(u){name=u.fullName;vac=u.vacationDays||0;}}}
+    let dtype='',period='',pay=null;
+    if(isExp){
+        dtype='LIQUIDACIÓN DE GASTOS';
+        const sd=document.getElementById('filter-start-date').value;
+        const ed=document.getElementById('filter-end-date').value;
+        if(sd&&ed)period=`${fmtDate(sd)} al ${fmtDate(ed)}`;
+        else if(list.length)period=`Del ${fmtDate(list[0].date)} al ${fmtDate(list[list.length-1].date)}`;
+        else{const n=new Date();period=`Mes: ${String(n.getMonth()+1).padStart(2,'0')}/${n.getFullYear()}`;}
+    }else{dtype='VALE DE PAGO';pay=calcPay(techId,hrs,ptype);period=periodStr(ptype);}
+    document.getElementById('print-tech-name').textContent=name;
+    document.getElementById('print-date').textContent='Fecha Emisión: '+new Date().toLocaleDateString();
+    document.getElementById('print-period-text').textContent=period;
+    document.getElementById('print-vacation-days').textContent=`${vac} días`;
+    document.querySelector('.pdf-col-info:nth-child(3)').style.display=isExp?'none':'block';
+    document.getElementById('print-doc-type').textContent=dtype;
+    document.querySelector('.grand-total').style.display='';
+    let html='';
+    if(!isExp){
+        if(hrs.length){
+            let tot=0;hrs.forEach(r=>tot+=parseFloat(r.extra));
+            html+=`<h3 style="margin-top:15px;font-size:16px;border-bottom:1px solid #ccc;padding-bottom:5px">Detalle Horas Extra</h3>`;
+            html+=`<table class="pdf-table"><thead><tr><th style="width:18%">Fecha</th><th style="width:32%">Cliente</th><th style="width:12%">Día</th><th style="width:19%">Total</th><th style="width:19%">Extra</th></tr></thead><tbody>`;
+            hrs.forEach(r=>{const[y,m,d]=r.date.split('-');const day=new Date(y,m-1,d).getDay();const dn=day===0?'Dom':day===6?'Sáb':'Lun-Vie';html+=`<tr><td>${fmtDate(r.date)}</td><td>${r.client}</td><td style="text-align:center">${dn}</td><td style="text-align:center">${r.total}h</td><td style="text-align:center;font-weight:bold">${r.extra}h</td></tr>`;});
+            html+=`<tr class="subtotal"><td colspan="4" style="text-align:right">Total Horas:</td><td style="text-align:center">${tot.toFixed(1)}h</td></tr></tbody></table>`;
+        }
+        if(pay){
+            html+=`<div class="payroll-box"><div class="payroll-title">Desglose de Pago</div>`;
+            html+=`<div class="payroll-row earning"><span>Salario Base ${ptype==='biweekly'?'Quincenal':'Mensual'}:</span><span>${fmt(pay.baseSalary)}</span></div>`;
+            if(pay.amountSun>0)html+=`<div class="payroll-row earning"><span>Horas dobles (Dom):</span><span>${fmt(pay.amountSun)}</span></div>`;
+            if(pay.amountSat>0)html+=`<div class="payroll-row earning"><span>Horas Extra (Sáb/Ord.):</span><span>${fmt(pay.amountSat)}</span></div>`;
+            html+=`<div style="border-top:1px dashed #ccc;margin:5px 0"></div>`;
+            html+=`<div class="payroll-row deduction"><span>CCSS (10.83%):</span><span>-${fmt(pay.ccss)}</span></div>`;
+            html+=`<div class="payroll-row deduction"><span>Renta Estimada:</span><span>-${fmt(pay.renta)}</span></div>`;
+            html+=`<div style="border-top:1px solid #000;margin:5px 0"></div>`;
+            html+=`<div class="payroll-row total" style="color:#1B2A4A"><span>Neto Salario:</span><span>${fmt(pay.neto)}</span></div>`;
+            if(totE>0)html+=`<div class="payroll-row earning" style="margin-top:10px"><span>Reembolso Gastos:</span><span>${fmt(totE)}</span></div>`;
+            html+=`</div>`;
+        }
+    }
+    if(exps.length){
+        html+=`<h3 style="margin-top:20px;font-size:16px;border-bottom:1px solid #ccc;padding-bottom:5px">Reembolso de Gastos</h3>`;
+        html+=`<table class="pdf-table"><thead><tr><th style="width:12%">Fecha</th><th style="width:12%">Factura</th><th style="width:15%">Comercio</th><th style="width:15%">Cliente</th><th style="width:26%">Descripción</th><th style="width:20%">Monto</th></tr></thead><tbody>`;
+        exps.forEach(r=>html+=`<tr><td>${fmtDate(r.date)}</td><td>${r.invoiceNum}</td><td>${r.store}</td><td>${r.client}</td><td style="vertical-align:top">${r.description||'-'}</td><td class="num">${fmt(r.amount)}</td></tr>`);
+        html+=`<tr class="subtotal"><td colspan="5" style="text-align:right">Total Gastos:</td><td class="num">${fmt(totE)}</td></tr></tbody></table>`;
+        const LIM=200000;
+        html+=`<div class="petty-cash-box"><div class="petty-cash-header">Resumen Caja Chica (Límite: ₡200,000)</div>`;
+        if(totE<=LIM){html+=`<div class="petty-cash-row"><span>Saldo Restante:</span><span class="petty-cash-ok">${fmt(LIM-totE)}</span></div>`;}
+        else{const exc=totE-LIM;html+=`<div class="petty-cash-row"><span>Fondo Utilizado:</span><span>₡200,000.00</span></div><div class="petty-cash-row" style="margin-top:5px;border-top:1px solid #eee;padding-top:5px"><span style="font-weight:bold">Excedente (Dinero del Técnico):</span><span class="petty-cash-excess">${fmt(exc)}</span></div>`;}
+        html+=`</div>`;
+    }
+    document.getElementById('print-tables-container').innerHTML=html;
+    let ft=0;
+    if(isExp)ft=totE;else{if(pay)ft=parseFloat(pay.neto);ft+=totE;}
+    document.getElementById('print-final-total').textContent=fmt(ft);
+    document.getElementById('app-view').style.display='none';
+    document.getElementById('print-area').style.display='block';
+    window.print();
+    document.getElementById('print-area').style.display='none';
+    document.getElementById('app-view').style.display='block';
+}
+
+/* ── HELPERS ── */
+
+/* ══════════════════════════════════════════
+   ESTADÍSTICAS
+══════════════════════════════════════════ */
+
+const TECH_COLORS = [
+    '#1B2A4A','#c0272d','#2563eb','#0891b2','#7c3aed',
+    '#b45309','#065f46','#9f1239','#d97706','#374151'
+];
+
+let statsCharts = {};
+
+function destroyChart(id) {
+    if (statsCharts[id]) { statsCharts[id].destroy(); delete statsCharts[id]; }
+}
+
+function initStatsYearSelector() {
+    const sel = document.getElementById('stats-year');
+    if (!sel || sel.options.length > 0) return;
+    const now = new Date().getFullYear();
+    for (let y = now; y >= now - 4; y--) {
+        const o = document.createElement('option');
+        o.value = y; o.textContent = y; sel.appendChild(o);
+    }
+}
+
+// Shared Chart.js defaults for clean, professional look
+function chartDefaults() {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 600, easing: 'easeInOutQuart' },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: '#1B2A4A',
+                titleColor: '#e2e8f4',
+                bodyColor: '#9bacc8',
+                borderColor: '#2e4270',
+                borderWidth: 1,
+                padding: 10,
+                cornerRadius: 8,
+                titleFont: { size: 12, weight: '600' },
+                bodyFont: { size: 12 },
+            }
+        },
+        scales: {
+            x: {
+                grid: { display: false },
+                border: { display: false },
+                ticks: { font: { size: 11, family: "'DM Sans', sans-serif" }, color: '#8896b0', maxRotation: 0 }
             },
-            formatDateTime: (isoStr) => {
-                if(!isoStr) return '';
-                const d = new Date(isoStr);
-                return d.toLocaleString('es-CR');
+            y: {
+                grid: { color: '#f0f3f8', drawBorder: false },
+                border: { display: false, dash: [4,4] },
+                ticks: { font: { size: 11, family: "'DM Sans', sans-serif" }, color: '#8896b0' }
+            }
+        }
+    };
+}
+
+function donutDefaults(fmtFn, labels) {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        animation: { duration: 700, easing: 'easeInOutQuart' },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'bottom',
+                labels: {
+                    font: { size: 11, family: "'DM Sans', sans-serif" },
+                    color: '#4a5878',
+                    boxWidth: 10, boxHeight: 10,
+                    padding: 12,
+                    usePointStyle: true,
+                    pointStyleWidth: 10
+                }
             },
-            showToast: (msg, type = 'info') => {
-                const container = document.getElementById('toast-container');
-                const toast = document.createElement('div');
-                toast.className = `toast toast-${type}`;
-                toast.textContent = msg;
-                container.appendChild(toast);
-                setTimeout(() => toast.classList.add('show'), 100);
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 300);
-                }, 3000);
-            },
-            // Calcula la diferencia en meses completos entre dos fechas
-            getMonthsDifference: (startDateStr) => {
-                if(!startDateStr) return 0;
-                const start = new Date(startDateStr + 'T00:00:00');
-                const now = new Date();
-                
-                let months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-                
-                // Si el día de hoy es menor al día de ingreso, restar un mes (aún no cumple ese mes)
-                if (now.getDate() < start.getDate()) {
-                    months--;
-                }
-                
-                return months < 0 ? 0 : months; 
-            }
-        };
-
-        // --- GESTIÓN DE SESIÓN ---
-        function checkSession() {
-            auth.signOut();
-
-            onAuthStateChanged(auth, async (user) => {
-                document.getElementById('loading-screen').classList.add('hidden');
-                try {
-                    if (user) {
-                        await loadUserProfile(user.uid);
-                    } else {
-                        showLogin();
-                    }
-                } catch (error) {
-                    console.error("Error en sesión:", error);
-                    showLogin(); 
-                }
-            });
-        }
-
-        async function loadUserProfile(uid) {
-            try {
-                const docRef = doc(db, "users", uid);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    currentUser = { id: uid, ...docSnap.data() };
-                    if (!currentUser.role) currentUser.role = 'tech'; 
-                } else {
-                    const userAuth = auth.currentUser;
-                    currentUser = {
-                        id: uid,
-                        email: userAuth.email,
-                        fullName: userAuth.displayName || userAuth.email.split('@')[0],
-                        role: 'admin',
-                    };
-                }
-                showApp();
-            } catch (error) {
-                console.error("Error cargando perfil:", error);
-                Utils.showToast('Error de conexión', 'error');
-                auth.signOut();
-            }
-        }
-
-        function showLogin() {
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('login-view').classList.remove('hidden');
-            document.getElementById('app-view').classList.add('hidden');
-        }
-
-        function showApp() {
-            document.getElementById('login-view').classList.add('hidden');
-            document.getElementById('app-view').classList.remove('hidden');
-            document.getElementById('user-display-name').textContent = `${currentUser.fullName} (${currentUser.role === 'admin' ? 'Admin' : 'Técnico'})`;
-
-            if (currentUser.role === 'admin') {
-                document.getElementById('admin-panel').classList.remove('hidden');
-                document.getElementById('technician-panel').classList.add('hidden');
-                loadAdminData();
-            } else {
-                document.getElementById('technician-panel').classList.remove('hidden');
-                document.getElementById('admin-panel').classList.add('hidden');
-                loadTechData();
-            }
-        }
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-password').value);
-                Utils.showToast('Iniciando sesión...', 'info');
-            } catch (error) {
-                Utils.showToast('Credenciales incorrectas: ' + error.message, 'error');
-            }
-        });
-
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            signOut(auth).then(() => location.reload());
-        });
-
-        // --- LÓGICA DE NEGOCIO ---
-        function calculateTimeLogic(dateStr, startStr, endStr) {
-            const stdStart = 7.5; 
-            const stdEnd = 17.0;  
-            const dateObj = new Date(dateStr + 'T00:00:00');
-            const dayOfWeek = dateObj.getDay(); 
-            const toDecimal = (timeStr) => {
-                const [h, m] = timeStr.split(':').map(Number);
-                return h + (m / 60);
-            };
-            const startH = toDecimal(startStr);
-            const endH = toDecimal(endStr);
-            let totalMinutes = (endH - startH) * 60;
-            if (totalMinutes <= 0) return { total: '0.0', regular: '0.0', extra: '0.0' };
-            let regularMinutes = 0;
-            let extraMinutes = 0;
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
-                extraMinutes = totalMinutes;
-                regularMinutes = 0;
-            } else {
-                let overlapStart = Math.max(startH, stdStart);
-                let overlapEnd = Math.min(endH, stdEnd);
-                let overlapDuration = 0;
-                if (overlapEnd > overlapStart) {
-                    overlapDuration = (overlapEnd - overlapStart) * 60;
-                }
-                regularMinutes = overlapDuration;
-                extraMinutes = totalMinutes - regularMinutes;
-            }
-            return {
-                total: (totalMinutes / 60).toFixed(1),
-                regular: (regularMinutes / 60).toFixed(1),
-                extra: (extraMinutes / 60).toFixed(1)
-            };
-        }
-
-        function calculatePaymentForRecords(techId, hoursList, periodType = 'monthly') {
-            const tech = usersData.find(u => u.id === techId);
-            
-            if (!tech || !tech.salary) return null; 
-            
-            const salary = parseFloat(tech.salary);
-            
-            const baseSalary = periodType === 'biweekly' ? salary / 2 : salary;
-            
-            const hourlyRate = salary / 240; 
-            const satRate = hourlyRate * 1.5;
-            const sunRate = hourlyRate * 2.0;
-            
-            let satHours = 0;
-            let sunHours = 0;
-            
-            if(hoursList && hoursList.length > 0) {
-                hoursList.forEach(r => {
-                    const day = new Date(r.date + 'T00:00:00').getDay();
-                    const extra = parseFloat(r.extra);
-                    if (day === 0) { sunHours += extra; } else { satHours += extra; }
-                });
-            }
-            
-            const grossSat = satHours * satRate;
-            const grossSun = sunHours * sunRate;
-            const grossExtra = grossSat + grossSun;
-            
-            const totalIncome = baseSalary + grossExtra;
-            const ccss = totalIncome * 0.1083;
-            
-            let renta = 0;
-            const exemption = 864000;
-            if (totalIncome > exemption) renta = (totalIncome - exemption) * 0.10; 
-            
-            return { 
-                baseSalary, 
-                gross: grossExtra, 
-                ccss, 
-                renta, 
-                neto: totalIncome - ccss - renta, 
-                satHours, 
-                sunHours,
-                amountSat: grossSat, 
-                amountSun: grossSun 
-            };
-        }
-
-        async function logAudit(action, recordType, recordId, details) {
-            try {
-                await addDoc(collection(db, "auditLog"), {
-                    timestamp: new Date().toISOString(),
-                    actor: currentUser ? currentUser.fullName : 'Usuario',
-                    action: action,
-                    type: recordType,
-                    recordId: recordId,
-                    details: details
-                });
-            } catch (e) {
-                console.warn("No se pudo guardar log de auditoría:", e);
-            }
-        }
-
-        // --- GESTIÓN DE TÉCNICO ---
-        async function loadTechData() {
-            try {
-                const q = query(collection(db, "records"), where("userId", "==", currentUser.id));
-                const querySnapshot = await getDocs(q);
-                const records = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                const hours = records.filter(r => r.type === 'hour').sort((a,b) => new Date(b.date) - new Date(a.date));
-                
-                const hoursBody = document.querySelector('#tech-hours-table tbody');
-                let hoursRows = '';
-                let totalPendingExtra = 0;
-                
-                hours.forEach(h => {
-                    const isPaid = h.status === 'paid';
-                    if(!isPaid) totalPendingExtra += parseFloat(h.extra);
-                    
-                    hoursRows += `
-                        <tr>
-                            <td>${Utils.formatDate(h.date)}</td>
-                            <td>${h.client}</td>
-                            <td>${h.startTime}</td>
-                            <td>${h.endTime}</td>
-                            <td>${h.total}h</td>
-                            <td class="font-bold" style="color: ${parseFloat(h.extra) > 0 ? 'var(--primary-color)' : 'inherit'}">${h.extra}h</td>
-                            <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td>
-                            <td class="flex gap-2">
-                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-warning" onclick="window.openEditModal('hour', '${h.id}')">Editar</button>` : ''}
-                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('hour', '${h.id}')">Eliminar</button>` : ''}
-                            </td>
-                        </tr>`;
-                });
-                hoursBody.innerHTML = hoursRows;
-                document.getElementById('tech-pending-hours').textContent = totalPendingExtra.toFixed(1);
-
-                const expenses = records.filter(r => r.type === 'expense').sort((a,b) => new Date(b.date) - new Date(a.date));
-                const expBody = document.querySelector('#tech-expenses-table tbody');
-                let expRows = '';
-                let totalPendingExp = 0;
-                
-                expenses.forEach(ex => {
-                    const isPaid = ex.status === 'paid';
-                    if(!isPaid) totalPendingExp += parseFloat(ex.amount);
-                    
-                    expRows += `
-                        <tr>
-                            <td>${Utils.formatDate(ex.date)}</td>
-                            <td>${ex.invoiceNum}</td>
-                            <td>${ex.store}</td>
-                            <td>${ex.client}</td>
-                            <td>${ex.description}</td>
-                            <td>${Utils.formatCurrency(ex.amount)}</td>
-                            <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td>
-                            <td class="flex gap-2">
-                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-warning" onclick="window.openEditModal('expense', '${ex.id}')">Editar</button>` : ''}
-                                ${!isPaid ? `<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('expense', '${ex.id}')">Eliminar</button>` : ''}
-                            </td>
-                        </tr>`;
-                });
-                expBody.innerHTML = expRows;
-                document.getElementById('tech-pending-expenses').textContent = Utils.formatCurrency(totalPendingExp);
-            } catch (e) {
-                console.error(e);
-                Utils.showToast("Error cargando datos", "error");
-            }
-        }
-
-        window.openEditModal = async function(type, id) {
-            const modalId = type === 'hour' ? 'modal-hour' : 'modal-expense';
-            window.openModal(modalId); 
-
-            try {
-                const docRef = doc(db, "records", id);
-                const docSnap = await getDoc(docRef);
-                const r = docSnap.data();
-                
-                if(type === 'hour') {
-                    document.getElementById('hour-id').value = id;
-                    document.getElementById('hour-client').value = r.client;
-                    document.getElementById('hour-date').value = r.date;
-                    document.getElementById('hour-start').value = r.startTime;
-                    document.getElementById('hour-end').value = r.endTime;
-                    document.getElementById('hour-modal-title').textContent = 'Editar Hora Extra';
-                } else {
-                    document.getElementById('expense-id').value = id;
-                    document.getElementById('exp-date').value = r.date;
-                    document.getElementById('exp-invoice').value = r.invoiceNum;
-                    document.getElementById('exp-store').value = r.store;
-                    document.getElementById('exp-amount').value = r.amount;
-                    document.getElementById('exp-client').value = r.client;
-                    document.getElementById('exp-desc').value = r.description;
-                    document.getElementById('expense-modal-title').textContent = 'Editar Gasto';
-                }
-            } catch(e) { 
-                Utils.showToast('Error cargando datos', 'error'); 
-            }
-        };
-
-        window.openDeleteConfirm = function(type, id) {
-            pendingDelete = { type, id };
-            const modal = document.getElementById('modal-confirm-delete');
-            modal.classList.remove('hidden');
-        };
-
-        window.cancelDelete = function() {
-            const modal = document.getElementById('modal-confirm-delete');
-            modal.classList.add('hidden');
-            pendingDelete = { type: null, id: null };
-        };
-
-        window.confirmDeleteAction = async function() {
-            if (!pendingDelete.id) return;
-
-            try {
-                await deleteDoc(doc(db, "records", pendingDelete.id));
-                try {
-                    await logAudit('DELETE', pendingDelete.type, pendingDelete.id, 'Registro eliminado');
-                } catch (e) { console.warn(e); }
-                await loadTechData();
-                Utils.showToast('Registro eliminado', 'success');
-                window.cancelDelete();
-            } catch (error) {
-                console.error("Error borrando:", error);
-                Utils.showToast('No se pudo borrar: ' + error.message, 'error');
-            }
-        };
-
-        window.openModal = function(id) {
-            document.getElementById(id).classList.remove('hidden');
-            
-            const form = document.getElementById(id).querySelector('form');
-            if(form) {
-                form.reset();
-                const hiddenId = form.querySelector('input[type="hidden"]');
-                if(hiddenId) hiddenId.value = '';
-            }
-
-            if(id === 'modal-hour') document.getElementById('hour-modal-title').textContent = 'Registro de Horas';
-            if(id === 'modal-expense') document.getElementById('expense-modal-title').textContent = 'Registro de Gastos';
-        };
-
-        document.getElementById('hour-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('hour-id').value;
-                const date = document.getElementById('hour-date').value;
-                const start = document.getElementById('hour-start').value;
-                const end = document.getElementById('hour-end').value;
-                const client = document.getElementById('hour-client').value;
-                const calc = calculateTimeLogic(date, start, end);
-                
-                const newRecord = { 
-                    type: 'hour', 
-                    userId: currentUser.id, 
-                    date, 
-                    startTime: start, 
-                    endTime: end, 
-                    client, 
-                    total: calc.total, 
-                    regular: calc.regular, 
-                    extra: calc.extra, 
-                    status: 'pending' 
-                };
-
-                if(id) { 
-                    newRecord.id = id;
-                    await updateRecord(newRecord, 'hour'); 
-                } else { 
-                    await saveRecord(newRecord); 
-                }
-            } catch (error) {
-                console.error("Error guardando hora:", error);
-                Utils.showToast('Error al guardar: ' + error.message, 'error');
-            }
-        });
-
-        document.getElementById('expense-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const id = document.getElementById('expense-id').value;
-                const newRecord = {
-                    type: 'expense',
-                    userId: currentUser.id,
-                    invoiceNum: document.getElementById('exp-invoice').value,
-                    store: document.getElementById('exp-store').value,
-                    amount: document.getElementById('exp-amount').value,
-                    date: document.getElementById('exp-date').value,
-                    client: document.getElementById('exp-client').value,
-                    description: document.getElementById('exp-desc').value,
-                    status: 'pending'
-                };
-                
-                if(id) { 
-                    newRecord.id = id;
-                    await updateRecord(newRecord, 'expense'); 
-                } else { 
-                    await saveRecord(newRecord); 
-                }
-            } catch (error) {
-                console.error("Error guardando gasto:", error);
-                Utils.showToast('Error al guardar: ' + error.message, 'error');
-            }
-        });
-
-        async function saveRecord(record) {
-            const docRef = await addDoc(collection(db, "records"), record);
-            await logAudit('CREATE', record.type, docRef.id, 'Registro creado');
-            loadTechData();
-            window.closeModal('modal-' + record.type);
-            Utils.showToast('Guardado exitosamente', 'success');
-        }
-
-        async function updateRecord(newRecord, type) {
-            const docRef = doc(db, "records", newRecord.id);
-            const oldSnap = await getDoc(docRef);
-            const oldRecord = oldSnap.data();
-            
-            const updateData = { ...newRecord };
-            delete updateData.id;
-
-            let changes = [];
-            if(type === 'hour') {
-                if(newRecord.client !== oldRecord.client) changes.push(`Cliente: ${oldRecord.client} -> ${newRecord.client}`);
-                if(newRecord.startTime !== oldRecord.startTime) changes.push(`Inicio: ${oldRecord.startTime} -> ${newRecord.startTime}`);
-                if(newRecord.endTime !== oldRecord.endTime) changes.push(`Fin: ${oldRecord.endTime} -> ${newRecord.endTime}`);
-                if(newRecord.extra !== oldRecord.extra) changes.push(`Extra: ${oldRecord.extra} -> ${newRecord.extra}`);
-            } else {
-                if(newRecord.amount !== oldRecord.amount) changes.push(`Monto: ${oldRecord.amount} -> ${newRecord.amount}`);
-                if(newRecord.store !== oldRecord.store) changes.push(`Comercio: ${oldRecord.store} -> ${newRecord.store}`);
-                if(newRecord.invoiceNum !== oldRecord.invoiceNum) changes.push(`Factura: ${oldRecord.invoiceNum} -> ${newRecord.invoiceNum}`);
-                if(newRecord.description !== oldRecord.description) changes.push(`Desc actualizada.`);
-            }
-            await updateDoc(docRef, updateData);
-            await logAudit('EDIT', type, newRecord.id, changes.join('; '));
-            loadTechData();
-            window.closeModal('modal-' + type);
-            Utils.showToast('Actualizado exitosamente', 'success');
-        }
-
-        // --- ADMIN ---
-        async function loadAdminData() {
-            try {
-                const q = query(collection(db, "users"), where("role", "==", "tech"));
-                const querySnapshot = await getDocs(q);
-                const tbody = document.getElementById('users-table-body');
-                const filterSelect = document.getElementById('filter-tech-select');
-                
-                let usersHtml = '';
-                let filterOptions = '<option value="all">Todos</option>';
-                
-                tbody.innerHTML = '';
-                filterSelect.innerHTML = filterOptions;
-                usersData = [];
-
-                // Array para guardar las promesas de actualización automática
-                const updatePromises = [];
-
-                querySnapshot.forEach((docRef) => {
-                    const u = docRef.data();
-                    const docId = docRef.id;
-
-                    // --- LÓGICA AUTOMÁTICA DE VACACIONES (Sumar 1 día cada mes) ---
-                    const currentTotalVacDays = u.vacationDays || 0;
-                    const currentMonthsPassed = Utils.getMonthsDifference(u.startDate);
-                    
-                    // Este campo tracking nos dice cuántos meses ya hemos sumado a la base de datos.
-                    // Si no existe, asumimos 0.
-                    const alreadyCreditedMonths = u.vacationCreditedMonths || 0;
-                    
-                    let finalVacDays = currentTotalVacDays;
-
-                    // Si han pasado más meses que los que hemos contabilizado, sumamos la diferencia
-                    if (currentMonthsPassed > alreadyCreditedMonths) {
-                        const monthsToAdd = currentMonthsPassed - alreadyCreditedMonths;
-                        finalVacDays = currentTotalVacDays + monthsToAdd;
-                        
-                        // Programar actualización a BD
-                        updatePromises.push(
-                            updateDoc(doc(db, "users", docId), { 
-                                vacationDays: finalVacDays,
-                                vacationCreditedMonths: currentMonthsPassed 
-                            }).then(() => {
-                                // Actualizar localmente para la tabla
-                                u.vacationDays = finalVacDays;
-                                u.vacationCreditedMonths = currentMonthsPassed;
-                            }).catch(err => console.error("Error auto-sumando vacaciones", err))
-                        );
-                    }
-                    // ----------------------------------------------
-
-                    usersData.push({ id: docId, ...u });
-                    
-                    const startDateFormatted = u.startDate ? Utils.formatDate(u.startDate) : '-'; 
-                    
-                    // Usamos finalVacDays (que ya contiene el valor actualizado si hubo cambio)
-                    usersHtml += `<tr>
-                        <td>${u.fullName}</td>
-                        <td>${Utils.formatCurrency(u.salary)}</td>
-                        <td style="text-align:center; font-weight:bold;">${finalVacDays}</td>
-                        <td style="text-align:center;">${startDateFormatted}</td>
-                        <td>${u.email}</td>
-                        <td>Técnico</td>
-                        <td>
-                            <button type="button" class="btn btn-sm btn-warning" onclick="window.openTechEditModal('${docId}')">Editar</button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteUser('${docId}')">Eliminar</button>
-                        </td>
-                    </tr>`;
-                    
-                    filterOptions += `<option value="${docId}">${u.fullName}</option>`;
-                });
-
-                tbody.innerHTML = usersHtml;
-                filterSelect.innerHTML = filterOptions;
-
-                // Ejecutar actualizaciones automáticas en segundo plano
-                await Promise.all(updatePromises);
-                
-            } catch(e) {
-                console.error(e);
-                Utils.showToast("Error cargando admin", "error");
-            }
-        }
-
-        async function createUserViaAPI(email, password) {
-            const endpoint = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`;
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    returnSecureToken: true
-                })
-            });
-            return response.json();
-        }
-
-        document.getElementById('create-user-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('new-fullname').value;
-            const email = document.getElementById('new-email').value;
-            const pass = document.getElementById('new-password').value;
-            const salary = document.getElementById('new-salary').value;
-            const startDate = document.getElementById('new-start-date').value; 
-            const manualVacations = document.getElementById('new-vacation-days').value || 0; 
-            
-            try {
-                const data = await createUserViaAPI(email, pass);
-                if (data.error) throw new Error(data.error.message);
-                const uid = data.localId;
-                
-                // Al crear, calculamos los meses pasados para setear el tracking inicial
-                const monthsPassed = Utils.getMonthsDifference(startDate);
-                
-                await setDoc(doc(db, "users", uid), { 
-                    fullName: name, 
-                    email, 
-                    salary: salary, 
-                    role: 'tech', 
-                    startDate: startDate,
-                    vacationDays: parseFloat(manualVacations),
-                    vacationCreditedMonths: monthsPassed, // Para no sumar desde el inicio del tiempo inmediatamente
-                    createdAt: new Date() 
-                });
-                Utils.showToast('Técnico creado exitosamente', 'success');
-                e.target.reset();
-                loadAdminData();
-            } catch (error) {
-                console.error(error);
-                let msg = error.message;
-                if (msg.includes('EMAIL_EXISTS')) msg = 'El correo ya está en uso.';
-                if (msg.includes('WEAK_PASSWORD')) msg = 'La contraseña es muy débil.';
-                Utils.showToast('Error: ' + msg, 'error');
-            }
-        });
-
-        window.openTechEditModal = function(userId) {
-            try {
-                const u = usersData.find(x => x.id === userId);
-                if(!u) {
-                    Utils.showToast('No se encontró el técnico', 'error');
-                    return;
-                }
-                
-                window.openModal('modal-tech-edit');
-                
-                document.getElementById('edit-tech-id').value = userId;
-                document.getElementById('edit-tech-fullname').value = u.fullName || '';
-                document.getElementById('edit-tech-salary').value = u.salary || '';
-                document.getElementById('edit-start-date').value = u.startDate || '';
-                document.getElementById('edit-vacation-days').value = u.vacationDays || 0;
-                
-            } catch (error) {
-                console.error(error);
-                Utils.showToast('Error al preparar edición', 'error');
-            }
-        };
-
-        document.getElementById('tech-edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                const userId = document.getElementById('edit-tech-id').value;
-                const name = document.getElementById('edit-tech-fullname').value;
-                const salaryInput = document.getElementById('edit-tech-salary').value;
-                const startDate = document.getElementById('edit-start-date').value;
-                const manualVacationsInput = document.getElementById('edit-vacation-days').value;
-                
-                if (!userId) throw new Error("ID de técnico no encontrado");
-                if (!name || name.trim() === "") throw new Error("El nombre es obligatorio");
-                
-                const salaryNumber = parseFloat(salaryInput);
-                if (isNaN(salaryNumber) || salaryNumber < 0) throw new Error("El salario debe ser un número válido");
-
-                const vacNumber = parseFloat(manualVacationsInput);
-                if (isNaN(vacNumber) || vacNumber < 0) throw new Error("Los días de vacaciones deben ser válidos");
-
-                // Importante: NO cambiar el vacationCreditedMonths si solo se edita la cantidad manual,
-                // para que el sistema siga sumando desde donde quedó.
-                // Si el usuario cambia la fecha de inicio, podríamos reiniciar, pero por simplicidad lo dejamos así.
-                
-                await updateDoc(doc(db, "users", userId), { 
-                    fullName: name, 
-                    salary: salaryNumber,
-                    startDate: startDate,
-                    vacationDays: vacNumber 
-                });
-
-                window.closeModal('modal-tech-edit');
-                loadAdminData();
-                Utils.showToast('Actualizado', 'success');
-            } catch (error) {
-                console.error("Error editando técnico:", error);
-                Utils.showToast('Error al actualizar: ' + error.message, 'error');
-            }
-        });
-
-        window.deleteUser = async function(userId) {
-            const q = query(collection(db, "records"), where("userId", "==", userId));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-                Utils.showToast('No se puede borrar. Tiene registros activos.', 'error');
-                return;
-            }
-            if(!confirm('¿Borrar técnico?')) return;
-            try {
-                await deleteDoc(doc(db, "users", userId));
-                loadAdminData();
-                Utils.showToast('Eliminado', 'success');
-            } catch(e) {
-                Utils.showToast('Error al borrar: ' + e.message, 'error');
-            }
-        };
-
-        // --- VALIDACIÓN Y PAGOS ---
-        window.renderValidationTable = async function() {
-            const typeFilter = document.getElementById('filter-type-select').value;
-            const filterId = document.getElementById('filter-tech-select').value;
-            const startDate = document.getElementById('filter-start-date').value;
-            const endDate = document.getElementById('filter-end-date').value;
-            const tbody = document.querySelector('#validation-table tbody');
-            
-            let q = query(collection(db, "records"));
-            
-            if (typeFilter !== 'all') q = query(q, where("type", "==", typeFilter));
-            if (filterId !== 'all') q = query(q, where("userId", "==", filterId));
-            if (startDate) q = query(q, where("date", ">=", startDate));
-            if (endDate) q = query(q, where("date", "<=", endDate));
-            
-            const snap = await getDocs(q);
-            const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            let rows = '';
-            records.sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            records.forEach(r => {
-                const u = usersData.find(x => x.id === r.userId);
-                const userName = u ? u.fullName : '?';
-                const isPaid = r.status === 'paid';
-                const id = r.id; 
-                let detail = '', amount = '';
-
-                if (r.type === 'hour') {
-                    amount = `Extra: ${r.extra}h`;
-                    detail = `De ${r.startTime} a ${r.endTime}`;
-                } else {
-                    amount = Utils.formatCurrency(r.amount);
-                    detail = `${r.invoiceNum} - ${r.store} - ${r.description}`;
-                }
-
-                let actionHtml = isPaid ? `<input type="checkbox" class="pay-check" value="${id}" title="PDF"><button type="button" class="btn btn-warning btn-sm" onclick="window.revertToPending('${id}')">Volver</button>` : `<input type="checkbox" class="pay-check" value="${id}">`;
-                
-                rows += `
-                    <tr>
-                        <td><input type="checkbox" class="row-select" value="${id}"></td>
-                        <td>${userName}</td>
-                        <td>${r.type === 'hour' ? 'Hora' : 'Gasto'}</td>
-                        <td>${Utils.formatDate(r.date)}</td>
-                        <td>${r.client}</td>
-                        <td>${detail}</td>
-                        <td>${amount}</td>
-                        <td><span class="badge ${isPaid ? 'badge-paid' : 'badge-pending'}">${isPaid ? 'PAGADO' : 'PENDIENTE'}</span></td>
-                        <td>${actionHtml}</td>
-                    </tr>`;
-            });
-            tbody.innerHTML = rows;
-        }
-
-        window.toggleSelectAllValidation = function() {
-            const master = document.getElementById('select-all-validation');
-            document.querySelectorAll('#validation-table .row-select').forEach(cb => cb.checked = master.checked);
-        };
-
-        window.revertToPending = async function(id) {
-            if(!confirm('¿Volver a pendiente?')) return;
-            await updateDoc(doc(db, "records", id), { status: 'pending' });
-            window.renderValidationTable();
-        };
-
-        window.markSelectedAsPaid = async function() {
-            const checkboxes = document.querySelectorAll('#validation-table .pay-check:checked');
-            if(checkboxes.length === 0) return;
-            const ids = Array.from(checkboxes).map(cb => cb.value);
-            if(!confirm(`¿Marcar ${ids.length} como pagado?`)) return;
-            
-            const batch = writeBatch(db);
-            ids.forEach(id => {
-                batch.update(doc(db, "records", id), { status: 'paid' });
-            });
-            await batch.commit();
-            window.renderValidationTable();
-            Utils.showToast('Procesados', 'success');
-        }
-
-        function getPayrollPeriodString(periodType) {
-            const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth() +1).padStart(2, '0');
-            const d = now.getDate();
-
-            let startDay, endDay;
-            const daysInMonth = new Date(y, now.getMonth() + 1, 0).getDate();
-            
-            if (periodType === 'monthly') {
-                startDay = '01';
-                endDay = String(daysInMonth).padStart(2, '0');
-            } else { // biweekly
-                if (d <= 15) {
-                    startDay = '01';
-                    endDay = '15';
-                } else {
-                    startDay = '16';
-                    endDay = String(daysInMonth).padStart(2, '0');
-                }
-            }
-
-            const startDateStr = `${startDay}/${m}/${y}`;
-            const endDateStr = `${endDay}/${m}/${y}`;
-
-            return `${startDateStr} al ${endDateStr}`;
-        }
-
-        window.generateValidationPDF = async function() {
-            const checkboxes = document.querySelectorAll('#validation-table .row-select:checked');
-            const actionCheckboxes = document.querySelectorAll('#validation-table .pay-check:checked');
-            const idSet = new Set();
-            checkboxes.forEach(cb => idSet.add(cb.value));
-            actionCheckboxes.forEach(cb => idSet.add(cb.value));
-            
-            const currentFilterTechId = document.getElementById('filter-tech-select').value;
-            const periodType = document.getElementById('filter-period-select').value;
-            const filterType = document.getElementById('filter-type-select').value;
-
-            if(idSet.size === 0) {
-                if (currentFilterTechId === 'all') {
-                    return Utils.showToast("Seleccione un técnico específico o registros de la tabla", "warning");
-                }
-                printGenericRecords([], 'auto', periodType, currentFilterTechId, filterType);
-                return;
-            }
-
-            const q = query(collection(db, "records"), where(documentId(), "in", Array.from(idSet)));
-            const snap = await getDocs(q);
-            const records = snap.docs.map(d => d.data());
-            
-            printGenericRecords(records, 'auto', periodType, currentFilterTechId, filterType); 
-        }
-
-        async function printGenericRecords(recordList, mode = 'auto', periodType = 'monthly', techIdParam = null, filterType = 'all') {
-            recordList.sort((a,b) => new Date(a.date) - new Date(b.date));
-
-            const expenses = recordList.filter(r => r.type === 'expense');
-            const hours = recordList.filter(r => r.type === 'hour');
-            
-            let totalExpenses = 0;
-            expenses.forEach(e => totalExpenses += parseFloat(e.amount));
-
-            let isExpenseReport = false;
-            if (filterType === 'expense' || (hours.length === 0 && expenses.length > 0)) {
-                isExpenseReport = true;
-            }
-
-            let techName = "Varios";
-            let vacationDays = 0;
-
-            if (techIdParam && techIdParam !== 'all') {
-                const u = usersData.find(x => x.id === techIdParam);
-                if (u) {
-                    techName = u.fullName;
-                    vacationDays = u.vacationDays || 0;
-                }
-            } else {
-                let techIds = [...new Set(recordList.map(r => r.userId))];
-                if (techIds.length === 1) {
-                    const u = usersData.find(x => x.id === techIds[0]);
-                    if (u) {
-                        techName = u.fullName;
-                        vacationDays = u.vacationDays || 0;
+            tooltip: {
+                backgroundColor: '#1B2A4A',
+                titleColor: '#e2e8f4',
+                bodyColor: '#9bacc8',
+                borderColor: '#2e4270',
+                borderWidth: 1,
+                padding: 10,
+                cornerRadius: 8,
+                callbacks: {
+                    label: ctx => {
+                        const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+                        const pct = total > 0 ? ((ctx.raw/total)*100).toFixed(1) : '0.0';
+                        return ` ${ctx.label}: ${fmtFn(ctx.raw)} (${pct}%)`;
                     }
                 }
             }
-
-            let docType = "";
-            let periodText = "";
-            let paymentData = null;
-
-            if (isExpenseReport) {
-                docType = "LIQUIDACIÓN DE GASTOS";
-                const startInput = document.getElementById('filter-start-date').value;
-                const endInput = document.getElementById('filter-end-date').value;
-                
-                if(startInput && endInput) {
-                    periodText = `${Utils.formatDate(startInput)} al ${Utils.formatDate(endInput)}`;
-                } else if (recordList.length > 0) {
-                     const minDate = recordList[0].date;
-                    const maxDate = recordList[recordList.length-1].date;
-                    periodText = `Del ${Utils.formatDate(minDate)} al ${Utils.formatDate(maxDate)}`;
-                } else {
-                    const now = new Date();
-                    const m = String(now.getMonth() + 1).padStart(2, '0');
-                    const y = now.getFullYear();
-                    periodText = `Mes: ${m}/${y}`;
-                }
-            } else {
-                docType = "VALE DE PAGO";
-                paymentData = calculatePaymentForRecords(techIdParam, hours, periodType); 
-                periodText = getPayrollPeriodString(periodType);
-            }
-
-            document.getElementById('print-tech-name').textContent = techName;
-            document.getElementById('print-date').textContent = 'Fecha Emisión: ' + new Date().toLocaleDateString();
-            document.getElementById('print-period-text').textContent = periodText;
-            
-            document.getElementById('print-vacation-days').textContent = `${vacationDays} días`;
-            
-            if (isExpenseReport) {
-                document.querySelector('.pdf-col-info:nth-child(3)').style.display = 'none';
-            } else {
-                document.querySelector('.pdf-col-info:nth-child(3)').style.display = 'block';
-            }
-
-            document.getElementById('print-doc-type').textContent = docType;
-
-            let html = '';
-            
-            if (!isExpenseReport) {
-                if (hours.length > 0) {
-                    let totalHorasExtra = 0;
-                    hours.forEach(r => totalHorasExtra += parseFloat(r.extra));
-
-                    html += `<h3 style="margin-top: 15px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Detalle Horas Extra</h3>`;
-                    html += `<table class="pdf-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 18%;">Fecha</th>
-                                        <th style="width: 32%;">Cliente</th>
-                                        <th style="width: 12%;">Día</th>
-                                        <th style="width: 19%;">Total</th>
-                                        <th style="width: 19%;">Extra</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-                    
-                    hours.forEach(r => {
-                        const [y, m, d] = r.date.split('-');
-                        const dateObj = new Date(y, m-1, d);
-                        const day = dateObj.getDay();
-                        let dayName = day === 0 ? 'Dom' : (day === 6 ? 'Sáb' : 'Lun-Vie');
-                        
-                        html += `<tr>
-                            <td>${Utils.formatDate(r.date)}</td>
-                            <td>${r.client}</td>
-                            <td style="text-align: center;">${dayName}</td>
-                            <td style="text-align: center;">${r.total}h</td>
-                            <td style="text-align: center; font-weight: bold;">${r.extra}h</td>
-                        </tr>`;
-                    });
-                    html += `<tr class="subtotal"><td colspan="4" style="text-align: right;">Total Horas:</td><td style="text-align: center;">${totalHorasExtra.toFixed(1)}h</td></tr>`;
-                    html += `</tbody></table>`;
-                }
-
-                if (paymentData) {
-                    html += `<div class="payroll-box">`;
-                    html += `<div class="payroll-title">Desglose de Pago</div>`;
-                    
-                    html += `<div class="payroll-row earning"><span>Salario Base ${periodType === 'biweekly' ? 'Quincenal' : 'Mensual'}:</span> <span>${Utils.formatCurrency(paymentData.baseSalary)}</span></div>`;
-                    
-                    if (paymentData.amountSun > 0) {
-                        html += `<div class="payroll-row earning"><span>Horas dobles (Domingos):</span> <span>${Utils.formatCurrency(paymentData.amountSun)}</span></div>`;
-                    }
-                    if (paymentData.amountSat > 0) {
-                        html += `<div class="payroll-row earning"><span>Horas Extra (Sábados/Días Ord.):</span> <span>${Utils.formatCurrency(paymentData.amountSat)}</span></div>`;
-                    }
-                    
-                    html += `<div style="border-top: 1px dashed #ccc; margin: 5px 0;"></div>`;
-                    
-                    html += `<div class="payroll-row deduction"><span>CCSS (10.83%):</span> <span>-${Utils.formatCurrency(paymentData.ccss)}</span></div>`;
-                    html += `<div class="payroll-row deduction"><span>Renta Estimada:</span> <span>-${Utils.formatCurrency(paymentData.renta)}</span></div>`;
-                    html += `<div style="border-top: 1px solid #000; margin: 5px 0;"></div>`;
-                    
-                    html += `<div class="payroll-row total" style="color: var(--primary-color);"><span>Neto Salario:</span> <span>${Utils.formatCurrency(paymentData.neto)}</span></div>`;
-
-                    if(totalExpenses > 0) {
-                        html += `<div class="payroll-row earning" style="margin-top: 10px;"><span>Reembolso Gastos:</span> <span>${Utils.formatCurrency(totalExpenses)}</span></div>`;
-                    }
-                    
-                    html += `</div>`;
-                }
-            }
-
-            if (expenses.length > 0) {
-                html += `<h3 style="margin-top: 20px; font-size: 16px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Reembolso de Gastos</h3>`;
-                html += `<table class="pdf-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 12%;">Fecha</th>
-                                    <th style="width: 12%;">Factura</th>
-                                    <th style="width: 15%;">Comercio</th>
-                                    <th style="width: 15%;">Cliente</th>
-                                    <th style="width: 26%;">Descripción</th>
-                                    <th style="width: 20%;">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                
-                expenses.forEach(r => {
-                    html += `<tr>
-                        <td>${Utils.formatDate(r.date)}</td>
-                        <td>${r.invoiceNum}</td>
-                        <td>${r.store}</td>
-                        <td>${r.client}</td>
-                        <td style="vertical-align: top;">${r.description || '-'}</td>
-                        <td class="num">${Utils.formatCurrency(r.amount)}</td>
-                    </tr>`;
-                });
-                html += `<tr class="subtotal"><td colspan="5" style="text-align: right;">Total Gastos:</td><td class="num">${Utils.formatCurrency(totalExpenses)}</td></tr>`;
-                html += `</tbody></table>`;
-
-                // --- LÓGICA CAJA CHICA (AGREGADO) ---
-                const CAJA_CHICA_LIMIT = 200000;
-                
-                html += `<div class="petty-cash-box">`;
-                html += `    <div class="petty-cash-header">`;
-                html += `        <span>Resumen Caja Chica (Límite: ₡200,000)</span>`;
-                html += `    </div>`;
-                
-                if (totalExpenses <= CAJA_CHICA_LIMIT) {
-                    const saldoDisponible = CAJA_CHICA_LIMIT - totalExpenses;
-                    html += `    <div class="petty-cash-row">`;
-                    html += `        <span>Saldo Restante Caja Chica:</span>`;
-                    html += `        <span class="petty-cash-ok">${Utils.formatCurrency(saldoDisponible)}</span>`;
-                    html += `    </div>`;
-                } else {
-                    const excedente = totalExpenses - CAJA_CHICA_LIMIT;
-                    
-                    html += `    <div class="petty-cash-row">`;
-                    html += `        <span>Fondo Caja Chica Utilizado:</span>`;
-                    html += `        <span>₡200,000.00</span>`;
-                    html += `    </div>`;
-                    
-                    html += `    <div class="petty-cash-row" style="margin-top: 5px; border-top: 1px solid #eee; padding-top:5px;">`;
-                    html += `        <span style="font-weight:bold;">Excedente (Dinero del Técnico):</span>`;
-                    html += `        <span class="petty-cash-excess">${Utils.formatCurrency(excedente)}</span>`;
-                    html += `    </div>`;
-                }
-                html += `</div>`;
-                // --- FIN LÓGICA CAJA CHICA ---
-            }
-
-            document.getElementById('print-tables-container').innerHTML = html;
-            
-            let finalTotal = 0;
-            
-            if (isExpenseReport) {
-                finalTotal += totalExpenses;
-            } else {
-                if (paymentData) {
-                    finalTotal += parseFloat(paymentData.neto);
-                }
-                finalTotal += totalExpenses;
-            }
-
-            document.getElementById('print-final-total').textContent = Utils.formatCurrency(finalTotal);
-            
-            document.getElementById('app-view').style.display = 'none';
-            document.getElementById('print-area').style.display = 'block';
-            window.print();
-            document.getElementById('print-area').style.display = 'none';
-            document.getElementById('app-view').style.display = 'block';
         }
+    };
+}
 
-        // --- HELPERS ---
-        window.switchTab = (id) => { 
-            document.querySelectorAll('#technician-panel .card').forEach(el => el.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            document.querySelectorAll('#technician-panel .tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-        
-        window.switchAdminTab = (id) => {
-            document.querySelectorAll('#admin-panel .card').forEach(el => el.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
-            document.querySelectorAll('#admin-panel .tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if(id === 'admin-validation') window.renderValidationTable();
-        }
-        
-        window.closeModal = function(id) { document.getElementById(id).classList.add('hidden'); }
+function fmtCLP(n) {
+    return '₡' + Math.round(n).toLocaleString('es-CR');
+}
 
-        // --- INICIALIZACIÓN ---
-        checkSession();
-    </script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('SW fail', err));
-        }
-    </script>
+window.loadStats = async () => {
+    const year  = parseInt(document.getElementById('stats-year').value);
+    const month = document.getElementById('stats-month').value;
+
+    const allRecs = (await getDocs(collection(db, 'records'))).docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const filtered = allRecs.filter(r => {
+        if (!r.date) return false;
+        const [y, m] = r.date.split('-').map(Number);
+        if (y !== year) return false;
+        if (month !== 'all' && m !== parseInt(month)) return false;
+        return true;
+    });
+
+    const expenses = filtered.filter(r => r.type === 'expense');
+    const hours    = filtered.filter(r => r.type === 'hour');
+
+    const hasData = filtered.length > 0;
+    document.getElementById('stats-empty').classList.toggle('hidden', hasData);
+
+    // Months axis
+    let months, monthLabels;
+    if (month === 'all') {
+        months = [1,2,3,4,5,6,7,8,9,10,11,12];
+        monthLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'];
+    } else {
+        months = [parseInt(month)];
+        monthLabels = [['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'][parseInt(month)-1]];
+    }
+
+    // Techs with any data
+    const techsWithData = usersData.filter(u => filtered.some(r => r.userId === u.id));
+
+    // Aggregations per tech per month
+    function aggregate(recs, valFn) {
+        const map = {};
+        recs.forEach(r => {
+            const m = parseInt(r.date.split('-')[1]);
+            if (!map[r.userId]) map[r.userId] = {};
+            map[r.userId][m] = (map[r.userId][m] || 0) + valFn(r);
+        });
+        return map;
+    }
+
+    const expMap  = aggregate(expenses, r => parseFloat(r.amount || 0));
+    const hrsMap  = aggregate(hours,    r => parseFloat(r.extra  || 0));
+    const costMap = aggregate(hours, r => {
+        const tech = usersData.find(u => u.id === r.userId);
+        if (!tech?.salary) return 0;
+        const hr  = parseFloat(tech.salary) / 240;
+        const day = new Date(r.date + 'T00:00:00').getDay();
+        return parseFloat(r.extra || 0) * hr * (day === 0 ? 2 : 1.5);
+    });
+
+    // KPIs
+    const totalExp  = expenses.reduce((s,r) => s + parseFloat(r.amount||0), 0);
+    const totalHrs  = hours.reduce((s,r)    => s + parseFloat(r.extra||0),  0);
+    const totalCost = Object.values(costMap).reduce((s,mm) => s + Object.values(mm).reduce((a,b)=>a+b,0), 0);
+
+    document.getElementById('kpi-expenses').textContent   = fmtCLP(totalExp);
+    document.getElementById('kpi-hours').textContent      = totalHrs.toFixed(1) + ' h';
+    document.getElementById('kpi-extra-cost').textContent = fmtCLP(totalCost);
+    document.getElementById('kpi-techs').textContent      = techsWithData.length;
+
+    // ── Global legend ──────────────────────────────────────
+    const legendEl = document.getElementById('s-legend-global');
+    legendEl.innerHTML = techsWithData.length
+        ? techsWithData.map((t, i) => `
+            <div class="s-legend-item">
+                <div class="s-legend-swatch" style="background:${TECH_COLORS[i % TECH_COLORS.length]}"></div>
+                ${t.fullName.split(' ').slice(0,2).join(' ')}
+            </div>`).join('')
+        : '<span style="font-size:.78rem;color:var(--text-3)">Sin datos en este periodo</span>';
+
+    // ── Datasets builder ───────────────────────────────────
+    function buildBar(map, months) {
+        return techsWithData.map((tech, idx) => ({
+            label: tech.fullName.split(' ').slice(0,2).join(' '),
+            data: months.map(m => parseFloat((map[tech.id]?.[m] || 0).toFixed(2))),
+            backgroundColor: TECH_COLORS[idx % TECH_COLORS.length],
+            borderColor: TECH_COLORS[idx % TECH_COLORS.length],
+            borderRadius: 5,
+            borderSkipped: false,
+        }));
+    }
+
+    function buildLine(map, months) {
+        return techsWithData.map((tech, idx) => ({
+            label: tech.fullName.split(' ').slice(0,2).join(' '),
+            data: months.map(m => parseFloat((map[tech.id]?.[m] || 0).toFixed(2))),
+            borderColor: TECH_COLORS[idx % TECH_COLORS.length],
+            backgroundColor: TECH_COLORS[idx % TECH_COLORS.length] + '18',
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            pointBackgroundColor: TECH_COLORS[idx % TECH_COLORS.length],
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            fill: true,
+            tension: 0.4,
+        }));
+    }
+
+    function totalPerTech(map) {
+        return techsWithData.map(t => Object.values(map[t.id] || {}).reduce((a,b)=>a+b,0));
+    }
+
+    // ── Chart helpers ──────────────────────────────────────
+    function makeBarOpts(fmtFn) {
+        const opts = JSON.parse(JSON.stringify(chartDefaults()));
+        opts.plugins.tooltip.callbacks = { label: ctx => ` ${ctx.dataset.label}: ${fmtFn(ctx.raw)}` };
+        opts.scales.y.ticks.callback = v => fmtFn(v);
+        return opts;
+    }
+    function makeLineOpts(fmtFn) {
+        const opts = makeBarOpts(fmtFn);
+        opts.interaction = { mode: 'index', intersect: false };
+        return opts;
+    }
+
+    // ── 1. Gastos mensuales bar ────────────────────────────
+    destroyChart('expM');
+    statsCharts['expM'] = new Chart(document.getElementById('chart-expenses-monthly'), {
+        type: 'bar',
+        data: { labels: monthLabels, datasets: buildBar(expMap, months) },
+        options: makeBarOpts(fmtCLP)
+    });
+
+    // ── 2. Horas extra line ───────────────────────────────
+    destroyChart('hrsM');
+    statsCharts['hrsM'] = new Chart(document.getElementById('chart-hours-monthly'), {
+        type: 'line',
+        data: { labels: monthLabels, datasets: buildLine(hrsMap, months) },
+        options: makeLineOpts(v => v.toFixed(1) + 'h')
+    });
+
+    // ── 3. Costo extra bar ────────────────────────────────
+    destroyChart('costM');
+    statsCharts['costM'] = new Chart(document.getElementById('chart-cost-monthly'), {
+        type: 'bar',
+        data: { labels: monthLabels, datasets: buildBar(costMap, months) },
+        options: makeBarOpts(fmtCLP)
+    });
+
+    // ── 4. Donut gastos ───────────────────────────────────
+    const donutLabels = techsWithData.map(t => t.fullName.split(' ').slice(0,2).join(' '));
+    const donutColors = techsWithData.map((_,i) => TECH_COLORS[i % TECH_COLORS.length]);
+
+    destroyChart('dExp');
+    statsCharts['dExp'] = new Chart(document.getElementById('chart-donut-expenses'), {
+        type: 'doughnut',
+        data: { labels: donutLabels, datasets: [{ data: totalPerTech(expMap), backgroundColor: donutColors, borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }] },
+        options: donutDefaults(fmtCLP, donutLabels)
+    });
+
+    // ── 5. Donut costo extra ──────────────────────────────
+    destroyChart('dCost');
+    statsCharts['dCost'] = new Chart(document.getElementById('chart-donut-cost'), {
+        type: 'doughnut',
+        data: { labels: donutLabels, datasets: [{ data: totalPerTech(costMap), backgroundColor: donutColors, borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }] },
+        options: donutDefaults(fmtCLP, donutLabels)
+    });
+
+    // ── Rankings ───────────────────────────────────────────
+    function renderRanking(containerId, map, fmtFn) {
+        const sorted = techsWithData.map(t => ({
+            name: t.fullName,
+            val: Object.values(map[t.id] || {}).reduce((a,b)=>a+b,0)
+        })).sort((a,b) => b.val - a.val);
+        const max = sorted[0]?.val || 1;
+        const rankCls = ['r1','r2','r3'];
+        document.getElementById(containerId).innerHTML = sorted.length
+            ? sorted.map((t, i) => `
+                <li>
+                    <div class="s-rank-num ${rankCls[i]||''}">${i+1}</div>
+                    <div class="s-rank-info">
+                        <div class="s-rank-name">${t.name.split(' ').slice(0,2).join(' ')}</div>
+                        <div class="s-rank-bar-bg">
+                            <div class="s-rank-bar-fill" style="width:${max>0?((t.val/max)*100).toFixed(1):0}%"></div>
+                        </div>
+                    </div>
+                    <div class="s-rank-val">${fmtFn(t.val)}</div>
+                </li>`).join('')
+            : '<li style="color:var(--text-3);font-size:.82rem;padding:.5rem 0">Sin datos</li>';
+    }
+
+    renderRanking('rank-expenses', expMap,  fmtCLP);
+    renderRanking('rank-hours',    hrsMap,  v => v.toFixed(1)+'h');
+    renderRanking('rank-cost',     costMap, fmtCLP);
+};
+
+
+window.switchTab=id=>{
+    document.querySelectorAll('#technician-panel .card').forEach(el=>el.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('#technician-panel .tab-btn').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+};
+window.switchAdminTab=id=>{
+    document.querySelectorAll('#admin-panel .card').forEach(el=>el.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    document.querySelectorAll('#admin-panel .tab-btn').forEach(b=>b.classList.remove('active'));
+    event.target.classList.add('active');
+    if(id==='admin-validation')window.renderValidationTable();
+    if(id==='admin-vacations')window.renderAdminVacTable();
+    if(id==='admin-stats'){ initStatsYearSelector(); window.loadStats(); }
+};
+window.closeModal=id=>document.getElementById(id).classList.add('hidden');
+
+checkSession();
+</script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/service-worker.js').catch(()=>{});</script>
 </body>
 </html>
