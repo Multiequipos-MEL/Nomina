@@ -245,6 +245,32 @@
         .petty-cash-row{display:flex;justify-content:space-between;margin-bottom:4px;}
         .petty-cash-excess{color:#d9534f;font-weight:bold;font-size:14px;}
         .petty-cash-ok{color:#28a745;font-weight:bold;}
+        /* Reporte de Costos OT */
+        .rpt-header { border-bottom: 3px solid #1B2A4A; padding-bottom: 14px; margin-bottom: 18px; display:flex; justify-content:space-between; align-items:flex-start; }
+        .rpt-company h1 { font-size: 22px; color: #1B2A4A; margin-bottom: 3px; font-family: Arial, sans-serif; }
+        .rpt-company p { font-size: 12px; color: #666; }
+        .rpt-doc h2 { font-size: 16px; text-transform: uppercase; letter-spacing: 1px; color: #1B2A4A; text-align:right; }
+        .rpt-doc p { font-size: 11px; color: #666; text-align:right; }
+        .rpt-ot-box { background: #f5f7fb; border: 1px solid #dde4ef; border-left: 4px solid #1B2A4A; border-radius: 5px; padding: 14px 18px; margin-bottom: 18px; }
+        .rpt-ot-box h3 { font-size: 18px; font-weight: 700; color: #1B2A4A; margin-bottom: 4px; }
+        .rpt-ot-box p { font-size: 13px; color: #555; margin: 2px 0; }
+        .rpt-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #1B2A4A; border-bottom: 1px solid #dde4ef; padding-bottom: 5px; margin: 16px 0 10px; }
+        .rpt-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: Arial, sans-serif; margin-bottom: 14px; table-layout: fixed; }
+        .rpt-table th { background: #1B2A4A; color: #fff; padding: 7px 8px; text-align: left; font-size: 11px; }
+        .rpt-table td { padding: 6px 8px; border-bottom: 1px solid #e8ecf2; }
+        .rpt-table tr:nth-child(even) td { background: #f5f7fb; }
+        .rpt-table tfoot td { background: #1B2A4A; color: #fff; font-weight: 700; padding: 7px 8px; }
+        .rpt-cat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+        .rpt-cat-item { border: 1px solid #dde4ef; border-radius: 5px; padding: 10px 12px; background: #fff; }
+        .rpt-cat-item .rct-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #888; margin-bottom: 3px; }
+        .rpt-cat-item .rct-amount { font-size: 15px; font-weight: 700; color: #1B2A4A; }
+        .rpt-cat-item .rct-pct { font-size: 10px; color: #aaa; }
+        .rpt-total-box { background: #1B2A4A; color: #fff; border-radius: 6px; padding: 14px 20px; display:flex; justify-content:space-between; align-items:center; margin-top: 16px; }
+        .rpt-total-box .rtb-label { font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+        .rpt-total-box .rtb-amount { font-size: 22px; font-weight: 700; }
+        .rpt-sig { display:flex; justify-content:space-between; margin-top: 60px; }
+        .rpt-sig-block { width: 42%; text-align: center; border-top: 1px solid #000; padding-top: 6px; font-size: 11px; color: #333; }
+
         /* Boleta vacaciones PDF */
         .vac-box{border:2px solid #1B2A4A;padding:20px;border-radius:5px;background:#fdfdfd;margin-bottom:20px;}
         .vac-title{background:#1B2A4A;color:white;padding:6px 10px;margin:-20px -20px 15px -20px;font-weight:bold;font-size:15px;text-align:center;letter-spacing:.05em;}
@@ -329,6 +355,8 @@
             padding-right: 2rem;
         }
         .s-select:focus { outline: none; border-color: var(--crimson); box-shadow: 0 0 0 3px rgba(192,39,45,0.2); }
+        #cf-ot-search::placeholder { color: rgba(255,255,255,.45); }
+        #cf-ot-search:focus { border-color: rgba(255,255,255,.5) !important; box-shadow: none; }
         .s-select option { background: var(--navy-800); color: #fff; }
 
         /* ── KPI Row ── */
@@ -493,6 +521,198 @@
         }
 
 
+        
+        /* ── COST ANALYSIS — OT Cards ── */
+        .ot-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--sh-sm);
+            transition: var(--ease);
+        }
+        .ot-card:hover { box-shadow: var(--sh); }
+        .ot-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.4rem;
+            cursor: pointer;
+            user-select: none;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .ot-card-header:hover { background: var(--navy-50); }
+        .ot-card-left { display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 0; }
+        .ot-badge {
+            background: var(--navy-800);
+            color: #fff;
+            padding: .3rem .8rem;
+            border-radius: var(--r-sm);
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .04em;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .ot-badge.general {
+            background: var(--amber);
+            color: #fff;
+        }
+        .ot-card-info { min-width: 0; }
+        .ot-card-client { font-weight: 600; color: var(--text-1); font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ot-card-desc { font-size: .75rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ot-card-right { display: flex; align-items: center; gap: 1.25rem; flex-shrink: 0; }
+        .ot-total-label { font-size: .68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .1rem; }
+        .ot-total-value { font-size: 1.2rem; font-weight: 700; color: var(--text-1); }
+        .ot-chevron {
+            width: 24px; height: 24px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-3); transition: transform .25s ease;
+            flex-shrink: 0;
+        }
+        .ot-card.open .ot-chevron { transform: rotate(180deg); }
+        .ot-card-body {
+            display: none;
+            border-top: 1px solid var(--border);
+            padding: 1.25rem 1.4rem;
+        }
+        .ot-card.open .ot-card-body { display: block; }
+        .ot-cat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: .75rem;
+            margin-bottom: 1.1rem;
+        }
+        .ot-cat-item {
+            background: var(--navy-50);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .75rem 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .ot-cat-item::before {
+            content: '';
+            position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+        }
+        .ot-cat-name { font-size: .7rem; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .25rem; }
+        .ot-cat-amount { font-size: 1rem; font-weight: 700; color: var(--text-1); }
+        .ot-cat-pct { font-size: .72rem; color: var(--text-3); margin-top: .1rem; }
+        .ot-cat-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: .5rem; overflow: hidden; }
+        .ot-cat-bar-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+        .ot-receipts-title { font-size: .75rem; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .6rem; margin-top: .25rem; }
+        .ot-receipts-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+        .ot-receipts-table th { background: var(--bg); padding: .45rem .6rem; text-align: left; font-size: .68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; border-bottom: 2px solid var(--border); }
+        .ot-receipts-table td { padding: .5rem .6rem; border-bottom: 1px solid var(--border); color: var(--text-2); }
+        .ot-receipts-table tr:last-child td { border-bottom: none; }
+        .ot-receipts-table tr:hover td { background: var(--navy-50); }
+
+        /* Category colors */
+        .cat-color-0 { background: #1B2A4A; }
+        .cat-color-1 { background: #c0272d; }
+        .cat-color-2 { background: #2563eb; }
+        .cat-color-3 { background: #0891b2; }
+        .cat-color-4 { background: #7c3aed; }
+        .cat-color-5 { background: #d97706; }
+
+        /* Cat summary chips */
+        .cat-chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: .85rem 1rem;
+            display: flex; flex-direction: column; gap: .2rem;
+            position: relative; overflow: hidden;
+        }
+        .cat-chip::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+        .cat-chip-label { font-size: .68rem; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+        .cat-chip-amount { font-size: 1.1rem; font-weight: 700; color: var(--text-1); }
+        .cat-chip-pct { font-size: .7rem; color: var(--text-3); }
+
+        @media(max-width:768px){
+            .ot-card-right { flex-direction: column; align-items: flex-end; gap: .5rem; }
+            .ot-cat-grid { grid-template-columns: repeat(2,1fr); }
+        }
+
+        
+        /* ── OT Autocomplete ── */
+        .ot-autocomplete-wrap {
+            position: relative;
+        }
+        .ot-autocomplete-wrap input.form-control {
+            padding-right: 2rem;
+        }
+        .ot-autocomplete-wrap .ot-clear-btn {
+            position: absolute;
+            right: .5rem; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: var(--text-3); cursor: pointer;
+            font-size: 1rem; line-height: 1;
+            padding: 0;
+            display: none;
+        }
+        .ot-autocomplete-wrap:focus-within .ot-clear-btn,
+        .ot-autocomplete-wrap .ot-clear-btn.visible { display: block; }
+        .ot-dropdown {
+            position: absolute;
+            top: calc(100% + 4px); left: 0; right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--r);
+            box-shadow: var(--sh-lg);
+            z-index: 600;
+            max-height: 260px;
+            overflow-y: auto;
+            display: none;
+        }
+        .ot-dropdown.open { display: block; }
+        .ot-dropdown-item {
+            padding: .6rem .9rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background .15s;
+        }
+        .ot-dropdown-item:last-child { border-bottom: none; }
+        .ot-dropdown-item:hover, .ot-dropdown-item.focused {
+            background: var(--blue-light);
+        }
+        .ot-dropdown-item .ot-di-number {
+            font-weight: 700; font-size: .82rem; color: var(--navy-800);
+        }
+        .ot-dropdown-item .ot-di-client {
+            font-size: .78rem; color: var(--text-2);
+        }
+        .ot-dropdown-item .ot-di-desc {
+            font-size: .72rem; color: var(--text-3);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ot-dropdown-item.ot-general { border-bottom: 2px solid var(--border); }
+        .ot-dropdown-item.ot-general .ot-di-number { color: var(--amber); }
+        .ot-selected-badge {
+            display: none;
+            align-items: center; gap: .4rem;
+            background: var(--blue-light);
+            border: 1px solid var(--navy-200);
+            border-radius: var(--r-sm);
+            padding: .35rem .7rem;
+            font-size: .78rem; font-weight: 600;
+            color: var(--navy-800); margin-top: .35rem;
+        }
+        .ot-selected-badge.visible { display: flex; }
+        .ot-selected-badge button {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-3); font-size: .9rem; padding: 0; line-height: 1;
+        }
+        .ot-selected-badge button:hover { color: var(--red); }
+        .ot-no-results {
+            padding: .8rem .9rem;
+            font-size: .82rem; color: var(--text-3);
+            text-align: center;
+        }
+
         </style>
 </head>
 <body>
@@ -513,12 +733,45 @@
             <p class="login-sub">Sistema de Nómina y Gastos</p>
         </div>
         <div class="login-divider"></div>
-        <form id="login-form">
-            <div class="form-group"><label>Correo Electrónico</label><input type="email" id="login-email" class="form-control" required placeholder="correo@multiequiposla.net"></div>
-            <div class="form-group"><label>Contraseña</label><input type="password" id="login-password" class="form-control" required placeholder="••••••••"></div>
+        <!-- Vista: Login -->
+        <div id="login-form-view">
+            <form id="login-form">
+                <div class="form-group"><label>Correo Electrónico</label><input type="email" id="login-email" class="form-control" required placeholder="correo@multiequiposla.net"></div>
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+                        <label style="margin:0">Contraseña</label>
+                        <button type="button" onclick="window.showResetView()"
+                            style="background:none;border:none;color:var(--crimson);font-size:.75rem;cursor:pointer;padding:0;font-family:var(--font);font-weight:600">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+                    <input type="password" id="login-password" class="form-control" required placeholder="••••••••">
+                </div>
+                <div style="height:.35rem"></div>
+                <button type="submit" class="btn btn-primary w-full" style="padding:.7rem;font-size:.9rem;font-weight:600">Iniciar Sesión</button>
+            </form>
+        </div>
+
+        <!-- Vista: Restablecer contraseña -->
+        <div id="reset-form-view" style="display:none">
+            <div style="text-align:center;margin-bottom:1.25rem">
+                <div style="font-size:2rem;margin-bottom:.5rem">🔑</div>
+                <div style="font-weight:600;color:var(--text-1);font-size:.95rem">Restablecer contraseña</div>
+                <div style="font-size:.78rem;color:var(--text-3);margin-top:.3rem">Te enviaremos un enlace a tu correo para crear una nueva contraseña.</div>
+            </div>
+            <div class="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" id="reset-email" class="form-control" placeholder="correo@multiequiposla.net">
+            </div>
             <div style="height:.35rem"></div>
-            <button type="submit" class="btn btn-primary w-full" style="padding:.7rem;font-size:.9rem;font-weight:600">Iniciar Sesión</button>
-        </form>
+            <button type="button" class="btn btn-primary w-full" onclick="window.sendPasswordReset()" style="padding:.7rem;font-size:.9rem;font-weight:600">
+                Enviar enlace
+            </button>
+            <button type="button" onclick="window.showLoginView()"
+                style="width:100%;background:none;border:none;color:var(--crimson);font-size:.8rem;cursor:pointer;margin-top:.85rem;padding:.4rem;font-family:var(--font);font-weight:600">
+                ← Volver al inicio de sesión
+            </button>
+        </div>
     </div>
 </section>
 
@@ -576,7 +829,7 @@
                 </div>
                 <div class="table-responsive">
                     <table id="tech-expenses-table">
-                        <thead><tr><th>Fecha</th><th>Factura #</th><th>Comercio</th><th>Cliente</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <thead><tr><th>Fecha</th><th>Factura #</th><th>OT</th><th>Tipo</th><th>Comercio</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -603,6 +856,9 @@
                 <button class="tab-btn active" onclick="window.switchAdminTab('admin-users')">Técnicos</button>
                 <button class="tab-btn" onclick="window.switchAdminTab('admin-validation')">Validación y Pagos</button>
                 <button class="tab-btn" onclick="window.switchAdminTab('admin-vacations')">Vacaciones</button>
+                <button class="tab-btn" onclick="window.switchAdminTab('admin-ot')">Órdenes de Trabajo</button>
+                <button class="tab-btn" onclick="window.switchAdminTab('admin-unclassified')">Gestión de Gastos</button>
+                <button class="tab-btn" onclick="window.switchAdminTab('admin-cost')">Análisis de Costos</button>
                 <button class="tab-btn" onclick="window.switchAdminTab('admin-stats')">Estadísticas</button>
             </div>
 
@@ -626,6 +882,29 @@
                 <div class="card-title" style="margin-bottom:.9rem">Equipo Técnico Registrado</div>
                 <div class="table-responsive">
                     <table><thead><tr><th>Nombre</th><th>Salario</th><th>Vacaciones</th><th>Fecha Ingreso</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead><tbody id="users-table-body"></tbody></table>
+                </div>
+
+                <!-- Historial de eliminados -->
+                <div class="divider" style="margin-top:1.75rem"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.9rem">
+                    <div>
+                        <div class="card-title" style="margin-bottom:.15rem">Historial de Técnicos Eliminados</div>
+                        <div class="card-sub" style="margin-bottom:0">Técnicos archivados. Puedes restaurar su perfil y registros históricos.</div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="window.loadDeletedUsers()">↺ Actualizar</button>
+                </div>
+                <div id="deleted-users-empty" class="empty-state hidden">
+                    <div class="icon" style="font-size:1.5rem">✅</div>
+                    <p>Sin técnicos eliminados</p>
+                </div>
+                <div class="table-responsive" id="deleted-users-wrap" style="display:none">
+                    <table>
+                        <thead><tr>
+                            <th>Nombre</th><th>Email</th><th>Salario</th>
+                            <th>Fecha Ingreso</th><th>Eliminado</th><th>Registros</th><th>Acciones</th>
+                        </tr></thead>
+                        <tbody id="deleted-users-body"></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -674,6 +953,270 @@
                 </div>
             </div>
 
+            <!-- Órdenes de Trabajo -->
+            <div id="admin-ot" class="card hidden">
+                <div class="accent-rule"></div>
+                <div class="card-title">Órdenes de Trabajo</div>
+                <div class="card-sub">Crea y administra las órdenes de trabajo disponibles para los técnicos</div>
+                <form id="ot-form" style="margin-bottom:1.25rem">
+                    <input type="hidden" id="ot-edit-id">
+                    <div class="create-form-grid">
+                        <div class="form-group">
+                            <label>Número OT</label>
+                            <input type="text" id="ot-number" class="form-control" placeholder="Ej: OT-001" required>
+                        </div>
+                        <div class="form-group" style="grid-column:span 2">
+                            <label>Cliente</label>
+                            <input type="text" id="ot-client" class="form-control" placeholder="Nombre del cliente" required>
+                        </div>
+                        <div class="form-group" style="grid-column:span 2">
+                            <label>Descripción del Trabajo</label>
+                            <input type="text" id="ot-description" class="form-control" placeholder="Ej: Instalación rampa niveladora" required>
+                        </div>
+                        <div class="form-group" style="display:flex;align-items:flex-end;gap:.5rem">
+                            <button type="submit" class="btn btn-success w-full" id="ot-submit-btn">+ Crear OT</button>
+                            <button type="button" class="btn btn-secondary hidden" id="ot-cancel-btn" onclick="window.cancelOTEdit()">Cancelar</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="divider"></div>
+                <div class="card-title" style="margin-bottom:.9rem">Órdenes Registradas</div>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Número</th><th>Cliente</th><th>Descripción</th><th>Fecha Creación</th><th>Acciones</th></tr></thead>
+                        <tbody id="ot-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gestión de Gastos -->
+            <div id="admin-unclassified" class="card hidden">
+                <div class="accent-rule"></div>
+                <div class="card-title">Gestión de Gastos</div>
+                <div class="card-sub">Clasifica gastos pendientes o corrige la OT y tipo de cualquier registro existente.</div>
+
+                <!-- View toggle tabs -->
+                <div style="display:flex;gap:.5rem;margin-bottom:1.25rem;border-bottom:2px solid var(--border);padding-bottom:0">
+                    <button type="button" id="gg-tab-unclassified"
+                        onclick="window.switchGGTab('unclassified')"
+                        style="padding:.55rem 1.1rem;font-size:.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid var(--navy-800);color:var(--navy-800);margin-bottom:-2px">
+                        Sin Clasificar
+                        <span id="gg-unclassified-badge" style="background:var(--crimson);color:#fff;border-radius:999px;padding:.1rem .45rem;font-size:.68rem;margin-left:.35rem">0</span>
+                    </button>
+                    <button type="button" id="gg-tab-all"
+                        onclick="window.switchGGTab('all')"
+                        style="padding:.55rem 1.1rem;font-size:.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-3);margin-bottom:-2px">
+                        Todos los Gastos
+                    </button>
+                </div>
+
+                <!-- ── VISTA: SIN CLASIFICAR ── -->
+                <div id="gg-view-unclassified">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap">
+                        <div id="unclassified-count" style="background:var(--crimson-bg);border:1px solid rgba(192,39,45,.2);border-radius:var(--r);padding:.5rem 1rem;font-size:.82rem;font-weight:600;color:var(--crimson)"></div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.loadUnclassified()">↺ Actualizar</button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="window.bulkReassignGeneral()" id="btn-bulk-reassign" style="display:none">
+                            ⚡ Reasignar todos los Generales a S0000
+                        </button>
+                    </div>
+                    <div id="bulk-reassign-progress" class="hidden" style="background:var(--blue-light);border:1px solid var(--navy-200);border-radius:var(--r);padding:.75rem 1rem;margin-bottom:1rem;font-size:.82rem;color:var(--navy-800)">
+                        <div style="font-weight:600;margin-bottom:.35rem">⏳ Reasignando gastos... <span id="bulk-progress-text">0 / 0</span></div>
+                        <div style="background:var(--border);border-radius:999px;height:6px;overflow:hidden">
+                            <div id="bulk-progress-bar" style="height:100%;background:var(--navy-800);border-radius:999px;width:0%;transition:width .3s"></div>
+                        </div>
+                    </div>
+                    <div class="validation-table-area" style="max-height:60vh">
+                        <div class="table-responsive">
+                            <table id="unclassified-table">
+                                <thead><tr>
+                                    <th>Fecha</th><th>Técnico</th><th>Factura #</th><th>Comercio</th><th>Monto</th>
+                                    <th style="min-width:240px">Orden de Trabajo</th>
+                                    <th style="min-width:160px">Tipo de Gasto</th>
+                                    <th>Acción</th>
+                                </tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── VISTA: TODOS LOS GASTOS ── -->
+                <div id="gg-view-all" style="display:none">
+                    <div class="filter-bar" style="margin-bottom:1rem">
+                        <div class="form-group">
+                            <label>Técnico</label>
+                            <select id="gg-filter-tech" class="form-control" onchange="window.loadAllExpenses()">
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Desde</label>
+                            <input type="date" id="gg-filter-from" class="form-control" onchange="window.loadAllExpenses()">
+                        </div>
+                        <div class="form-group">
+                            <label>Hasta</label>
+                            <input type="date" id="gg-filter-to" class="form-control" onchange="window.loadAllExpenses()">
+                        </div>
+                        <div class="form-group" style="align-self:flex-end">
+                            <button type="button" class="btn btn-secondary" onclick="window.loadAllExpenses()">↺ Buscar</button>
+                        </div>
+                    </div>
+                    <div id="gg-all-count" style="font-size:.82rem;color:var(--text-3);margin-bottom:.75rem"></div>
+                    <div class="validation-table-area" style="max-height:60vh">
+                        <div class="table-responsive">
+                            <table id="all-expenses-table">
+                                <thead><tr>
+                                    <th>Fecha</th><th>Técnico</th><th>Factura #</th><th>Comercio</th><th>Monto</th><th>Estado</th>
+                                    <th style="min-width:240px">Orden de Trabajo</th>
+                                    <th style="min-width:160px">Tipo de Gasto</th>
+                                    <th>Acción</th>
+                                </tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Análisis de Costos -->
+            <div id="admin-cost" class="card hidden" style="padding:0;background:transparent;border:none;box-shadow:none;">
+
+                <!-- Header -->
+                <div class="s-header-panel">
+                    <div class="s-header-left">
+                        <div class="s-header-eyebrow">Panel de Costos</div>
+                        <h2 class="s-header-title">Análisis de Costos por Proyecto</h2>
+                        <p class="s-header-sub">Desglose detallado de gastos por orden de trabajo y categoría</p>
+                    </div>
+                    <div class="s-header-filters">
+                        <div class="s-filter-group" style="position:relative;min-width:280px">
+                            <label class="s-filter-label">Orden de Trabajo</label>
+                            <input type="hidden" id="cost-filter-ot" value="all">
+                            <div style="position:relative">
+                                <input type="text" id="cf-ot-search"
+                                    placeholder="Buscar por número o cliente…"
+                                    autocomplete="off"
+                                    style="width:100%;padding:.5rem .9rem;padding-right:2rem;border-radius:var(--r-sm);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-family:var(--font);font-size:.85rem;outline:none;box-sizing:border-box"
+                                    oninput="window.cfOtInput(this.value)"
+                                    onkeydown="window.cfOtKey(event)"
+                                    onfocus="this.style.borderColor='rgba(255,255,255,.5)';window.cfOtOpen()"
+                                    onblur="this.style.borderColor='rgba(255,255,255,.2)'">
+                                <button type="button" id="cf-ot-clear"
+                                    style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1rem;line-height:1;padding:0;display:none"
+                                    onclick="window.cfOtClear()">×</button>
+                                <div id="cf-ot-dropdown"
+                                    style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border-mid);border-radius:var(--r);box-shadow:var(--sh-lg);z-index:600;max-height:280px;overflow-y:auto"></div>
+                            </div>
+                        </div>
+                        <div class="s-filter-group">
+                            <label class="s-filter-label">Técnico</label>
+                            <select id="cost-filter-tech" class="s-select" onchange="window.loadCostAnalysis()">
+                                <option value="all">Todos</option>
+                            </select>
+                        </div>
+                        <div class="s-filter-group">
+                            <label class="s-filter-label">Desde</label>
+                            <input type="date" id="cost-filter-from" class="s-select" onchange="window.loadCostAnalysis()">
+                        </div>
+                        <div class="s-filter-group">
+                            <label class="s-filter-label">Hasta</label>
+                            <input type="date" id="cost-filter-to" class="s-select" onchange="window.loadCostAnalysis()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI totales globales -->
+                <div class="s-kpi-row" style="margin-top:1.25rem">
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#1B2A4A,#2e4270)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Gasto Total</div>
+                            <div class="s-kpi-value" id="cost-kpi-total">₡0</div>
+                            <div class="s-kpi-sub">suma de todos los gastos</div>
+                        </div>
+                    </div>
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#c0272d,#9a1e23)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Proyectos con Gasto</div>
+                            <div class="s-kpi-value" id="cost-kpi-ots">0</div>
+                            <div class="s-kpi-sub">órdenes de trabajo activas</div>
+                        </div>
+                    </div>
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#1d7a4f,#155f39)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Promedio por Proyecto</div>
+                            <div class="s-kpi-value" id="cost-kpi-avg">₡0</div>
+                            <div class="s-kpi-sub">costo promedio por OT</div>
+                        </div>
+                    </div>
+                    <div class="s-kpi">
+                        <div class="s-kpi-icon" style="background:linear-gradient(135deg,#7c3aed,#5b21b6)">
+                            <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <div class="s-kpi-body">
+                            <div class="s-kpi-label">Categoria Mayor Gasto</div>
+                            <div class="s-kpi-value" id="cost-kpi-top-cat" style="font-size:1rem">—</div>
+                            <div class="s-kpi-sub">categoria dominante</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen global por categoria -->
+                <div class="card" style="margin-top:1.25rem;padding:1.5rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem;flex-wrap:wrap;gap:.75rem">
+                        <div>
+                            <div class="card-title">Resumen Global por Categoria</div>
+                            <div class="card-sub" style="margin-bottom:0">Totales consolidados de todos los proyectos filtrados</div>
+                        </div>
+                    </div>
+                    <div id="cost-cat-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.75rem"></div>
+                </div>
+
+                <!-- Grafico comparativo OTs -->
+                <div class="s-charts-main" style="margin-top:1.25rem">
+                    <div class="s-chart-panel s-span-2">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">COMPARATIVA DE PROYECTOS</div>
+                                <div class="s-chart-title">Gasto total acumulado por orden de trabajo</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:260px"><canvas id="chart-cost-top-ots"></canvas></div>
+                    </div>
+                    <div class="s-chart-panel">
+                        <div class="s-chart-header">
+                            <div>
+                                <div class="s-chart-label">DISTRIBUCION POR CATEGORIA</div>
+                                <div class="s-chart-title">Proporcion del gasto total</div>
+                            </div>
+                        </div>
+                        <div class="s-chart-body" style="height:260px"><canvas id="chart-cost-donut-cat"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Tarjetas por OT -->
+                <div style="margin-top:1.25rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+                        <div class="card-title" style="font-size:1rem">Desglose por Orden de Trabajo</div>
+                        <span style="font-size:.75rem;color:var(--text-3)">Expandir cada proyecto para ver el detalle</span>
+                    </div>
+                    <div id="cost-ot-cards"></div>
+                </div>
+
+                <div id="cost-empty" class="s-empty hidden">
+                    <div>📦</div>
+                    <p>Sin gastos para los filtros seleccionados</p>
+                </div>
+            </div>
+
             <!-- Estadísticas -->
             <div id="admin-stats" class="card hidden" style="padding:0;background:transparent;border:none;box-shadow:none;">
 
@@ -700,6 +1243,15 @@
                                 <option value="9">Setiembre</option><option value="10">Octubre</option>
                                 <option value="11">Noviembre</option><option value="12">Diciembre</option>
                             </select>
+                        </div>
+                        <div class="s-filter-group" style="align-self:flex-end">
+                            <button type="button" onclick="window.generateStatsPDF()"
+                                style="padding:.5rem 1.1rem;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:var(--r-sm);font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:.4rem;transition:background .2s"
+                                onmouseover="this.style.background='rgba(255,255,255,.25)'"
+                                onmouseout="this.style.background='rgba(255,255,255,.15)'">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Generar PDF
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -858,10 +1410,48 @@
             <div class="form-group"><label>Factura #</label><input type="text" id="exp-invoice" class="form-control" required placeholder="001-000-000"></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
-            <div class="form-group"><label>Comercio</label><input type="text" id="exp-store" class="form-control" required placeholder="Nombre del comercio"></div>
-            <div class="form-group"><label>Cliente</label><input type="text" id="exp-client" class="form-control" required placeholder="Cliente relacionado"></div>
+            <div class="form-group">
+                <label>Orden de Trabajo</label>
+                <input type="hidden" id="exp-ot-id" value="">
+                <input type="hidden" id="exp-ot-number" value="General">
+                <input type="hidden" id="exp-ot-client" value="">
+                <div class="ot-autocomplete-wrap">
+                    <input type="text" id="exp-ot-search" class="form-control"
+                        placeholder="Buscar por número o cliente…"
+                        autocomplete="off"
+                        oninput="window.otSearchInput(this.value)"
+                        onkeydown="window.otSearchKey(event)"
+                        onfocus="window.otSearchOpen()">
+                    <button type="button" class="ot-clear-btn" id="ot-clear-btn" onclick="window.otSearchClear()" title="Limpiar">×</button>
+                    <div class="ot-dropdown" id="ot-dropdown"></div>
+                </div>
+                <div class="ot-selected-badge" id="ot-selected-badge">
+                    <span id="ot-selected-label">Seleccione una OT</span>
+                    <button type="button" onclick="window.otSearchClear()" title="Cambiar">×</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tipo de Gasto</label>
+                <select id="exp-type" class="form-control" required onchange="window.toggleOtrosField(this.value)">
+                    <option value="">Seleccione...</option>
+                    <option value="Materiales">Materiales</option>
+                    <option value="Insumos">Insumos</option>
+                    <option value="Herramientas">Herramientas</option>
+                    <option value="Repuestos">Repuestos</option>
+                    <option value="Combustible">Combustible</option>
+                    <option value="Viaticos">Viáticos</option>
+                    <option value="Hospedaje">Hospedaje</option>
+                    <option value="Parqueo">Parqueo</option>
+                    <option value="Peajes">Peajes</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
         </div>
-        <div class="form-group"><label>Descripción</label><textarea id="exp-desc" class="form-control" rows="2" placeholder="Descripción del gasto…"></textarea></div>
+        <div class="form-group"><label>Comercio</label><input type="text" id="exp-store" class="form-control" required placeholder="Nombre del comercio"></div>
+        <div class="form-group hidden" id="otros-field-wrap">
+            <label>Especifique el gasto <span style="color:var(--crimson)">*</span></label>
+            <input type="text" id="exp-otros-detail" class="form-control" placeholder="Describa el tipo de gasto…">
+        </div>
         <div class="form-group"><label>Monto (₡)</label><input type="number" id="exp-amount" class="form-control" required min="0" placeholder="0"></div>
         <button type="submit" class="btn btn-success w-full" style="margin-top:.35rem;padding:.65rem">Guardar Gasto</button>
     </form>
@@ -925,7 +1515,7 @@
     <div id="print-tables-container"></div>
     <div class="grand-total">TOTAL A PAGAR: <span id="print-final-total">₡0</span></div>
     <div style="clear:both"></div>
-    <div class="signature-section">
+    <div class="signature-section" id="print-signatures">
         <div class="sig-block">Firma Recibido<br><br>___________________</div>
         <div class="sig-block">Firma Autorizada<br><br>___________________</div>
     </div>
@@ -934,7 +1524,7 @@
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, query, where, writeBatch, documentId } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -994,7 +1584,12 @@ async function loadUserProfile(uid){
         if(snap.exists()){currentUser={id:uid,...snap.data()};if(!currentUser.role)currentUser.role='tech';}
         else{const u=auth.currentUser;currentUser={id:uid,email:u.email,fullName:u.displayName||u.email.split('@')[0],role:'admin'};}
         showApp();
-    }catch(e){console.error(e);showToast('Error de conexión','error');auth.signOut();}
+    }catch(e){
+        console.error(e);
+        // Permission errors mean user is not in Firestore — sign out and show login
+        await auth.signOut();
+        showLogin();
+    }
 }
 function showLogin(){
     document.getElementById('loading-screen').classList.add('hidden');
@@ -1022,6 +1617,53 @@ document.getElementById('login-form').addEventListener('submit',async e=>{
     catch(e){showToast('Credenciales incorrectas: '+e.message,'error');}
 });
 document.getElementById('logout-btn').addEventListener('click',()=>signOut(auth).then(()=>location.reload()));
+
+/* ── PASSWORD RESET ── */
+window.showResetView = () => {
+    document.getElementById('login-form-view').style.display = 'none';
+    document.getElementById('reset-form-view').style.display = '';
+    // Pre-fill email if already typed
+    const email = document.getElementById('login-email').value;
+    if (email) document.getElementById('reset-email').value = email;
+};
+
+window.showLoginView = () => {
+    document.getElementById('reset-form-view').style.display = 'none';
+    document.getElementById('login-form-view').style.display = '';
+};
+
+window.sendPasswordReset = async () => {
+    const email = document.getElementById('reset-email').value.trim();
+    if (!email) { showToast('Ingrese su correo electrónico', 'warning'); return; }
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    try {
+        await sendPasswordResetEmail(auth, email);
+        // Show success state
+        document.getElementById('reset-form-view').innerHTML = `
+            <div style="text-align:center;padding:1rem 0">
+                <div style="font-size:2.5rem;margin-bottom:.75rem">✉️</div>
+                <div style="font-weight:600;color:#fff;font-size:.95rem;margin-bottom:.5rem">Correo enviado</div>
+                <div style="font-size:.8rem;color:rgba(255,255,255,.55);line-height:1.5;margin-bottom:1.5rem">
+                    Revisá tu bandeja de entrada en <strong style="color:rgba(255,255,255,.8)">${email}</strong>.<br>
+                    El enlace expira en 1 hora.
+                </div>
+                <button type="button" onclick="window.showLoginView()"
+                    style="background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);border-radius:var(--r-sm);padding:.55rem 1.2rem;font-size:.82rem;cursor:pointer;font-family:var(--font)">
+                    ← Volver al inicio de sesión
+                </button>
+            </div>`;
+    } catch(e) {
+        let msg = 'Error al enviar el correo';
+        if (e.code === 'auth/user-not-found')    msg = 'No existe una cuenta con ese correo';
+        if (e.code === 'auth/invalid-email')     msg = 'El correo no es válido';
+        if (e.code === 'auth/too-many-requests') msg = 'Demasiados intentos. Intente más tarde';
+        showToast(msg, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Enviar enlace';
+    }
+};
 
 /* ── BUSINESS LOGIC ── */
 function calcTime(dateStr,startStr,endStr){
@@ -1078,7 +1720,11 @@ async function loadTechData(){
         exps.forEach(ex=>{
             const paid=ex.status==='paid';
             if(!paid)pendE+=parseFloat(ex.amount);
-            rowsE+=`<tr><td>${fmtDate(ex.date)}</td><td>${ex.invoiceNum}</td><td>${ex.store}</td><td>${ex.client}</td><td>${ex.description}</td>
+            const otLabel=ex.otNumber||'—';
+            rowsE+=`<tr><td>${fmtDate(ex.date)}</td><td>${ex.invoiceNum}</td>
+            <td style="font-size:.78rem;font-weight:600;color:var(--navy-800)">${otLabel}</td>
+            <td><span style="background:var(--navy-50);border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;font-size:.72rem;font-weight:600">${ex.expenseType||'—'}</span></td>
+            <td>${ex.store}</td>
             <td>${fmt(ex.amount)}</td>
             <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
             <td class="actions-cell">
@@ -1158,7 +1804,14 @@ window.openModal=id=>{
     const form=document.getElementById(id)?.querySelector('form');
     if(form){form.reset();const h=form.querySelector('input[type="hidden"]');if(h)h.value='';}
     if(id==='modal-hour')document.getElementById('hour-modal-title').textContent='Registro de Horas';
-    if(id==='modal-expense')document.getElementById('expense-modal-title').textContent='Registro de Gastos';
+    if(id==='modal-expense'){
+        document.getElementById('expense-modal-title').textContent='Registro de Gastos';
+        // Reset otros field
+        const ow=document.getElementById('otros-field-wrap');
+        if(ow){ow.classList.add('hidden');}
+        const od=document.getElementById('exp-otros-detail');
+        if(od){od.value='';od.required=false;}
+    }
     if(id==='modal-vac-request'){
         document.getElementById('vac-days-preview').classList.add('hidden');
         // Show balance
@@ -1213,7 +1866,9 @@ window.printVacationSlip=async(vacId)=>{
     document.getElementById('print-date').textContent='Fecha Emisión: '+new Date().toLocaleDateString();
     document.getElementById('print-period-text').textContent=`${fmtDate(v.fromDate)} al ${fmtDate(v.toDate)}`;
     document.getElementById('print-vacation-days').textContent=`${remainingDays} días`;
+    // Show vacation balance, hide Moneda column
     document.querySelector('.pdf-col-info:nth-child(3)').style.display='block';
+    document.querySelector('.pdf-col-info:nth-child(4)').style.display='none';
     container.innerHTML=`
         <div class="vac-box">
             <div class="vac-title">SOLICITUD DE VACACIONES — APROBADA</div>
@@ -1222,18 +1877,30 @@ window.printVacationSlip=async(vacId)=>{
             <div class="vac-row"><div><strong>Días Hábiles</strong><span style="font-size:18px;font-weight:bold">${v.days}</span></div><div><strong>Motivo</strong>${v.reason||'—'}</div></div>
             <div class="vac-row"><div><strong>Estado</strong><span style="color:#1d7a4f;font-weight:bold">APROBADA</span></div><div><strong>Aprobado por</strong>${v.approvedBy||'Administrador'}</div></div>
         </div>
-        <div class="signature-section" style="margin-top:40px">
-            <div class="sig-block">Firma Empleado<br><br>___________________<br>${u.fullName}</div>
-            <div class="sig-block">Firma Autorizada<br><br>___________________<br>Multiequipos</div>
+        <div style="margin-top:70px;display:flex;justify-content:space-between;padding:0 40px">
+            <div style="width:42%;text-align:center;">
+                <div style="border-top:1px solid #000;padding-top:6px;font-size:12px">
+                    Colaborador<br><br>___________________<br>${u.fullName}
+                </div>
+            </div>
+            <div style="width:42%;text-align:center;">
+                <div style="border-top:1px solid #000;padding-top:6px;font-size:12px">
+                    Autorizado<br><br>___________________<br>Multiequipos
+                </div>
+            </div>
         </div>`;
     document.getElementById('print-final-total').textContent='';
     document.querySelector('.grand-total').style.display='none';
+    document.getElementById('print-signatures').style.display='none';
     document.getElementById('app-view').style.display='none';
     document.getElementById('print-area').style.display='block';
     window.print();
     document.getElementById('print-area').style.display='none';
     document.getElementById('app-view').style.display='block';
     document.querySelector('.grand-total').style.display='';
+    document.getElementById('print-signatures').style.display='';
+    // Restore Moneda column
+    document.querySelector('.pdf-col-info:nth-child(4)').style.display='block';
 };
 
 /* ── EDIT / DELETE RECORDS ── */
@@ -1255,8 +1922,18 @@ window.openEditModal=async(type,id)=>{
             document.getElementById('exp-invoice').value=r.invoiceNum;
             document.getElementById('exp-store').value=r.store;
             document.getElementById('exp-amount').value=r.amount;
-            document.getElementById('exp-client').value=r.client;
-            document.getElementById('exp-desc').value=r.description;
+            // Restore type — handle "Otros: detail" format
+            const rawType = r.expenseType||'';
+            if(rawType.startsWith('Otros: ')){
+                document.getElementById('exp-type').value='Otros';
+                document.getElementById('exp-otros-detail').value=rawType.replace('Otros: ','');
+                document.getElementById('otros-field-wrap').classList.remove('hidden');
+            }else{
+                document.getElementById('exp-type').value=rawType;
+                document.getElementById('exp-otros-detail').value='';
+                document.getElementById('otros-field-wrap').classList.add('hidden');
+            }
+            window._pendingOtId = r.otId||null;
             document.getElementById('expense-modal-title').textContent='Editar Gasto';
         }
     }catch(e){showToast('Error cargando datos','error');}
@@ -1289,7 +1966,25 @@ document.getElementById('expense-form').addEventListener('submit',async e=>{
     e.preventDefault();
     try{
         const id=document.getElementById('expense-id').value;
-        const rec={type:'expense',userId:currentUser.id,invoiceNum:document.getElementById('exp-invoice').value,store:document.getElementById('exp-store').value,amount:document.getElementById('exp-amount').value,date:document.getElementById('exp-date').value,client:document.getElementById('exp-client').value,description:document.getElementById('exp-desc').value,status:'pending'};
+        const otId     = document.getElementById('exp-ot-id').value     || '';
+        const otNumber = document.getElementById('exp-ot-number').value || 'General';
+        const otClient = document.getElementById('exp-ot-client').value || '';
+        const rec={type:'expense',userId:currentUser.id,
+            invoiceNum:document.getElementById('exp-invoice').value,
+            store:document.getElementById('exp-store').value,
+            amount:document.getElementById('exp-amount').value,
+            date:document.getElementById('exp-date').value,
+            expenseType:(()=>{
+                const t=document.getElementById('exp-type').value;
+                if(t==='Otros'){
+                    const d=document.getElementById('exp-otros-detail').value.trim();
+                    return d?`Otros: ${d}`:'Otros';
+                }
+                return t;
+            })(),
+            otId, otNumber, otClient,
+            otDescription: otId ? (otData.find(x=>x.id===otId)?.description||'') : '',
+            status:'pending'};
         if(id){rec.id=id;await updateRecord(rec,'expense');}else{await saveRecord(rec);}
     }catch(e){showToast('Error al guardar: '+e.message,'error');}
 });
@@ -1345,6 +2040,7 @@ async function loadAdminData(){
         fSel.innerHTML=opts;
         if(vFSel)vFSel.innerHTML=opts;
         await Promise.all(upd);
+        window.loadDeletedUsers();
     }catch(e){console.error(e);showToast('Error cargando admin','error');}
 }
 async function createUserViaAPI(email,password){
@@ -1400,11 +2096,27 @@ document.getElementById('tech-edit-form').addEventListener('submit',async e=>{
     }catch(e){showToast('Error: '+e.message,'error');}
 });
 window.deleteUser=async id=>{
-    const s=await getDocs(query(collection(db,'records'),where('userId','==',id)));
-    if(!s.empty){showToast('No se puede borrar. Tiene registros activos.','error');return;}
-    if(!confirm('¿Borrar técnico?'))return;
-    try{await deleteDoc(doc(db,'users',id));loadAdminData();showToast('Eliminado','success');}
-    catch(e){showToast('Error: '+e.message,'error');}
+    const u=usersData.find(x=>x.id===id);
+    if(!u){showToast('Técnico no encontrado','error');return;}
+    if(!confirm(`¿Archivar a ${u.fullName}?\n\nSus registros históricos se conservan y podrá restaurarlo en cualquier momento.`))return;
+    try{
+        // Count their records
+        const recs=await getDocs(query(collection(db,'records'),where('userId','==',id)));
+        const vacRecs=await getDocs(query(collection(db,'vacationRequests'),where('userId','==',id)));
+        // Archive to deletedUsers collection
+        await setDoc(doc(db,'deletedUsers',id),{
+            ...u,
+            deletedAt: new Date().toISOString(),
+            deletedBy: currentUser.fullName||currentUser.email,
+            recordCount: recs.size,
+            vacationCount: vacRecs.size
+        });
+        // Remove from active users
+        await deleteDoc(doc(db,'users',id));
+        loadAdminData();
+        window.loadDeletedUsers();
+        showToast(`${u.fullName} archivado correctamente`,'success');
+    }catch(e){showToast('Error: '+e.message,'error');}
 };
 
 /* ── VALIDATION TABLE ── */
@@ -1428,16 +2140,24 @@ window.renderValidationTable=async()=>{
         const u=usersData.find(x=>x.id===r.userId);
         const name=u?u.fullName:'?';
         const paid=r.status==='paid';
-        let det='',amt='';
-        if(r.type==='hour'){amt=`${r.extra}h extra`;det=`${r.startTime} – ${r.endTime}`;}
-        else{amt=fmt(r.amount);det=`${r.invoiceNum} · ${r.store} · ${r.description}`;}
+        let det='',amt='',clientCol='';
+        if(r.type==='hour'){
+            amt=`${r.extra}h extra`;
+            det=`${r.startTime} – ${r.endTime}`;
+            clientCol=r.client||'—';
+        }else{
+            amt=fmt(r.amount);
+            // gastos ya no tienen client — mostrar OT o comercio
+            clientCol=r.otNumber&&r.otNumber!=='General'?`${r.otNumber} · ${r.otClient||''}`:( r.store||'—');
+            det=`${r.invoiceNum||''}${r.store?' · '+r.store:''}${r.expenseType?' · '+r.expenseType:''}`;
+        }
         const tbStyle=r.type==='hour'?'background:rgba(27,42,74,.07);color:var(--navy-800);border:1px solid rgba(27,42,74,.15)':'background:var(--amber-bg);color:var(--amber);border:1px solid rgba(154,94,16,.18)';
         const act=paid?`<input type="checkbox" class="pay-check" value="${r.id}"><button type="button" class="btn btn-warning btn-sm" onclick="window.revertToPending('${r.id}')">Revertir</button>`:`<input type="checkbox" class="pay-check" value="${r.id}">`;
         rows+=`<tr>
             <td><input type="checkbox" class="row-select" value="${r.id}"></td>
             <td style="font-weight:600;color:var(--text-1)">${name}</td>
             <td><span class="badge" style="${tbStyle};padding:.17rem .52rem;border-radius:999px;font-size:.67rem;font-weight:600">${r.type==='hour'?'Hora':'Gasto'}</span></td>
-            <td>${fmtDate(r.date)}</td><td>${r.client}</td>
+            <td>${fmtDate(r.date)}</td><td>${clientCol}</td>
             <td style="font-size:.76rem;color:var(--text-3);max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${det}">${det}</td>
             <td style="font-weight:600">${amt}</td>
             <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
@@ -1489,6 +2209,7 @@ window.renderAdminVacTable=async()=>{
                 ${v.status==='pending'?`<button type="button" class="btn btn-sm btn-danger" onclick="window.rejectVac('${v.id}')">Rechazar</button>`:``}
                 ${v.status==='approved'?`<button type="button" class="btn btn-sm btn-secondary" onclick="window.printVacationSlip('${v.id}')">Boleta</button>`:``}
                 ${v.status==='approved'?`<button type="button" class="btn btn-sm btn-warning" onclick="window.revertVac('${v.id}','${v.userId}',${v.days})">Revertir</button>`:``}
+                <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteVacRequest('${v.id}','${v.status}','${v.userId}',${v.days||0})">Eliminar</button>
             </td>
         </tr>`;
     });
@@ -1534,6 +2255,24 @@ window.revertVac=async(vacId,userId,days)=>{
         await renderAdminVacTable_refresh();
         showToast(`Revertida. Se devolvieron ${days} días.`,'success');
     }catch(e){showToast('Error: '+e.message,'error');}
+};
+
+window.deleteVacRequest=async(vacId, status, userId, days)=>{
+    if(!confirm('¿Eliminar este registro de vacaciones? Esta acción no se puede deshacer.'))return;
+    try{
+        // Si estaba aprobada, devolver los días al técnico antes de eliminar
+        if(status==='approved' && userId && days>0){
+            const uRef=doc(db,'users',userId);
+            const uSnap=await getDoc(uRef);
+            if(uSnap.exists()){
+                const cur=uSnap.data().vacationDays||0;
+                await updateDoc(uRef,{vacationDays:cur+days});
+            }
+        }
+        await deleteDoc(doc(db,'vacationRequests',vacId));
+        await renderAdminVacTable_refresh();
+        showToast('Registro eliminado','success');
+    }catch(e){showToast('Error al eliminar: '+e.message,'error');}
 };
 
 async function renderAdminVacTable_refresh(){
@@ -1595,10 +2334,47 @@ async function printRecords(list,ptype,techId,ftype){
     if(!isExp){
         if(hrs.length){
             let tot=0;hrs.forEach(r=>tot+=parseFloat(r.extra));
-            html+=`<h3 style="margin-top:15px;font-size:16px;border-bottom:1px solid #ccc;padding-bottom:5px">Detalle Horas Extra</h3>`;
-            html+=`<table class="pdf-table"><thead><tr><th style="width:18%">Fecha</th><th style="width:32%">Cliente</th><th style="width:12%">Día</th><th style="width:19%">Total</th><th style="width:19%">Extra</th></tr></thead><tbody>`;
-            hrs.forEach(r=>{const[y,m,d]=r.date.split('-');const day=new Date(y,m-1,d).getDay();const dn=day===0?'Dom':day===6?'Sáb':'Lun-Vie';html+=`<tr><td>${fmtDate(r.date)}</td><td>${r.client}</td><td style="text-align:center">${dn}</td><td style="text-align:center">${r.total}h</td><td style="text-align:center;font-weight:bold">${r.extra}h</td></tr>`;});
-            html+=`<tr class="subtotal"><td colspan="4" style="text-align:right">Total Horas:</td><td style="text-align:center">${tot.toFixed(1)}h</td></tr></tbody></table>`;
+            html+=`<h3 style="margin-top:15px;font-size:16px;border-bottom:2px solid #1B2A4A;padding-bottom:6px;color:#1B2A4A">Detalle Horas Extra</h3>`;
+            html+=`<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10.5px;font-family:Arial,sans-serif;table-layout:fixed">
+                <colgroup>
+                    <col style="width:14%">
+                    <col style="width:50%">
+                    <col style="width:12%">
+                    <col style="width:12%">
+                    <col style="width:12%">
+                </colgroup>
+                <thead>
+                    <tr style="background:#1B2A4A;color:#fff">
+                        <th style="padding:6px 5px;text-align:left">Fecha</th>
+                        <th style="padding:6px 5px;text-align:left">Cliente</th>
+                        <th style="padding:6px 5px;text-align:center">Día</th>
+                        <th style="padding:6px 5px;text-align:center">Total</th>
+                        <th style="padding:6px 5px;text-align:center">Extra</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            hrs.forEach((r,idx)=>{
+                const[y,m,d]=r.date.split('-');
+                const day=new Date(y,m-1,d).getDay();
+                const dn=day===0?'Dom':day===6?'Sáb':'Lun-Vie';
+                const bg=idx%2===0?'#ffffff':'#f5f7fb';
+                const hCell = `padding:5px 5px;border-bottom:1px solid #e8ecf2;overflow:hidden;word-break:break-word`;
+                html+=`<tr style="background:${bg}">
+                    <td style="${hCell};white-space:nowrap">${fmtDate(r.date)}</td>
+                    <td style="${hCell}">${r.client}</td>
+                    <td style="${hCell};text-align:center">${dn}</td>
+                    <td style="${hCell};text-align:center">${r.total}h</td>
+                    <td style="${hCell};text-align:center;font-weight:700;color:#1B2A4A">${r.extra}h</td>
+                </tr>`;
+            });
+            html+=`</tbody>
+                <tfoot>
+                    <tr style="background:#1B2A4A;color:#fff;font-weight:bold">
+                        <td colspan="4" style="padding:6px 5px;text-align:right;font-size:11px">Total Horas Extra:</td>
+                        <td style="padding:6px 5px;text-align:center">${tot.toFixed(1)}h</td>
+                    </tr>
+                </tfoot>
+            </table>`;
         }
         if(pay){
             html+=`<div class="payroll-box"><div class="payroll-title">Desglose de Pago</div>`;
@@ -1615,10 +2391,59 @@ async function printRecords(list,ptype,techId,ftype){
         }
     }
     if(exps.length){
-        html+=`<h3 style="margin-top:20px;font-size:16px;border-bottom:1px solid #ccc;padding-bottom:5px">Reembolso de Gastos</h3>`;
-        html+=`<table class="pdf-table"><thead><tr><th style="width:12%">Fecha</th><th style="width:12%">Factura</th><th style="width:15%">Comercio</th><th style="width:15%">Cliente</th><th style="width:26%">Descripción</th><th style="width:20%">Monto</th></tr></thead><tbody>`;
-        exps.forEach(r=>html+=`<tr><td>${fmtDate(r.date)}</td><td>${r.invoiceNum}</td><td>${r.store}</td><td>${r.client}</td><td style="vertical-align:top">${r.description||'-'}</td><td class="num">${fmt(r.amount)}</td></tr>`);
-        html+=`<tr class="subtotal"><td colspan="5" style="text-align:right">Total Gastos:</td><td class="num">${fmt(totE)}</td></tr></tbody></table>`;
+        html+=`<h3 style="margin-top:20px;font-size:16px;border-bottom:2px solid #1B2A4A;padding-bottom:6px;color:#1B2A4A;margin-bottom:10px">Reembolso de Gastos</h3>`;
+
+        html+=`<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px;font-family:Arial,sans-serif;table-layout:fixed">
+            <colgroup>
+                <col style="width:13%">
+                <col style="width:13%">
+                <col style="width:20%">
+                <col style="width:16%">
+                <col style="width:20%">
+                <col style="width:18%">
+            </colgroup>
+            <thead>
+                <tr style="background:#1B2A4A;color:#fff">
+                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Fecha</th>
+                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Factura</th>
+                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Orden de Trabajo</th>
+                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Tipo de Gasto</th>
+                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Comercio</th>
+                    <th style="padding:9px 10px;text-align:right;font-size:12px;letter-spacing:.03em">Monto</th>
+                </tr>
+            </thead>
+            <tbody>`;
+
+        exps.forEach((r, idx) => {
+            const raw = r.expenseType || '—';
+            const tipoDisplay = raw.startsWith('Otros:')
+                ? `Otros<br><span style="font-size:11px;color:#555">${raw.replace('Otros:','').trim()}</span>`
+                : raw;
+            const rowBg = idx % 2 === 0 ? '#ffffff' : '#f5f7fb';
+            const cellStyle = `padding:9px 10px;border-bottom:1px solid #e8ecf2;overflow:hidden;word-break:break-word;font-size:13px`;
+            html += `<tr style="background:${rowBg}">
+                <td style="${cellStyle};white-space:nowrap">${fmtDate(r.date)}</td>
+                <td style="${cellStyle};white-space:nowrap">${r.invoiceNum||'—'}</td>
+                <td style="${cellStyle};font-weight:700;color:#1B2A4A">
+                    ${r.otNumber||'General'}
+                    ${r.otClient?`<br><span style="font-size:11px;font-weight:400;color:#555">${r.otClient}</span>`:''}
+                </td>
+                <td style="${cellStyle}">${tipoDisplay}</td>
+                <td style="${cellStyle}">${r.store||'—'}</td>
+                <td style="${cellStyle};text-align:right;font-weight:700;white-space:nowrap">${fmt(r.amount)}</td>
+            </tr>`;
+        });
+
+        html+=`</tbody>
+            <tfoot>
+                <tr style="background:#1B2A4A;color:#fff;font-weight:bold">
+                    <td colspan="5" style="padding:9px 10px;text-align:right;font-size:13px">TOTAL GASTOS:</td>
+                    <td style="padding:9px 10px;text-align:right;font-size:13px;white-space:nowrap">${fmt(totE)}</td>
+                </tr>
+            </tfoot>
+        </table>`;
+
+        // ── Caja chica ─────────────────────────────────────────
         const LIM=200000;
         html+=`<div class="petty-cash-box"><div class="petty-cash-header">Resumen Caja Chica (Límite: ₡200,000)</div>`;
         if(totE<=LIM){html+=`<div class="petty-cash-row"><span>Saldo Restante:</span><span class="petty-cash-ok">${fmt(LIM-totE)}</span></div>`;}
@@ -1933,6 +2758,1418 @@ window.loadStats = async () => {
 };
 
 
+
+/* ══════════════════════════════════════════
+   ORDENES DE TRABAJO
+══════════════════════════════════════════ */
+
+let otData = []; // cache of all OTs
+
+// ── OT Autocomplete logic ──────────────────────────────────────
+let _otFocusIdx = -1;
+
+async function ensureOTData() {
+    if (!otData.length) {
+        const snap = await getDocs(collection(db, 'workOrders'));
+        otData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        otData.sort((a, b) => a.number.localeCompare(b.number));
+    }
+}
+
+function otSetSelected(id, number, client, label) {
+    document.getElementById('exp-ot-id').value     = id;
+    document.getElementById('exp-ot-number').value = number;
+    document.getElementById('exp-ot-client').value = client;
+    document.getElementById('exp-ot-search').value = '';
+    document.getElementById('exp-ot-search').placeholder = 'Buscar por número o cliente…';
+    const badge = document.getElementById('ot-selected-badge');
+    document.getElementById('ot-selected-label').textContent = label;
+    badge.classList.add('visible');
+    document.getElementById('ot-clear-btn').classList.remove('visible');
+    otCloseDropdown();
+}
+
+function otSearchClear() {
+    document.getElementById('exp-ot-id').value     = '';
+    document.getElementById('exp-ot-number').value = 'General';
+    document.getElementById('exp-ot-client').value = '';
+    document.getElementById('exp-ot-search').value = '';
+    document.getElementById('ot-selected-badge').classList.remove('visible');
+    document.getElementById('ot-clear-btn').classList.remove('visible');
+    otCloseDropdown();
+}
+window.otSearchClear = otSearchClear;
+
+function otCloseDropdown() {
+    const dd = document.getElementById('ot-dropdown');
+    if (dd) { dd.classList.remove('open'); dd.innerHTML = ''; }
+    _otFocusIdx = -1;
+}
+
+function otRenderDropdown(results) {
+    const dd = document.getElementById('ot-dropdown');
+    if (!dd) return;
+    _otFocusIdx = -1;
+
+    // Always show "Gasto General" at top
+    let html = ``;
+
+    if (results.length === 0 && document.getElementById('exp-ot-search').value.trim()) {
+        html += `<div class="ot-no-results">Sin resultados para esa búsqueda</div>`;
+    } else {
+        results.forEach(ot => {
+            html += `<div class="ot-dropdown-item"
+                data-id="${ot.id}" data-number="${ot.number}"
+                data-client="${ot.client}"
+                data-label="${ot.number} — ${ot.client}"
+                onmousedown="window.otPickItem(this)">
+                <div class="ot-di-number">${ot.number}</div>
+                <div class="ot-di-client">${ot.client}</div>
+                <div class="ot-di-desc">${ot.description}</div>
+            </div>`;
+        });
+    }
+
+    dd.innerHTML = html;
+    dd.classList.add('open');
+}
+
+window.otPickItem = function(el) {
+    const id     = el.dataset.id;
+    const number = el.dataset.number;
+    const client = el.dataset.client;
+    const label  = el.dataset.label;
+    otSetSelected(id, number, client, label);
+};
+
+window.otSearchOpen = async function() {
+    await ensureOTData();
+    document.getElementById('ot-clear-btn').classList.add('visible');
+    const q = document.getElementById('exp-ot-search').value.trim().toLowerCase();
+    const results = q ? otData.filter(ot =>
+        ot.number.toLowerCase().includes(q) ||
+        ot.client.toLowerCase().includes(q) ||
+        (ot.description||'').toLowerCase().includes(q)
+    ) : otData;
+    otRenderDropdown(results);
+};
+
+window.otSearchInput = async function(val) {
+    await ensureOTData();
+    document.getElementById('ot-clear-btn').classList.toggle('visible', val.length > 0);
+    // Clear selection when typing
+    document.getElementById('ot-selected-badge').classList.remove('visible');
+    const q = val.trim().toLowerCase();
+    const results = q ? otData.filter(ot =>
+        ot.number.toLowerCase().includes(q) ||
+        ot.client.toLowerCase().includes(q) ||
+        (ot.description||'').toLowerCase().includes(q)
+    ) : otData;
+    otRenderDropdown(results);
+};
+
+window.otSearchKey = function(e) {
+    const dd = document.getElementById('ot-dropdown');
+    if (!dd || !dd.classList.contains('open')) return;
+    const items = dd.querySelectorAll('.ot-dropdown-item');
+    if (!items.length) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        _otFocusIdx = Math.min(_otFocusIdx + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        _otFocusIdx = Math.max(_otFocusIdx - 1, 0);
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (_otFocusIdx >= 0) window.otPickItem(items[_otFocusIdx]);
+        return;
+    } else if (e.key === 'Escape') {
+        otCloseDropdown(); return;
+    }
+
+    items.forEach((item, i) => item.classList.toggle('focused', i === _otFocusIdx));
+    if (_otFocusIdx >= 0) items[_otFocusIdx].scrollIntoView({ block: 'nearest' });
+};
+
+// Close dropdown when clicking outside
+document.addEventListener('mousedown', e => {
+    const wrap = document.querySelector('.ot-autocomplete-wrap');
+    if (wrap && !wrap.contains(e.target)) otCloseDropdown();
+});
+
+// Initialize autocomplete for expense modal opening
+async function initOTAutocomplete(pendingId) {
+    await ensureOTData();
+    document.getElementById('exp-ot-search').value = '';
+    document.getElementById('ot-clear-btn').classList.remove('visible');
+    otCloseDropdown();
+
+    if (pendingId) {
+        const ot = otData.find(x => x.id === pendingId);
+        if (ot) { otSetSelected(ot.id, ot.number, ot.client, `${ot.number} — ${ot.client}`); return; }
+    }
+    // Default: empty — OT is required
+    document.getElementById('exp-ot-id').value = '';
+    document.getElementById('exp-ot-number').value = '';
+    document.getElementById('exp-ot-client').value = '';
+    document.getElementById('ot-selected-badge').classList.remove('visible');
+}
+
+async function populateOTSelect(selectedId) {
+    // kept for compatibility — now just inits autocomplete
+    await initOTAutocomplete(selectedId);
+}
+
+// Cost filter OT autocomplete
+let _cfOtIdx = -1;
+
+async function populateCostOTFilter() {
+    await ensureOTData();
+    // Populate tech filter
+    const techSel = document.getElementById('cost-filter-tech');
+    if (techSel) {
+        let tOpts = '<option value="all">Todos</option>';
+        usersData.forEach(u => { tOpts += `<option value="${u.id}">${u.fullName}</option>`; });
+        techSel.innerHTML = tOpts;
+    }
+    // Reset autocomplete to "all" if first time
+    const hidden = document.getElementById('cost-filter-ot');
+    if (hidden && !hidden._initialized) {
+        hidden._initialized = true;
+        // already set to "all" by default
+    }
+}
+
+function cfOtBuildDropdown(results, query) {
+    // Use a body-level dropdown to escape any overflow/z-index context in the header
+    let dd = document.getElementById('cf-ot-dropdown-portal');
+    if (!dd) {
+        dd = document.createElement('div');
+        dd.id = 'cf-ot-dropdown-portal';
+        dd.style.cssText = 'position:fixed;background:#fff;border:1px solid var(--border-mid);border-radius:var(--r);box-shadow:0 8px 32px rgba(27,42,74,.18);z-index:9000;max-height:300px;overflow-y:auto;display:none;min-width:280px';
+        document.body.appendChild(dd);
+    }
+    _cfOtIdx = -1;
+
+    // Position below the input
+    const inp = document.getElementById('cf-ot-search');
+    if (inp) {
+        const rect = inp.getBoundingClientRect();
+        dd.style.top  = (rect.bottom + 4) + 'px';
+        dd.style.left = rect.left + 'px';
+        dd.style.width = rect.width + 'px';
+    }
+
+    const itemStyle = 'padding:.6rem .9rem;cursor:pointer;border-bottom:1px solid var(--border);font-size:.83rem;';
+    const nameStyle = 'font-weight:700;color:var(--navy-800);';
+    const subStyle  = 'font-size:.72rem;color:var(--text-3);margin-top:.15rem';
+
+    let html = `<div class="cf-ot-item" data-id="all" data-label=""
+        style="${itemStyle}border-bottom:2px solid var(--border-mid)"
+        onmousedown="window.cfOtPick(this)">
+        <div style="${nameStyle}">Todas las órdenes</div>
+    </div>`;
+
+    if (results.length === 0 && query.trim()) {
+        html += `<div style="padding:.75rem .9rem;font-size:.8rem;color:var(--text-3);text-align:center">Sin resultados para "${query}"</div>`;
+    } else {
+        results.forEach(ot => {
+            html += `<div class="cf-ot-item"
+                data-id="${ot.id}" data-label="${ot.number} — ${ot.client}"
+                style="${itemStyle}"
+                onmousedown="window.cfOtPick(this)">
+                <div style="${nameStyle}">${ot.number} <span style="font-weight:400;color:var(--text-2)">— ${ot.client}</span></div>
+                <div style="${subStyle}">${ot.description||''}</div>
+            </div>`;
+        });
+    }
+
+    dd.innerHTML = html;
+    dd.style.display = 'block';
+}
+
+// Always reload OTs fresh for the filter (otData can be reset by other tabs)
+async function cfOtGetData() {
+    const snap = await getDocs(collection(db, 'workOrders'));
+    const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    data.sort((a, b) => a.number.localeCompare(b.number));
+    otData = data; // keep cache in sync too
+    return data;
+}
+
+window.cfOtOpen = async function() {
+    const data = await cfOtGetData();
+    const q = document.getElementById('cf-ot-search').value.trim().toLowerCase();
+    const results = q ? data.filter(ot =>
+        ot.number.toLowerCase().includes(q) ||
+        ot.client.toLowerCase().includes(q) ||
+        (ot.description||'').toLowerCase().includes(q)
+    ) : data;
+    cfOtBuildDropdown(results, q);
+    document.getElementById('cf-ot-clear').style.display = q ? 'block' : 'none';
+};
+
+window.cfOtInput = async function(val) {
+    const data = await cfOtGetData();
+    document.getElementById('cf-ot-clear').style.display = val ? 'block' : 'none';
+    const q = val.trim().toLowerCase();
+    const results = q ? data.filter(ot =>
+        ot.number.toLowerCase().includes(q) ||
+        ot.client.toLowerCase().includes(q) ||
+        (ot.description||'').toLowerCase().includes(q)
+    ) : data;
+    cfOtBuildDropdown(results, q);
+};
+
+window.cfOtKey = function(e) {
+    const dd = document.getElementById('cf-ot-dropdown-portal');
+    if (!dd || dd.style.display === 'none') return;
+    const items = dd.querySelectorAll('.cf-ot-item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); _cfOtIdx = Math.min(_cfOtIdx+1, items.length-1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _cfOtIdx = Math.max(_cfOtIdx-1, 0); }
+    else if (e.key === 'Enter') { e.preventDefault(); if(_cfOtIdx>=0) window.cfOtPick(items[_cfOtIdx]); return; }
+    else if (e.key === 'Escape') { cfOtClose(); return; }
+    items.forEach((item,i) => item.style.background = i===_cfOtIdx ? 'var(--blue-light)' : '');
+    if(_cfOtIdx>=0) items[_cfOtIdx].scrollIntoView({block:'nearest'});
+};
+
+window.cfOtPick = function(el) {
+    const id    = el.dataset.id;
+    const label = el.dataset.label;
+    document.getElementById('cost-filter-ot').value = id;
+    document.getElementById('cf-ot-search').value   = id === 'all' ? '' : label;
+    document.getElementById('cf-ot-clear').style.display = id === 'all' ? 'none' : 'block';
+    cfOtClose();
+    window.loadCostAnalysis();
+};
+
+window.cfOtClear = function() {
+    document.getElementById('cost-filter-ot').value = 'all';
+    document.getElementById('cf-ot-search').value   = '';
+    document.getElementById('cf-ot-clear').style.display = 'none';
+    cfOtClose();
+    window.loadCostAnalysis();
+};
+
+function cfOtClose() {
+    const dd = document.getElementById('cf-ot-dropdown-portal');
+    if (dd) { dd.style.display = 'none'; dd.innerHTML = ''; }
+    _cfOtIdx = -1;
+}
+
+// Close when clicking outside
+document.addEventListener('mousedown', e => {
+    const inp = document.getElementById('cf-ot-search');
+    const dd  = document.getElementById('cf-ot-dropdown-portal');
+    if (inp && !inp.contains(e.target) && dd && !dd.contains(e.target)) cfOtClose();
+});
+
+// Override openModal to populate OT autocomplete when expense modal opens
+const _origOpenModal = window.openModal;
+window.openModal = function(id) {
+    _origOpenModal(id);
+    if (id === 'modal-expense') {
+        const pending = window._pendingOtId || null;
+        window._pendingOtId = null;
+        initOTAutocomplete(pending);
+    }
+};
+
+// Load OT management table
+window.loadOTTable = async () => {
+    otData = [];
+    const snap = await getDocs(collection(db, 'workOrders'));
+    otData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    otData.sort((a, b) => a.number.localeCompare(b.number));
+    const tbody = document.getElementById('ot-table-body');
+    let html = '';
+    otData.forEach(ot => {
+        html += `<tr>
+            <td style="font-weight:700;color:var(--navy-800)">${ot.number}</td>
+            <td>${ot.client}</td>
+            <td style="color:var(--text-2)">${ot.description}</td>
+            <td style="color:var(--text-3);font-size:.78rem">${fmtDate(ot.createdAt?.split('T')[0]||'')}</td>
+            <td class="actions-cell">
+                <button type="button" class="btn btn-sm btn-warning" onclick="window.editOT('${ot.id}')">Editar</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="window.deleteOT('${ot.id}')">Eliminar</button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html || `<tr><td colspan="5"><div class="empty-state"><div class="icon">📋</div><p>Sin órdenes de trabajo</p></div></td></tr>`;
+};
+
+// Create / Edit OT form
+document.getElementById('ot-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id    = document.getElementById('ot-edit-id').value;
+    const number = document.getElementById('ot-number').value.trim();
+    const client = document.getElementById('ot-client').value.trim();
+    const desc   = document.getElementById('ot-description').value.trim();
+    if (!number || !client || !desc) return;
+    try {
+        if (id) {
+            await updateDoc(doc(db, 'workOrders', id), { number, client, description: desc });
+            showToast('OT actualizada', 'success');
+        } else {
+            await addDoc(collection(db, 'workOrders'), { number, client, description: desc, createdAt: new Date().toISOString() });
+            showToast('OT creada exitosamente', 'success');
+        }
+        e.target.reset();
+        document.getElementById('ot-edit-id').value = '';
+        document.getElementById('ot-submit-btn').textContent = '+ Crear OT';
+        document.getElementById('ot-cancel-btn').classList.add('hidden');
+        otData = []; // reset cache
+        await window.loadOTTable();
+    } catch(err) { showToast('Error: ' + err.message, 'error'); }
+});
+
+window.editOT = (id) => {
+    const ot = otData.find(x => x.id === id);
+    if (!ot) return;
+    document.getElementById('ot-edit-id').value = id;
+    document.getElementById('ot-number').value = ot.number;
+    document.getElementById('ot-client').value = ot.client;
+    document.getElementById('ot-description').value = ot.description;
+    document.getElementById('ot-submit-btn').textContent = '✓ Guardar Cambios';
+    document.getElementById('ot-cancel-btn').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.cancelOTEdit = () => {
+    document.getElementById('ot-form').reset();
+    document.getElementById('ot-edit-id').value = '';
+    document.getElementById('ot-submit-btn').textContent = '+ Crear OT';
+    document.getElementById('ot-cancel-btn').classList.add('hidden');
+};
+
+window.deleteOT = async (id) => {
+    // Check if any expense uses this OT
+    const used = (await getDocs(collection(db, 'records'))).docs
+        .some(d => d.data().otId === id);
+    if (used) { showToast('No se puede eliminar: tiene gastos asociados.', 'error'); return; }
+    if (!confirm('¿Eliminar esta orden de trabajo?')) return;
+    await deleteDoc(doc(db, 'workOrders', id));
+    otData = [];
+    showToast('OT eliminada', 'success');
+    window.loadOTTable();
+};
+
+/* ══════════════════════════════════════════
+   ANALISIS DE COSTOS
+══════════════════════════════════════════ */
+
+const EXPENSE_TYPES = ['Materiales','Insumos','Herramientas','Repuestos','Combustible','Viaticos','Hospedaje','Parqueo','Peajes','Otros'];
+const CAT_COLORS    = ['#1B2A4A','#0f766e','#c0272d','#7c3aed','#2563eb','#0891b2','#1d7a4f','#9333ea','#d97706','#6b7280'];
+const CAT_ICONS     = ['📦','🧴','🛠️','🔧','⛽','🚗','🏨','🅿️','🛣️','📋'];
+let costCharts = {};
+
+function destroyCostChart(id) {
+    if (costCharts[id]) { costCharts[id].destroy(); delete costCharts[id]; }
+}
+
+window.loadCostAnalysis = async () => {
+    await populateCostOTFilter();
+    const otFilter   = document.getElementById('cost-filter-ot').value;
+    const techFilter = document.getElementById('cost-filter-tech').value;
+    const fromDate   = document.getElementById('cost-filter-from').value;
+    const toDate     = document.getElementById('cost-filter-to').value;
+
+    const allExp = (await getDocs(collection(db, 'records'))).docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(r => {
+            if (r.type !== 'expense') return false;
+            if (techFilter !== 'all' && r.userId !== techFilter) return false;
+            if (fromDate && r.date < fromDate) return false;
+            if (toDate && r.date > toDate) return false;
+            if (otFilter === 'all') return true;
+            return r.otId === otFilter;
+        });
+
+    const hasData = allExp.length > 0;
+    document.getElementById('cost-empty').classList.toggle('hidden', hasData);
+
+    // ── KPIs ──────────────────────────────────────────────
+    const totalCost = allExp.reduce((s, r) => s + parseFloat(r.amount || 0), 0);
+    const uniqueOTs = new Set(allExp.map(r => r.otId).filter(Boolean)).size;
+    const avgPerOT  = uniqueOTs > 0 ? totalCost / uniqueOTs : 0;
+    const catTotals = {};
+    EXPENSE_TYPES.forEach(c => catTotals[c] = 0);
+    allExp.forEach(r => { const c = r.expenseType || 'Otros'; catTotals[c] = (catTotals[c]||0) + parseFloat(r.amount||0); });
+    const topCat = Object.entries(catTotals).sort((a,b) => b[1]-a[1])[0];
+
+    document.getElementById('cost-kpi-total').textContent   = fmtCLP(totalCost);
+    document.getElementById('cost-kpi-ots').textContent     = uniqueOTs;
+    document.getElementById('cost-kpi-avg').textContent     = fmtCLP(avgPerOT);
+    document.getElementById('cost-kpi-top-cat').textContent = topCat && topCat[1] > 0 ? topCat[0] : '—';
+
+    // ── Resumen global por categoria (chips) ──────────────
+    const summaryEl = document.getElementById('cost-cat-summary');
+    summaryEl.innerHTML = EXPENSE_TYPES.map((cat, i) => {
+        const amt = catTotals[cat] || 0;
+        const pct = totalCost > 0 ? ((amt / totalCost) * 100).toFixed(1) : '0.0';
+        return `<div class="cat-chip">
+            <div class="cat-chip-label" style="display:flex;align-items:center;gap:.35rem">
+                <span>${CAT_ICONS[i]}</span>${cat}
+            </div>
+            <div class="cat-chip-amount">${fmtCLP(amt)}</div>
+            <div class="cat-chip-pct">${pct}% del total</div>
+            <div style="height:3px;background:var(--border);border-radius:2px;margin-top:.5rem;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${CAT_COLORS[i]};border-radius:2px;transition:width .6s ease"></div>
+            </div>
+        </div>`;
+    }).join('');
+
+    // ── Chart: Comparativa OTs (horizontal bar) ───────────
+    const otTotals = {};
+    allExp.forEach(r => {
+        const key = r.otId || 'SIN_OT';
+        otTotals[key] = (otTotals[key] || 0) + parseFloat(r.amount || 0);
+    });
+    const sortedOTs  = Object.entries(otTotals).sort((a,b) => b[1]-a[1]).slice(0,12);
+    const otChartLbls = sortedOTs.map(([id]) => {
+        const ot = otData.find(x => x.id === id);
+        return ot ? `${ot.number}` : id;
+    });
+
+    destroyCostChart('topOTs');
+    costCharts['topOTs'] = new Chart(document.getElementById('chart-cost-top-ots'), {
+        type: 'bar',
+        data: {
+            labels: otChartLbls,
+            datasets: [{
+                data: sortedOTs.map(([,v]) => v),
+                backgroundColor: sortedOTs.map((_, i) => CAT_COLORS[i % CAT_COLORS.length]),
+                borderRadius: 5, borderSkipped: false
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { backgroundColor:'#1B2A4A', titleColor:'#e2e8f4', bodyColor:'#9bacc8', cornerRadius:8, callbacks: { label: ctx => ` ${fmtCLP(ctx.raw)}` } } },
+            scales: {
+                x: { grid:{color:'#f0f3f8'}, border:{display:false}, ticks:{font:{size:11},color:'#8896b0',callback:v=>fmtCLP(v)} },
+                y: { grid:{display:false}, border:{display:false}, ticks:{font:{size:11},color:'#4a5878',fontWeight:'600'} }
+            }
+        }
+    });
+
+    // ── Chart: Donut por categoria ────────────────────────
+    destroyCostChart('catDonut');
+    costCharts['catDonut'] = new Chart(document.getElementById('chart-cost-donut-cat'), {
+        type: 'doughnut',
+        data: {
+            labels: EXPENSE_TYPES,
+            datasets: [{ data: EXPENSE_TYPES.map(c => catTotals[c]||0), backgroundColor: CAT_COLORS, borderWidth: 3, borderColor: '#fff', hoverOffset: 8 }]
+        },
+        options: donutDefaults(fmtCLP, EXPENSE_TYPES)
+    });
+
+    // ── OT Cards — desglose por proyecto ─────────────────
+    const otDetailMap = {};
+    allExp.forEach(r => {
+        const key = r.otId || 'SIN_OT';
+        const cat = r.expenseType || 'Otros';
+        const amt = parseFloat(r.amount || 0);
+        if (!otDetailMap[key]) {
+            const ot = otData.find(x => x.id === key);
+            otDetailMap[key] = {
+                id: key,
+                number: ot?.number || key,
+                client: ot?.client || '—',
+                desc:   ot?.description || '—',
+                cats: {}, receipts: []
+            };
+            EXPENSE_TYPES.forEach(c => otDetailMap[key].cats[c] = 0);
+        }
+        otDetailMap[key].cats[cat] = (otDetailMap[key].cats[cat] || 0) + amt;
+        otDetailMap[key].receipts.push(r);
+    });
+
+    const detailRows = Object.values(otDetailMap).sort((a,b) => {
+        const tA = Object.values(a.cats).reduce((x,y)=>x+y,0);
+        const tB = Object.values(b.cats).reduce((x,y)=>x+y,0);
+        return tB - tA;
+    });
+
+    const cardsEl = document.getElementById('cost-ot-cards');
+    cardsEl.innerHTML = detailRows.map((row, idx) => {
+        const rowTotal = Object.values(row.cats).reduce((x,y)=>x+y,0);
+        const isGeneral = false;
+
+        // Category items
+        const catItems = EXPENSE_TYPES.map((cat, ci) => {
+            const amt = row.cats[cat] || 0;
+            if (amt === 0) return '';
+            const pct = rowTotal > 0 ? ((amt/rowTotal)*100).toFixed(1) : '0';
+            return `<div class="ot-cat-item">
+                <div class="ot-cat-item" style="padding:0;border:none;background:none">
+                    <div style="position:absolute;top:0;left:0;bottom:0;width:3px;background:${CAT_COLORS[ci]};border-radius:2px 0 0 2px"></div>
+                </div>
+                <div class="ot-cat-name" style="display:flex;align-items:center;gap:.3rem"><span>${CAT_ICONS[ci]}</span>${cat}</div>
+                <div class="ot-cat-amount">${fmtCLP(amt)}</div>
+                <div class="ot-cat-pct">${pct}% del proyecto</div>
+                <div class="ot-cat-bar"><div class="ot-cat-bar-fill" style="width:${pct}%;background:${CAT_COLORS[ci]}"></div></div>
+            </div>`;
+        }).filter(x=>x).join('');
+
+        // Receipts table
+        const recs = row.receipts.sort((a,b)=>new Date(b.date)-new Date(a.date));
+        const techName = uid => { const u = usersData.find(x=>x.id===uid); return u?u.fullName.split(' ').slice(0,2).join(' '):'—'; };
+        const receiptsRows = recs.map(r => `<tr>
+            <td>${fmtDate(r.date)}</td>
+            <td>${r.invoiceNum||'—'}</td>
+            <td><span style="background:var(--navy-50);border:1px solid var(--border);border-radius:3px;padding:.1rem .4rem;font-size:.7rem;font-weight:600">${r.expenseType||'—'}</span></td>
+            <td>${r.store||'—'}</td>
+            <td style="color:var(--text-3);font-size:.75rem">${r.description||'—'}</td>
+            <td>${techName(r.userId)}</td>
+            <td style="text-align:right;font-weight:600;color:var(--text-1)">${fmtCLP(r.amount)}</td>
+        </tr>`).join('');
+
+        return `<div class="ot-card" id="otcard-${idx}">
+            <div class="ot-card-header" onclick="window.toggleOTCard('otcard-${idx}')">
+                <div class="ot-card-left">
+                    <span class="ot-badge ${isGeneral?'general':''}">${row.number}</span>
+                    <div class="ot-card-info">
+                        <div class="ot-card-client">${row.client}</div>
+                        <div class="ot-card-desc">${row.desc}</div>
+                    </div>
+                </div>
+                <div class="ot-card-right">
+                    <div style="text-align:right">
+                        <div class="ot-total-label">Total Gastado</div>
+                        <div class="ot-total-value">${fmtCLP(rowTotal)}</div>
+                    </div>
+                    <div style="font-size:.75rem;color:var(--text-3);text-align:right">
+                        <div>${recs.length} factura${recs.length!==1?'s':''}</div>
+                    </div>
+                    <button type="button"
+                        class="btn btn-sm btn-primary"
+                        style="flex-shrink:0"
+                        onclick="event.stopPropagation();window.generateOTReport('${row.id}')"
+                        title="Generar reporte PDF de costos">
+                        ↓ Reporte
+                    </button>
+                    <div class="ot-chevron">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="ot-card-body">
+                ${catItems ? `<div class="ot-cat-grid">${catItems}</div>` : ''}
+                <div class="ot-receipts-title">Comprobantes (${recs.length})</div>
+                <div style="overflow-x:auto">
+                    <table class="ot-receipts-table">
+                        <thead><tr><th>Fecha</th><th>Factura</th><th>Tipo</th><th>Comercio</th><th>Descripcion</th><th>Tecnico</th><th style="text-align:right">Monto</th></tr></thead>
+                        <tbody>${receiptsRows}</tbody>
+                        <tfoot><tr style="background:var(--navy-50)">
+                            <td colspan="6" style="text-align:right;font-weight:700;padding:.6rem;font-size:.82rem">TOTAL:</td>
+                            <td style="text-align:right;font-weight:700;color:var(--navy-800);padding:.6rem">${fmtCLP(rowTotal)}</td>
+                        </tr></tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>`;
+    }).join('') || `<div class="empty-state"><div class="icon">📦</div><p>Sin proyectos con gastos para los filtros seleccionados</p></div>`;
+};
+
+window.toggleOTCard = (id) => {
+    document.getElementById(id)?.classList.toggle('open');
+};
+
+
+/* ══════════════════════════════════════════
+   GASTOS SIN CLASIFICAR
+══════════════════════════════════════════ */
+
+window.loadUnclassified = async () => {
+    // Ensure OTs are loaded
+    if (!otData.length) {
+        const snap = await getDocs(collection(db, 'workOrders'));
+        otData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        otData.sort((a, b) => a.number.localeCompare(b.number));
+    }
+
+    const allRecs = (await getDocs(collection(db, 'records'))).docs.map(d => ({ id: d.id, ...d.data() }));
+    const unclassified = allRecs.filter(r =>
+        r.type === 'expense' && !r.expenseType
+    ).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const countEl = document.getElementById('unclassified-count');
+    countEl.textContent = unclassified.length === 0
+        ? '✓ Todos los gastos están clasificados'
+        : `${unclassified.length} gasto${unclassified.length !== 1 ? 's' : ''} sin clasificar`;
+    countEl.style.background = unclassified.length === 0 ? 'var(--green-bg)' : 'var(--crimson-bg)';
+    countEl.style.color      = unclassified.length === 0 ? 'var(--green)' : 'var(--crimson)';
+    countEl.style.borderColor= unclassified.length === 0 ? 'rgba(29,122,79,.2)' : 'rgba(192,39,45,.2)';
+    // Update badge on tab
+    const badge = document.getElementById('gg-unclassified-badge');
+    if (badge) { badge.textContent = unclassified.length; badge.style.display = unclassified.length > 0 ? 'inline' : 'none'; }
+
+    // Show bulk reassign button if there are records with otId=GENERAL or no otId
+    // Hide bulk button — no longer needed after cleanup
+    const bulkBtn = document.getElementById('btn-bulk-reassign');
+    if (bulkBtn) bulkBtn.style.display = 'none';
+
+    // Build OT options
+    let otOpts = '';
+    otData.forEach(ot => {
+        otOpts += `<option value="${ot.id}" data-number="${ot.number}" data-client="${ot.client}">${ot.number} — ${ot.client}</option>`;
+    });
+
+    const catOpts = `
+        <option value="">Seleccione...</option>
+        <option value="Materiales">Materiales</option>
+        <option value="Insumos">Insumos</option>
+        <option value="Herramientas">Herramientas</option>
+        <option value="Repuestos">Repuestos</option>
+        <option value="Combustible">Combustible</option>
+        <option value="Viaticos">Viáticos</option>
+        <option value="Hospedaje">Hospedaje</option>
+        <option value="Parqueo">Parqueo</option>
+        <option value="Peajes">Peajes</option>
+        <option value="Otros">Otros</option>`;
+
+    const tbody = document.querySelector('#unclassified-table tbody');
+
+    if (unclassified.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">
+            <div class="icon" style="font-size:2rem">✅</div>
+            <p>Todos los gastos tienen OT y tipo de gasto asignado</p>
+        </div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = unclassified.map(r => {
+        const tech = usersData.find(u => u.id === r.userId);
+        const techName = tech ? tech.fullName.split(' ').slice(0,2).join(' ') : '—';
+        const missingOT  = !r.otId;
+        const missingCat = !r.expenseType;
+
+        return `<tr id="ucrow-${r.id}">
+            <td>${fmtDate(r.date)}</td>
+            <td style="font-weight:600;color:var(--text-1)">${techName}</td>
+            <td style="font-size:.78rem">${r.invoiceNum||'—'}</td>
+            <td>${r.store||'—'}</td>
+            <td style="font-weight:600">${fmt(r.amount)}</td>
+            <td>
+                <select class="form-control" id="uc-ot-${r.id}" style="font-size:.78rem;padding:.4rem .6rem"
+                    ${!missingOT ? '' : 'style="border-color:var(--amber)"'}>
+                    ${otOpts}
+                </select>
+            </td>
+            <td>
+                <select class="form-control" id="uc-cat-${r.id}" style="font-size:.78rem;padding:.4rem .6rem">
+                    ${catOpts}
+                </select>
+            </td>
+            <td>
+                <button type="button" class="btn btn-success btn-sm" onclick="window.saveUnclassified('${r.id}')">
+                    ✓ Guardar
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // Pre-select existing values
+    unclassified.forEach(r => {
+        const otSel = document.getElementById(`uc-ot-${r.id}`);
+        const catSel = document.getElementById(`uc-cat-${r.id}`);
+        if (otSel && r.otId) otSel.value = r.otId;
+        if (catSel && r.expenseType) catSel.value = r.expenseType;
+    });
+};
+
+window.saveUnclassified = async (recordId) => {
+    const otSel  = document.getElementById(`uc-ot-${recordId}`);
+    const catSel = document.getElementById(`uc-cat-${recordId}`);
+    if (!otSel || !catSel) return;
+
+    const otId  = otSel.value;
+    const selOpt = otSel.options[otSel.selectedIndex];
+    const otNumber = selOpt ? (selOpt.dataset.number || 'General') : 'General';
+    const otClient = selOpt ? (selOpt.dataset.client || '') : '';
+    const expType  = catSel.value;
+
+    if (!expType) { showToast('Seleccione un tipo de gasto', 'warning'); return; }
+
+    try {
+        await updateDoc(doc(db, 'records', recordId), {
+            otId, otNumber, otClient, expenseType: expType
+        });
+
+        // Animate row removal
+        const row = document.getElementById(`ucrow-${recordId}`);
+        if (row) {
+            row.style.transition = 'opacity .3s, transform .3s';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(20px)';
+            setTimeout(() => window.loadUnclassified(), 350);
+        }
+        showToast('Gasto clasificado correctamente', 'success');
+    } catch(e) {
+        showToast('Error al guardar: ' + e.message, 'error');
+    }
+};
+
+
+/* Toggle "Otros" detail field */
+window.toggleOtrosField = function(val) {
+    const wrap = document.getElementById('otros-field-wrap');
+    const input = document.getElementById('exp-otros-detail');
+    if (!wrap) return;
+    if (val === 'Otros') {
+        wrap.classList.remove('hidden');
+        input.required = true;
+        input.focus();
+    } else {
+        wrap.classList.add('hidden');
+        input.required = false;
+        input.value = '';
+    }
+};
+
+
+/* ══════════════════════════════════════════
+   REPORTE DE COSTOS POR OT
+══════════════════════════════════════════ */
+window.generateOTReport = async (otId) => {
+
+    // Fetch all expenses for this OT
+    const allRecs = (await getDocs(collection(db, 'records'))).docs.map(d=>({id:d.id,...d.data()}));
+    const exps = allRecs.filter(r => {
+        if (r.type !== 'expense') return false;
+        return r.otId === otId;
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    if (!exps.length) { showToast('Esta OT no tiene gastos registrados', 'warning'); return; }
+
+    // OT info
+    const ot = otData.find(x => x.id === otId);
+    const otNumber = ot?.number || otId;
+    const otClient = ot?.client || '—';
+    const otDesc   = ot?.description || '—';
+
+    // Totals
+    const grandTotal = exps.reduce((s,r) => s + parseFloat(r.amount||0), 0);
+    const ALL_CATS = ['Materiales','Insumos','Herramientas','Repuestos','Combustible','Viaticos','Hospedaje','Parqueo','Peajes','Otros'];
+    const catTotals = {};
+    ALL_CATS.forEach(c => catTotals[c] = 0);
+    exps.forEach(r => {
+        const raw = r.expenseType || 'Otros';
+        const cat = raw.startsWith('Otros:') ? 'Otros' : raw;
+        catTotals[cat] = (catTotals[cat]||0) + parseFloat(r.amount||0);
+    });
+    const usedCats = ALL_CATS.filter(c => catTotals[c] > 0);
+
+    // Techs involved
+    const techIds = [...new Set(exps.map(r=>r.userId))];
+    const techNames = techIds.map(id => usersData.find(u=>u.id===id)?.fullName || '—');
+    const techName = uid => usersData.find(u=>u.id===uid)?.fullName.split(' ').slice(0,2).join(' ') || '—';
+
+    // Date range
+    const dates = exps.map(r=>r.date).sort();
+    const dateRange = `${fmtDate(dates[0])} al ${fmtDate(dates[dates.length-1])}`;
+
+    // ── Build HTML ─────────────────────────────────────────────
+    let html = '';
+
+    // Header
+    html += `<div class="rpt-header">
+        <div class="rpt-company">
+            <h1>Multiequipos</h1>
+            <p>Reporte de Análisis de Costos</p>
+        </div>
+        <div class="rpt-doc">
+            <h2>Reporte de Costos</h2>
+            <p>Fecha de emisión: ${new Date().toLocaleDateString('es-CR')}</p>
+            <p>Periodo: ${dateRange}</p>
+        </div>
+    </div>`;
+
+    // OT info box
+    html += `<div class="rpt-ot-box">
+        <h3>${otNumber} — ${otClient}</h3>
+        <p><strong>Descripción:</strong> ${otDesc}</p>
+        <p><strong>Técnicos involucrados:</strong> ${techNames.join(', ')}</p>
+        <p><strong>Total de comprobantes:</strong> ${exps.length}</p>
+    </div>`;
+
+    // Category breakdown
+    html += `<div class="rpt-section-title">Desglose por Categoría de Gasto</div>`;
+    html += `<div class="rpt-cat-grid">`;
+    usedCats.forEach(cat => {
+        const pct = grandTotal > 0 ? ((catTotals[cat]/grandTotal)*100).toFixed(1) : '0.0';
+        html += `<div class="rpt-cat-item">
+            <div class="rct-label">${cat}</div>
+            <div class="rct-amount">${fmtCLP(catTotals[cat])}</div>
+            <div class="rct-pct">${pct}% del total</div>
+        </div>`;
+    });
+    html += `</div>`;
+
+    // Receipts table
+    html += `<div class="rpt-section-title">Detalle de Comprobantes (${exps.length})</div>`;
+    html += `<table class="rpt-table" style="table-layout:fixed">
+        <colgroup>
+            <col style="width:11%"><col style="width:13%"><col style="width:15%">
+            <col style="width:20%"><col style="width:18%"><col style="width:23%">
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Factura</th>
+                <th>Tipo de Gasto</th>
+                <th>Comercio</th>
+                <th>Técnico</th>
+                <th style="text-align:right">Monto</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    exps.forEach(r => {
+        const raw = r.expenseType || '—';
+        const tipo = raw.startsWith('Otros:') ? `Otros: ${raw.replace('Otros:','').trim()}` : raw;
+        html += `<tr>
+            <td>${fmtDate(r.date)}</td>
+            <td>${r.invoiceNum||'—'}</td>
+            <td>${tipo}</td>
+            <td>${r.store||'—'}</td>
+            <td>${techName(r.userId)}</td>
+            <td style="text-align:right;font-weight:600">${fmtCLP(r.amount)}</td>
+        </tr>`;
+    });
+
+    html += `</tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5" style="text-align:right">TOTAL:</td>
+                <td style="text-align:right">${fmtCLP(grandTotal)}</td>
+            </tr>
+        </tfoot>
+    </table>`;
+
+    // Total box
+    html += `<div class="rpt-total-box">
+        <span class="rtb-label">COSTO TOTAL DEL PROYECTO</span>
+        <span class="rtb-amount">${fmtCLP(grandTotal)}</span>
+    </div>`;
+
+    // Signatures
+    html += `<div class="rpt-sig">
+        <div class="rpt-sig-block">Elaborado por<br><br>___________________<br>Administración</div>
+        <div class="rpt-sig-block">Revisado por<br><br>___________________<br>Financiero</div>
+    </div>`;
+
+    // ── Print ──────────────────────────────────────────────────
+    // Use a dedicated print container to avoid polluting #print-area
+    const printWin = window.open('', '_blank', 'width=900,height=700');
+    printWin.document.write(`<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <title>Reporte Costos — ${otNumber}</title>
+        <style>
+            * { box-sizing:border-box; margin:0; padding:0; }
+            body { font-family: Arial, sans-serif; font-size:12px; color:#222; padding:30px 40px; }
+            ${document.querySelector('style') ? '' : ''}
+            .rpt-header{border-bottom:3px solid #1B2A4A;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;}
+            .rpt-company h1{font-size:22px;color:#1B2A4A;margin-bottom:3px;}
+            .rpt-company p{font-size:12px;color:#666;}
+            .rpt-doc h2{font-size:16px;text-transform:uppercase;letter-spacing:1px;color:#1B2A4A;text-align:right;}
+            .rpt-doc p{font-size:11px;color:#666;text-align:right;}
+            .rpt-ot-box{background:#f5f7fb;border:1px solid #dde4ef;border-left:4px solid #1B2A4A;border-radius:5px;padding:14px 18px;margin-bottom:18px;}
+            .rpt-ot-box h3{font-size:18px;font-weight:700;color:#1B2A4A;margin-bottom:4px;}
+            .rpt-ot-box p{font-size:13px;color:#555;margin:3px 0;}
+            .rpt-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1B2A4A;border-bottom:1px solid #dde4ef;padding-bottom:5px;margin:16px 0 10px;}
+            .rpt-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px;table-layout:fixed;}
+            .rpt-table th{background:#1B2A4A;color:#fff;padding:7px 8px;text-align:left;font-size:11px;}
+            .rpt-table td{padding:6px 8px;border-bottom:1px solid #e8ecf2;overflow:hidden;word-break:break-word;}
+            .rpt-table tr:nth-child(even) td{background:#f5f7fb;}
+            .rpt-table tfoot td{background:#1B2A4A;color:#fff;font-weight:700;padding:7px 8px;}
+            .rpt-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+            .rpt-cat-item{border:1px solid #dde4ef;border-radius:5px;padding:10px 12px;background:#fff;}
+            .rct-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#888;margin-bottom:3px;}
+            .rct-amount{font-size:15px;font-weight:700;color:#1B2A4A;}
+            .rct-pct{font-size:10px;color:#aaa;}
+            .rpt-total-box{background:#1B2A4A;color:#fff;border-radius:6px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:16px;}
+            .rtb-label{font-size:13px;font-weight:600;letter-spacing:.04em;}
+            .rtb-amount{font-size:22px;font-weight:700;}
+            .rpt-sig{display:flex;justify-content:space-between;margin-top:60px;}
+            .rpt-sig-block{width:42%;text-align:center;border-top:1px solid #000;padding-top:6px;font-size:11px;color:#333;}
+            @media print { body { padding: 20px; } }
+        </style>
+    </head><body>${html}</body></html>`);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => { printWin.print(); }, 400);
+};
+
+
+/* ══════════════════════════════════════════
+   REPORTE PDF DE ESTADÍSTICAS
+══════════════════════════════════════════ */
+window.generateStatsPDF = async () => {
+
+    // ── Capture chart images before opening new window ──────────
+    function chartImg(id) {
+        const canvas = document.getElementById(id);
+        if (!canvas) return null;
+        try { return canvas.toDataURL('image/png'); } catch(e) { return null; }
+    }
+
+    const imgExpM    = chartImg('chart-expenses-monthly');
+    const imgExpD    = chartImg('chart-donut-expenses');
+    const imgHrsM    = chartImg('chart-hours-monthly');
+    const imgCostD   = chartImg('chart-donut-cost');
+
+    // ── Collect current KPI values ───────────────────────────────
+    const year  = document.getElementById('stats-year')?.value || '';
+    const month = document.getElementById('stats-month');
+    const monthLabel = month ? month.options[month.selectedIndex]?.text : 'Todo el año';
+    const kpiExp     = document.getElementById('kpi-expenses')?.textContent  || '—';
+    const kpiHrs     = document.getElementById('kpi-hours')?.textContent     || '—';
+    const kpiCost    = document.getElementById('kpi-extra-cost')?.textContent || '—';
+    const kpiTechs   = document.getElementById('kpi-techs')?.textContent     || '—';
+
+    // ── Collect rankings ─────────────────────────────────────────
+    function getRanking(id) {
+        const ul = document.getElementById(id);
+        if (!ul) return [];
+        return Array.from(ul.querySelectorAll('li')).map(li => {
+            const name = li.querySelector('.s-rank-name')?.textContent?.trim() || '—';
+            const val  = li.querySelector('.s-rank-val')?.textContent?.trim()  || '—';
+            return { name, val };
+        });
+    }
+    const rankExp  = getRanking('rank-expenses');
+    const rankHrs  = getRanking('rank-hours');
+    const rankCost = getRanking('rank-cost');
+
+    const medals = ['🥇','🥈','🥉'];
+
+    function rankTable(data, title) {
+        if (!data.length) return `<p style="color:#888;font-size:12px">Sin datos</p>`;
+        return `<table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:#1B2A4A;color:#fff">
+                <th style="padding:6px 8px;text-align:left">#</th>
+                <th style="padding:6px 8px;text-align:left">Técnico</th>
+                <th style="padding:6px 8px;text-align:right">Total</th>
+            </tr></thead>
+            <tbody>
+            ${data.map((r,i) => `<tr style="background:${i%2===0?'#fff':'#f5f7fb'}">
+                <td style="padding:5px 8px">${medals[i]||i+1}</td>
+                <td style="padding:5px 8px;font-weight:600">${r.name}</td>
+                <td style="padding:5px 8px;text-align:right">${r.val}</td>
+            </tr>`).join('')}
+            </tbody>
+        </table>`;
+    }
+
+    // ── Build HTML ───────────────────────────────────────────────
+    const periodText = monthLabel === 'Todo el año' ? `Año ${year}` : `${monthLabel} ${year}`;
+
+    let html = `
+    <div style="border-bottom:3px solid #1B2A4A;padding-bottom:14px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+            <h1 style="font-size:22px;color:#1B2A4A;margin:0 0 3px">Multiequipos</h1>
+            <p style="font-size:12px;color:#666;margin:0">Reporte de Estadísticas del Equipo</p>
+        </div>
+        <div style="text-align:right">
+            <h2 style="font-size:15px;text-transform:uppercase;letter-spacing:1px;color:#1B2A4A;margin:0 0 3px">Reporte Ejecutivo</h2>
+            <p style="font-size:11px;color:#666;margin:0">Periodo: ${periodText}</p>
+            <p style="font-size:11px;color:#666;margin:0">Emitido: ${new Date().toLocaleDateString('es-CR')}</p>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        ${[
+            ['Total Gastos', kpiExp, '#1B2A4A'],
+            ['Horas Extra', kpiHrs, '#c0272d'],
+            ['Costo Extra', kpiCost, '#1d7a4f'],
+            ['Técnicos Activos', kpiTechs, '#7c3aed']
+        ].map(([label, val, color]) => `
+        <div style="border:1px solid #dde4ef;border-top:3px solid ${color};border-radius:6px;padding:12px 14px;background:#fff">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:4px">${label}</div>
+            <div style="font-size:18px;font-weight:700;color:#1B2A4A">${val}</div>
+        </div>`).join('')}
+    </div>
+
+    <!-- Charts row 1 -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1B2A4A;border-bottom:1px solid #dde4ef;padding-bottom:5px;margin-bottom:12px">Gastos Mensuales por Técnico</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:20px;align-items:center">
+        ${imgExpM ? `<img src="${imgExpM}" style="width:100%;border-radius:6px;border:1px solid #eee">` : '<div style="height:180px;background:#f5f7fb;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px">Sin datos</div>'}
+        ${imgExpD ? `<img src="${imgExpD}" style="width:100%;border-radius:6px;border:1px solid #eee">` : '<div style="height:180px;background:#f5f7fb;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px">Sin datos</div>'}
+    </div>
+
+    <!-- Charts row 2 -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1B2A4A;border-bottom:1px solid #dde4ef;padding-bottom:5px;margin-bottom:12px">Horas Extra y Costo Salarial</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:20px;align-items:center">
+        ${imgHrsM ? `<img src="${imgHrsM}" style="width:100%;border-radius:6px;border:1px solid #eee">` : '<div style="height:160px;background:#f5f7fb;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px">Sin datos</div>'}
+        ${imgCostD ? `<img src="${imgCostD}" style="width:100%;border-radius:6px;border:1px solid #eee">` : '<div style="height:160px;background:#f5f7fb;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px">Sin datos</div>'}
+    </div>
+
+    <!-- Rankings -->
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#1B2A4A;border-bottom:1px solid #dde4ef;padding-bottom:5px;margin-bottom:12px">Rankings del Período</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#1B2A4A;margin-bottom:6px">💰 Gastos</div>
+            ${rankTable(rankExp)}
+        </div>
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#1B2A4A;margin-bottom:6px">⏱ Horas Extra</div>
+            ${rankTable(rankHrs)}
+        </div>
+        <div>
+            <div style="font-size:11px;font-weight:700;color:#1B2A4A;margin-bottom:6px">💼 Costo Extra</div>
+            ${rankTable(rankCost)}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="border-top:1px solid #dde4ef;padding-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#aaa">
+        <span>Multiequipos — Sistema de Nómina</span>
+        <span>Reporte generado el ${new Date().toLocaleDateString('es-CR')} a las ${new Date().toLocaleTimeString('es-CR',{hour:'2-digit',minute:'2-digit'})}</span>
+    </div>`;
+
+    // ── Open print window ────────────────────────────────────────
+    const w = window.open('','_blank','width=1000,height=750');
+    w.document.write(`<!DOCTYPE html><html><head>
+        <meta charset="UTF-8">
+        <title>Estadísticas ${periodText} — Multiequipos</title>
+        <style>
+            * { box-sizing:border-box; margin:0; padding:0; }
+            body { font-family:Arial,sans-serif; font-size:12px; color:#222; padding:28px 36px; }
+            @media print {
+                body { padding:16px; }
+                @page { margin:1cm; }
+            }
+        </style>
+    </head><body>${html}</body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 600);
+};
+
+
+/* ══════════════════════════════════════════
+   REASIGNACIÓN MASIVA DE GENERALES → S0000
+══════════════════════════════════════════ */
+window.bulkReassignGeneral = async () => {
+    // Find the S0000 OT in Firestore
+    await ensureOTData();
+    const s0000 = otData.find(x => x.number === 'S0000');
+    if (!s0000) {
+        showToast('No se encontró la OT S0000. Verifique que esté creada.', 'error');
+        return;
+    }
+
+    if (!confirm(`¿Reasignar TODOS los gastos generales a la OT ${s0000.number} — ${s0000.client}?\n\nEsta acción no se puede deshacer.`)) return;
+
+    // Fetch all GENERAL expense records
+    const allRecs = (await getDocs(collection(db, 'records'))).docs.map(d => ({id: d.id, ...d.data()}));
+    const generals = allRecs.filter(r =>
+        r.type === 'expense' && (r.otId === 'GENERAL' || !r.otId)
+    );
+
+    if (!generals.length) {
+        showToast('No hay gastos generales para reasignar', 'info');
+        return;
+    }
+
+    // Show progress
+    const progressEl = document.getElementById('bulk-reassign-progress');
+    const progressText = document.getElementById('bulk-progress-text');
+    const progressBar = document.getElementById('bulk-progress-bar');
+    progressEl.classList.remove('hidden');
+    document.getElementById('btn-bulk-reassign').disabled = true;
+
+    let done = 0;
+    const total = generals.length;
+
+    // Process in batches of 500 (Firestore batch limit)
+    const BATCH_SIZE = 400;
+    for (let i = 0; i < generals.length; i += BATCH_SIZE) {
+        const batchGroup = generals.slice(i, i + BATCH_SIZE);
+        const batch = writeBatch(db);
+        batchGroup.forEach(r => {
+            batch.update(doc(db, 'records', r.id), {
+                otId: s0000.id,
+                otNumber: s0000.number,
+                otClient: s0000.client,
+                otDescription: s0000.description || ''
+            });
+        });
+        await batch.commit();
+        done += batchGroup.length;
+        progressText.textContent = `${done} / ${total}`;
+        progressBar.style.width = `${(done/total)*100}%`;
+    }
+
+    // Done
+    progressEl.classList.add('hidden');
+    document.getElementById('btn-bulk-reassign').disabled = false;
+    showToast(`✓ ${total} gastos reasignados a ${s0000.number} exitosamente`, 'success');
+    await window.loadUnclassified();
+};
+
+
+/* ══════════════════════════════════════════
+   GESTIÓN DE GASTOS — DOS VISTAS
+══════════════════════════════════════════ */
+
+window.switchGGTab = function(tab) {
+    const viewU = document.getElementById('gg-view-unclassified');
+    const viewA = document.getElementById('gg-view-all');
+    const tabU  = document.getElementById('gg-tab-unclassified');
+    const tabA  = document.getElementById('gg-tab-all');
+    const active   = 'border-bottom:2px solid var(--navy-800);color:var(--navy-800);margin-bottom:-2px';
+    const inactive = 'border-bottom:2px solid transparent;color:var(--text-3);margin-bottom:-2px';
+
+    if (tab === 'unclassified') {
+        viewU.style.display = ''; viewA.style.display = 'none';
+        tabU.style.cssText += active; tabA.style.cssText += inactive;
+        window.loadUnclassified();
+    } else {
+        viewU.style.display = 'none'; viewA.style.display = '';
+        tabA.style.cssText += active; tabU.style.cssText += inactive;
+        // Populate tech filter
+        const techSel = document.getElementById('gg-filter-tech');
+        if (techSel && techSel.options.length <= 1) {
+            usersData.forEach(u => {
+                const o = document.createElement('option');
+                o.value = u.id; o.textContent = u.fullName;
+                techSel.appendChild(o);
+            });
+        }
+        window.loadAllExpenses();
+    }
+};
+
+window.loadAllExpenses = async () => {
+    await ensureOTData();
+    const techFilter = document.getElementById('gg-filter-tech')?.value || 'all';
+    const fromDate   = document.getElementById('gg-filter-from')?.value || '';
+    const toDate     = document.getElementById('gg-filter-to')?.value   || '';
+
+    const allRecs = (await getDocs(collection(db, 'records'))).docs.map(d => ({id:d.id,...d.data()}));
+    const exps = allRecs.filter(r => {
+        if (r.type !== 'expense') return false;
+        if (techFilter !== 'all' && r.userId !== techFilter) return false;
+        if (fromDate && r.date < fromDate) return false;
+        if (toDate   && r.date > toDate)   return false;
+        return true;
+    }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    document.getElementById('gg-all-count').textContent = `${exps.length} registro${exps.length!==1?'s':''} encontrado${exps.length!==1?'s':''}`;
+
+    // Build OT options
+    let otOpts = '';
+    otData.forEach(ot => {
+        otOpts += `<option value="${ot.id}" data-number="${ot.number}" data-client="${ot.client}">${ot.number} — ${ot.client}</option>`;
+    });
+
+    const catOpts = `<option value="">Seleccione...</option>
+        <option value="Materiales">Materiales</option>
+        <option value="Insumos">Insumos</option>
+        <option value="Herramientas">Herramientas</option>
+        <option value="Repuestos">Repuestos</option>
+        <option value="Combustible">Combustible</option>
+        <option value="Viaticos">Viáticos</option>
+        <option value="Hospedaje">Hospedaje</option>
+        <option value="Parqueo">Parqueo</option>
+        <option value="Peajes">Peajes</option>
+        <option value="Otros">Otros</option>`;
+
+    const tbody = document.querySelector('#all-expenses-table tbody');
+
+    if (!exps.length) {
+        tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="icon">🧾</div><p>Sin gastos para los filtros seleccionados</p></div></td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = exps.map(r => {
+        const tech = usersData.find(u => u.id === r.userId);
+        const techName = tech ? tech.fullName.split(' ').slice(0,2).join(' ') : '—';
+        const paid = r.status === 'paid';
+        const rawType = r.expenseType || '';
+        const isOtros = rawType.startsWith('Otros:');
+        const typeVal = isOtros ? 'Otros' : rawType;
+
+        return `<tr id="ggrow-${r.id}">
+            <td>${fmtDate(r.date)}</td>
+            <td style="font-weight:600;color:var(--text-1)">${techName}</td>
+            <td style="font-size:.78rem">${r.invoiceNum||'—'}</td>
+            <td>${r.store||'—'}</td>
+            <td style="font-weight:600">${fmt(r.amount)}</td>
+            <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
+            <td>
+                <select class="form-control" id="gg-ot-${r.id}" style="font-size:.78rem;padding:.4rem .6rem">
+                    ${otOpts}
+                </select>
+            </td>
+            <td>
+                <select class="form-control" id="gg-cat-${r.id}" style="font-size:.78rem;padding:.4rem .6rem">
+                    ${catOpts}
+                </select>
+            </td>
+            <td>
+                <button type="button" class="btn btn-success btn-sm" onclick="window.saveAllExpense('${r.id}')">
+                    ✓ Guardar
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // Pre-select current values
+    exps.forEach(r => {
+        const otSel  = document.getElementById(`gg-ot-${r.id}`);
+        const catSel = document.getElementById(`gg-cat-${r.id}`);
+        if (otSel && r.otId) otSel.value = r.otId;
+        if (catSel) {
+            const rawType = r.expenseType || '';
+            catSel.value = rawType.startsWith('Otros:') ? 'Otros' : rawType;
+        }
+    });
+};
+
+window.saveAllExpense = async (recordId) => {
+    const otSel  = document.getElementById(`gg-ot-${recordId}`);
+    const catSel = document.getElementById(`gg-cat-${recordId}`);
+    if (!otSel || !catSel) return;
+
+    const otId   = otSel.value;
+    const selOpt = otSel.options[otSel.selectedIndex];
+    const otNumber      = selOpt ? (selOpt.dataset.number || '') : '';
+    const otClient      = selOpt ? (selOpt.dataset.client || '') : '';
+    const otDescription = otId ? (otData.find(x=>x.id===otId)?.description||'') : '';
+    const expType = catSel.value;
+
+    if (!otId)    { showToast('Seleccione una orden de trabajo', 'warning'); return; }
+    if (!expType) { showToast('Seleccione un tipo de gasto', 'warning'); return; }
+
+    try {
+        await updateDoc(doc(db, 'records', recordId), {
+            otId, otNumber, otClient, otDescription, expenseType: expType
+        });
+        // Animate row to green briefly
+        const row = document.getElementById(`ggrow-${recordId}`);
+        if (row) {
+            row.style.transition = 'background .3s';
+            row.style.background = 'var(--green-bg)';
+            setTimeout(() => { row.style.background = ''; }, 1200);
+        }
+        showToast('Gasto actualizado correctamente', 'success');
+    } catch(e) {
+        showToast('Error al guardar: ' + e.message, 'error');
+    }
+};
+
+
+/* ══════════════════════════════════════════
+   HISTORIAL DE TÉCNICOS ELIMINADOS
+══════════════════════════════════════════ */
+
+window.loadDeletedUsers = async () => {
+    const snap = await getDocs(collection(db, 'deletedUsers'));
+    const deleted = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a,b) => new Date(b.deletedAt) - new Date(a.deletedAt));
+
+    const empty = document.getElementById('deleted-users-empty');
+    const wrap  = document.getElementById('deleted-users-wrap');
+    const tbody = document.getElementById('deleted-users-body');
+
+    if (!deleted.length) {
+        empty.classList.remove('hidden');
+        wrap.style.display = 'none';
+        return;
+    }
+
+    empty.classList.add('hidden');
+    wrap.style.display = '';
+
+    tbody.innerHTML = deleted.map(u => {
+        const deletedDate = u.deletedAt ? fmtDate(u.deletedAt.split('T')[0]) : '—';
+        return `<tr>
+            <td style="font-weight:600;color:var(--text-1)">${u.fullName}</td>
+            <td style="color:var(--text-3);font-size:.78rem">${u.email}</td>
+            <td>${fmt(u.salary||0)}</td>
+            <td>${u.startDate ? fmtDate(u.startDate) : '—'}</td>
+            <td style="font-size:.78rem;color:var(--text-3)">
+                ${deletedDate}
+                ${u.deletedBy ? `<br><span style="color:var(--text-3)">por ${u.deletedBy}</span>` : ''}
+            </td>
+            <td style="text-align:center">
+                <span style="font-size:.75rem;color:var(--text-3)">
+                    ${u.recordCount||0} registros
+                </span>
+            </td>
+            <td class="actions-cell">
+                <button type="button" class="btn btn-sm btn-success"
+                    onclick="window.restoreUser('${u.id}')">
+                    ↩ Restaurar
+                </button>
+                <button type="button" class="btn btn-sm btn-danger"
+                    onclick="window.permanentDeleteUser('${u.id}','${u.fullName}')">
+                    🗑 Borrar
+                </button>
+            </td>
+        </tr>`;
+    }).join('');
+};
+
+window.restoreUser = async (id) => {
+    const snap = await getDoc(doc(db, 'deletedUsers', id));
+    if (!snap.exists()) { showToast('No se encontró el técnico archivado', 'error'); return; }
+    const u = snap.data();
+
+    if (!confirm(`¿Restaurar a ${u.fullName}?\n\nSe restaurará su perfil. Sus registros históricos ya están disponibles.\n\nNecesitará crear una nueva contraseña para que pueda iniciar sesión.`)) return;
+
+    try {
+        // Ask for new password
+        const newPass = prompt(`Nueva contraseña temporal para ${u.fullName}:\n(mínimo 6 caracteres)`);
+        if (!newPass || newPass.length < 6) { showToast('Contraseña inválida — mínimo 6 caracteres', 'warning'); return; }
+
+        // Re-create Firebase Auth account
+        const authResult = await createUserViaAPI(u.email, newPass);
+        if (authResult.error) {
+            // If account already exists in Auth, just restore Firestore doc
+            if (authResult.error.message !== 'EMAIL_EXISTS') {
+                throw new Error(authResult.error.message);
+            }
+        }
+
+        // Restore user document (use original ID if auth was recreated with same email)
+        const newUid = authResult.localId || id;
+        const { deletedAt, deletedBy, recordCount, vacationCount, ...userData } = u;
+        await setDoc(doc(db, 'users', newUid), {
+            ...userData,
+            restoredAt: new Date().toISOString(),
+            restoredBy: currentUser.fullName || currentUser.email
+        });
+
+        // Remove from deletedUsers
+        await deleteDoc(doc(db, 'deletedUsers', id));
+
+        showToast(`${u.fullName} restaurado exitosamente. Contraseña temporal: ${newPass}`, 'success');
+        loadAdminData();
+        window.loadDeletedUsers();
+    } catch(e) {
+        showToast('Error al restaurar: ' + e.message, 'error');
+    }
+};
+
+window.permanentDeleteUser = async (id, name) => {
+    if (!confirm(`⚠️ ELIMINAR PERMANENTEMENTE a ${name}.\n\nEsta acción NO se puede deshacer. Sus registros históricos quedarán huérfanos.\n\n¿Está completamente seguro?`)) return;
+    try {
+        await deleteDoc(doc(db, 'deletedUsers', id));
+        showToast(`${name} eliminado permanentemente`, 'success');
+        window.loadDeletedUsers();
+    } catch(e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+};
+
 window.switchTab=id=>{
     document.querySelectorAll('#technician-panel .card').forEach(el=>el.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
@@ -1947,6 +4184,9 @@ window.switchAdminTab=id=>{
     if(id==='admin-validation')window.renderValidationTable();
     if(id==='admin-vacations')window.renderAdminVacTable();
     if(id==='admin-stats'){ initStatsYearSelector(); window.loadStats(); }
+    if(id==='admin-ot') window.loadOTTable();
+    if(id==='admin-unclassified'){ window.loadUnclassified(); document.getElementById('gg-unclassified-badge') && (document.getElementById('gg-view-unclassified').style.display='', document.getElementById('gg-view-all').style.display='none'); }
+    if(id==='admin-cost') window.loadCostAnalysis();
 };
 window.closeModal=id=>document.getElementById(id).classList.add('hidden');
 
