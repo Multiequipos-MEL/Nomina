@@ -829,7 +829,7 @@
                 </div>
                 <div class="table-responsive">
                     <table id="tech-expenses-table">
-                        <thead><tr><th>Fecha</th><th>Factura #</th><th>OT</th><th>Tipo</th><th>Comercio</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <thead><tr><th>Fecha</th><th>Factura #</th><th>OT</th><th>Tipo</th><th>Comercio</th><th>Descripción</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -973,6 +973,10 @@
                             <label>Descripción del Trabajo</label>
                             <input type="text" id="ot-description" class="form-control" placeholder="Ej: Instalación rampa niveladora" required>
                         </div>
+                        <div class="form-group">
+                            <label>Valor del Proyecto (₡) <span style="color:var(--text-3);font-weight:400;font-size:.75rem">(opcional)</span></label>
+                            <input type="number" id="ot-value" class="form-control" placeholder="0" min="0">
+                        </div>
                         <div class="form-group" style="display:flex;align-items:flex-end;gap:.5rem">
                             <button type="submit" class="btn btn-success w-full" id="ot-submit-btn">+ Crear OT</button>
                             <button type="button" class="btn btn-secondary hidden" id="ot-cancel-btn" onclick="window.cancelOTEdit()">Cancelar</button>
@@ -983,7 +987,7 @@
                 <div class="card-title" style="margin-bottom:.9rem">Órdenes Registradas</div>
                 <div class="table-responsive">
                     <table>
-                        <thead><tr><th>Número</th><th>Cliente</th><th>Descripción</th><th>Fecha Creación</th><th>Acciones</th></tr></thead>
+                        <thead><tr><th>Número</th><th>Cliente</th><th>Descripción</th><th>Valor Proyecto</th><th>Fecha Creación</th><th>Acciones</th></tr></thead>
                         <tbody id="ot-table-body"></tbody>
                     </table>
                 </div>
@@ -1452,6 +1456,10 @@
             <label>Especifique el gasto <span style="color:var(--crimson)">*</span></label>
             <input type="text" id="exp-otros-detail" class="form-control" placeholder="Describa el tipo de gasto…">
         </div>
+        <div class="form-group">
+            <label>Descripción <span style="color:var(--text-3);font-weight:400;font-size:.75rem">(opcional)</span></label>
+            <textarea id="exp-desc" class="form-control" rows="2" placeholder="Ej: Viáticos para visita a cliente en Cartago…"></textarea>
+        </div>
         <div class="form-group"><label>Monto (₡)</label><input type="number" id="exp-amount" class="form-control" required min="0" placeholder="0"></div>
         <button type="submit" class="btn btn-success w-full" style="margin-top:.35rem;padding:.65rem">Guardar Gasto</button>
     </form>
@@ -1520,6 +1528,9 @@
         <div class="sig-block">Firma Autorizada<br><br>___________________</div>
     </div>
 </div>
+
+<!-- SheetJS for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -1725,6 +1736,7 @@ async function loadTechData(){
             <td style="font-size:.78rem;font-weight:600;color:var(--navy-800)">${otLabel}</td>
             <td><span style="background:var(--navy-50);border:1px solid var(--border);border-radius:4px;padding:.15rem .45rem;font-size:.72rem;font-weight:600">${ex.expenseType||'—'}</span></td>
             <td>${ex.store}</td>
+            <td style="font-size:.75rem;color:var(--text-3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ex.description||''}">${ex.description||'—'}</td>
             <td>${fmt(ex.amount)}</td>
             <td><span class="badge ${paid?'badge-paid':'badge-pending'}">${paid?'Pagado':'Pendiente'}</span></td>
             <td class="actions-cell">
@@ -1732,7 +1744,7 @@ async function loadTechData(){
                 ${!paid?`<button type="button" class="btn btn-sm btn-danger" onclick="window.openDeleteConfirm('expense','${ex.id}')">Eliminar</button>`:''}
             </td></tr>`;
         });
-        document.querySelector('#tech-expenses-table tbody').innerHTML=rowsE||`<tr><td colspan="8"><div class="empty-state"><div class="icon">🧾</div><p>Sin registros</p></div></td></tr>`;
+        document.querySelector('#tech-expenses-table tbody').innerHTML=rowsE||`<tr><td colspan="9"><div class="empty-state"><div class="icon">🧾</div><p>Sin registros</p></div></td></tr>`;
         document.getElementById('tech-pending-expenses').textContent=fmt(pendE);
 
         // vacation days from user profile
@@ -1806,11 +1818,12 @@ window.openModal=id=>{
     if(id==='modal-hour')document.getElementById('hour-modal-title').textContent='Registro de Horas';
     if(id==='modal-expense'){
         document.getElementById('expense-modal-title').textContent='Registro de Gastos';
-        // Reset otros field
         const ow=document.getElementById('otros-field-wrap');
         if(ow){ow.classList.add('hidden');}
         const od=document.getElementById('exp-otros-detail');
         if(od){od.value='';od.required=false;}
+        const desc=document.getElementById('exp-desc');
+        if(desc){desc.value='';}
     }
     if(id==='modal-vac-request'){
         document.getElementById('vac-days-preview').classList.add('hidden');
@@ -1972,6 +1985,7 @@ document.getElementById('expense-form').addEventListener('submit',async e=>{
         const rec={type:'expense',userId:currentUser.id,
             invoiceNum:document.getElementById('exp-invoice').value,
             store:document.getElementById('exp-store').value,
+            description:document.getElementById('exp-desc').value||'',
             amount:document.getElementById('exp-amount').value,
             date:document.getElementById('exp-date').value,
             expenseType:(()=>{
@@ -2393,52 +2407,51 @@ async function printRecords(list,ptype,techId,ftype){
     if(exps.length){
         html+=`<h3 style="margin-top:20px;font-size:16px;border-bottom:2px solid #1B2A4A;padding-bottom:6px;color:#1B2A4A;margin-bottom:10px">Reembolso de Gastos</h3>`;
 
-        html+=`<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px;font-family:Arial,sans-serif;table-layout:fixed">
+        html+=`<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;font-family:Arial,sans-serif;table-layout:fixed">
             <colgroup>
+                <col style="width:11%">
                 <col style="width:13%">
-                <col style="width:13%">
-                <col style="width:20%">
+                <col style="width:24%">
+                <col style="width:36%">
                 <col style="width:16%">
-                <col style="width:20%">
-                <col style="width:18%">
             </colgroup>
             <thead>
                 <tr style="background:#1B2A4A;color:#fff">
-                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Fecha</th>
-                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Factura</th>
-                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Orden de Trabajo</th>
-                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Tipo de Gasto</th>
-                    <th style="padding:9px 10px;text-align:left;font-size:12px;letter-spacing:.03em">Comercio</th>
-                    <th style="padding:9px 10px;text-align:right;font-size:12px;letter-spacing:.03em">Monto</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;letter-spacing:.06em;white-space:nowrap">Fecha</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;letter-spacing:.06em;white-space:nowrap">Factura #</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;letter-spacing:.06em">OT / Tipo de Gasto</th>
+                    <th style="padding:10px 14px;text-align:left;font-size:11px;letter-spacing:.06em">Comercio / Descripción</th>
+                    <th style="padding:10px 14px;text-align:right;font-size:11px;letter-spacing:.06em;white-space:nowrap">Monto</th>
                 </tr>
             </thead>
             <tbody>`;
 
         exps.forEach((r, idx) => {
             const raw = r.expenseType || '—';
-            const tipoDisplay = raw.startsWith('Otros:')
-                ? `Otros<br><span style="font-size:11px;color:#555">${raw.replace('Otros:','').trim()}</span>`
-                : raw;
+            const tipo = raw.startsWith('Otros:') ? 'Otros: ' + raw.replace('Otros:','').trim() : raw;
             const rowBg = idx % 2 === 0 ? '#ffffff' : '#f5f7fb';
-            const cellStyle = `padding:9px 10px;border-bottom:1px solid #e8ecf2;overflow:hidden;word-break:break-word;font-size:13px`;
+            const cs = 'padding:9px 14px;border-bottom:1px solid #e8ecf2;overflow:hidden;word-break:break-word;font-size:12px';
             html += `<tr style="background:${rowBg}">
-                <td style="${cellStyle};white-space:nowrap">${fmtDate(r.date)}</td>
-                <td style="${cellStyle};white-space:nowrap">${r.invoiceNum||'—'}</td>
-                <td style="${cellStyle};font-weight:700;color:#1B2A4A">
-                    ${r.otNumber||'General'}
-                    ${r.otClient?`<br><span style="font-size:11px;font-weight:400;color:#555">${r.otClient}</span>`:''}
+                <td style="${cs};white-space:nowrap">${fmtDate(r.date)}</td>
+                <td style="${cs}">${r.invoiceNum||'—'}</td>
+                <td style="${cs}">
+                    <span style="font-weight:700;color:#1B2A4A">${r.otNumber||'—'}</span>
+                    ${r.otClient?`<span style="color:#888;font-size:10px"> · ${r.otClient}</span>`:''}
+                    <br><span style="font-size:11px;color:#555">${tipo}</span>
                 </td>
-                <td style="${cellStyle}">${tipoDisplay}</td>
-                <td style="${cellStyle}">${r.store||'—'}</td>
-                <td style="${cellStyle};text-align:right;font-weight:700;white-space:nowrap">${fmt(r.amount)}</td>
+                <td style="${cs}">
+                    <span style="font-weight:600">${r.store||'—'}</span>
+                    ${r.description?`<br><span style="font-size:11px;color:#777">${r.description}</span>`:''}
+                </td>
+                <td style="${cs};text-align:right;font-weight:700;white-space:nowrap">${fmt(r.amount)}</td>
             </tr>`;
         });
 
         html+=`</tbody>
             <tfoot>
                 <tr style="background:#1B2A4A;color:#fff;font-weight:bold">
-                    <td colspan="5" style="padding:9px 10px;text-align:right;font-size:13px">TOTAL GASTOS:</td>
-                    <td style="padding:9px 10px;text-align:right;font-size:13px;white-space:nowrap">${fmt(totE)}</td>
+                    <td colspan="4" style="padding:9px 14px;text-align:right;font-size:12px">TOTAL GASTOS:</td>
+                    <td style="padding:9px 14px;text-align:right;font-size:12px;white-space:nowrap">${fmt(totE)}</td>
                 </tr>
             </tfoot>
         </table>`;
@@ -3090,6 +3103,7 @@ window.loadOTTable = async () => {
             <td style="font-weight:700;color:var(--navy-800)">${ot.number}</td>
             <td>${ot.client}</td>
             <td style="color:var(--text-2)">${ot.description}</td>
+            <td style="font-weight:600;color:var(--navy-800)">${ot.projectValue>0?fmt(ot.projectValue):'—'}</td>
             <td style="color:var(--text-3);font-size:.78rem">${fmtDate(ot.createdAt?.split('T')[0]||'')}</td>
             <td class="actions-cell">
                 <button type="button" class="btn btn-sm btn-warning" onclick="window.editOT('${ot.id}')">Editar</button>
@@ -3107,13 +3121,14 @@ document.getElementById('ot-form').addEventListener('submit', async e => {
     const number = document.getElementById('ot-number').value.trim();
     const client = document.getElementById('ot-client').value.trim();
     const desc   = document.getElementById('ot-description').value.trim();
+    const value  = parseFloat(document.getElementById('ot-value').value)||0;
     if (!number || !client || !desc) return;
     try {
         if (id) {
-            await updateDoc(doc(db, 'workOrders', id), { number, client, description: desc });
+            await updateDoc(doc(db, 'workOrders', id), { number, client, description: desc, projectValue: value });
             showToast('OT actualizada', 'success');
         } else {
-            await addDoc(collection(db, 'workOrders'), { number, client, description: desc, createdAt: new Date().toISOString() });
+            await addDoc(collection(db, 'workOrders'), { number, client, description: desc, projectValue: value, createdAt: new Date().toISOString() });
             showToast('OT creada exitosamente', 'success');
         }
         e.target.reset();
@@ -3132,6 +3147,7 @@ window.editOT = (id) => {
     document.getElementById('ot-number').value = ot.number;
     document.getElementById('ot-client').value = ot.client;
     document.getElementById('ot-description').value = ot.description;
+    document.getElementById('ot-value').value = ot.projectValue||'';
     document.getElementById('ot-submit-btn').textContent = '✓ Guardar Cambios';
     document.getElementById('ot-cancel-btn').classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3349,7 +3365,14 @@ window.loadCostAnalysis = async () => {
                         style="flex-shrink:0"
                         onclick="event.stopPropagation();window.generateOTReport('${row.id}')"
                         title="Generar reporte PDF de costos">
-                        ↓ Reporte
+                        ↓ PDF
+                    </button>
+                    <button type="button"
+                        class="btn btn-sm btn-success"
+                        style="flex-shrink:0"
+                        onclick="event.stopPropagation();window.generateOTExcel('${row.id}')"
+                        title="Exportar a Excel">
+                        ↓ Excel
                     </button>
                     <div class="ot-chevron">
                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
@@ -3589,12 +3612,34 @@ window.generateOTReport = async (otId) => {
     </div>`;
 
     // OT info box
+    const projectValue = ot?.projectValue || 0;
+    const profit       = projectValue > 0 ? projectValue - grandTotal : null;
+    const profitPct    = projectValue > 0 ? ((profit/projectValue)*100).toFixed(1) : null;
+
     html += `<div class="rpt-ot-box">
         <h3>${otNumber} — ${otClient}</h3>
         <p><strong>Descripción:</strong> ${otDesc}</p>
         <p><strong>Técnicos involucrados:</strong> ${techNames.join(', ')}</p>
         <p><strong>Total de comprobantes:</strong> ${exps.length}</p>
     </div>`;
+
+    // Profitability summary if project value exists
+    if (projectValue > 0) {
+        const pBoxes = [
+            ['Valor del Proyecto', fmtCLP(projectValue), '#1d7a4f'],
+            ['Costo Total', fmtCLP(grandTotal), '#c0272d'],
+            [profit >= 0 ? 'Utilidad' : 'Perdida', fmtCLP(Math.abs(profit)) + ' (' + profitPct + '%)', profit >= 0 ? '#1B2A4A' : '#c0272d']
+        ];
+        html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px">';
+        pBoxes.forEach(function(box) {
+            var label = box[0], val = box[1], color = box[2];
+            html += '<div style="border:1px solid #dde4ef;border-top:3px solid ' + color + ';border-radius:6px;padding:12px 14px;background:#fff">';
+            html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#888;margin-bottom:4px">' + label + '</div>';
+            html += '<div style="font-size:16px;font-weight:700;color:' + color + '">' + val + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
 
     // Category breakdown
     html += `<div class="rpt-section-title">Desglose por Categoría de Gasto</div>`;
@@ -3655,6 +3700,19 @@ window.generateOTReport = async (otId) => {
         <span class="rtb-label">COSTO TOTAL DEL PROYECTO</span>
         <span class="rtb-amount">${fmtCLP(grandTotal)}</span>
     </div>`;
+    if (projectValue > 0) {
+        const profitColor = profit >= 0 ? '#1d7a4f' : '#c0272d';
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;background:${profit>=0?'#f0faf5':'#fff5f5'};border:1px solid ${profitColor};border-radius:6px;padding:12px 20px;margin-top:8px">
+            <div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:${profitColor}">${profit>=0?'UTILIDAD DEL PROYECTO':'PÉRDIDA DEL PROYECTO'}</div>
+                <div style="font-size:11px;color:#666;margin-top:2px">Valor (${fmtCLP(projectValue)}) − Costo (${fmtCLP(grandTotal)})</div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-size:22px;font-weight:700;color:${profitColor}">${fmtCLP(Math.abs(profit))}</div>
+                <div style="font-size:13px;font-weight:600;color:${profitColor}">${profitPct}%</div>
+            </div>
+        </div>`;
+    }
 
     // Signatures
     html += `<div class="rpt-sig">
@@ -4168,6 +4226,118 @@ window.permanentDeleteUser = async (id, name) => {
     } catch(e) {
         showToast('Error: ' + e.message, 'error');
     }
+};
+
+
+/* ══════════════════════════════════════════
+   EXPORTAR REPORTE OT A EXCEL
+══════════════════════════════════════════ */
+window.generateOTExcel = async (otId) => {
+    const allRecs = (await getDocs(collection(db, 'records'))).docs.map(d=>({id:d.id,...d.data()}));
+    const exps = allRecs.filter(r => r.type==='expense' && r.otId===otId)
+        .sort((a,b) => new Date(a.date)-new Date(b.date));
+
+    if (!exps.length) { showToast('Esta OT no tiene gastos registrados','warning'); return; }
+
+    await ensureOTData();
+    const ot = otData.find(x=>x.id===otId);
+    const otNumber = ot?.number || otId;
+    const otClient = ot?.client || '—';
+    const otDesc   = ot?.description || '—';
+    const projectValue = ot?.projectValue || 0;
+
+    const techName = uid => usersData.find(u=>u.id===uid)?.fullName || '—';
+    const grandTotal = exps.reduce((s,r)=>s+parseFloat(r.amount||0),0);
+
+    const ALL_CATS = ['Materiales','Insumos','Herramientas','Repuestos','Combustible','Viaticos','Hospedaje','Parqueo','Peajes','Otros'];
+    const catTotals = {};
+    ALL_CATS.forEach(c=>catTotals[c]=0);
+    exps.forEach(r=>{
+        const raw=r.expenseType||'Otros';
+        const cat=raw.startsWith('Otros:')?'Otros':raw;
+        catTotals[cat]=(catTotals[cat]||0)+parseFloat(r.amount||0);
+    });
+
+    const wb = XLSX.utils.book_new();
+
+    // ── Hoja 1: Resumen del Proyecto ─────────────────────────────
+    const summaryData = [
+        ['REPORTE DE COSTOS — MULTIEQUIPOS'],
+        [],
+        ['Orden de Trabajo', otNumber],
+        ['Cliente', otClient],
+        ['Descripción', otDesc],
+        ['Fecha del Reporte', new Date().toLocaleDateString('es-CR')],
+        [],
+        ['RESUMEN FINANCIERO'],
+        ['Valor del Proyecto (₡)', projectValue > 0 ? projectValue : 'No definido'],
+        ['Costo Total (₡)', grandTotal],
+    ];
+    if (projectValue > 0) {
+        const profit = projectValue - grandTotal;
+        const profitPct = ((profit/projectValue)*100).toFixed(1);
+        summaryData.push(['Utilidad / Pérdida (₡)', profit]);
+        summaryData.push(['Margen (%)', profitPct + '%']);
+    }
+    summaryData.push([]);
+    summaryData.push(['DESGLOSE POR CATEGORÍA']);
+    summaryData.push(['Categoría', 'Monto (₡)', '% del Total']);
+    ALL_CATS.forEach(cat => {
+        if (catTotals[cat] > 0) {
+            const pct = grandTotal > 0 ? ((catTotals[cat]/grandTotal)*100).toFixed(1)+'%' : '0%';
+            summaryData.push([cat, catTotals[cat], pct]);
+        }
+    });
+    summaryData.push(['TOTAL', grandTotal, '100%']);
+
+    const wsResumen = XLSX.utils.aoa_to_sheet(summaryData);
+    wsResumen['!cols'] = [{wch:30},{wch:20},{wch:15}];
+
+    // Style title
+    if (wsResumen['A1']) wsResumen['A1'].s = { font:{bold:true,sz:14} };
+
+    XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+    // ── Hoja 2: Detalle de Comprobantes ──────────────────────────
+    const detailHeaders = ['Fecha','Factura #','Tipo de Gasto','Comercio','Descripción','Técnico','Monto (₡)'];
+    const detailRows = exps.map(r => {
+        const raw = r.expenseType||'—';
+        const tipo = raw.startsWith('Otros:') ? raw : raw;
+        return [
+            r.date,
+            r.invoiceNum||'—',
+            tipo,
+            r.store||'—',
+            r.description||'—',
+            techName(r.userId),
+            parseFloat(r.amount||0)
+        ];
+    });
+    detailRows.push(['','','','','','TOTAL', grandTotal]);
+
+    const wsDetalle = XLSX.utils.aoa_to_sheet([detailHeaders, ...detailRows]);
+    wsDetalle['!cols'] = [{wch:12},{wch:14},{wch:16},{wch:20},{wch:28},{wch:20},{wch:16}];
+
+    XLSX.utils.book_append_sheet(wb, wsDetalle, 'Comprobantes');
+
+    // ── Hoja 3: Resumen por Categoría ────────────────────────────
+    const catHeaders = ['Categoría','Monto (₡)','% del Total'];
+    const catRows = ALL_CATS
+        .filter(c=>catTotals[c]>0)
+        .map(cat=>{
+            const pct = grandTotal>0?((catTotals[cat]/grandTotal)*100).toFixed(1)+'%':'0%';
+            return [cat, catTotals[cat], pct];
+        });
+    catRows.push(['TOTAL', grandTotal, '100%']);
+
+    const wsCat = XLSX.utils.aoa_to_sheet([catHeaders,...catRows]);
+    wsCat['!cols'] = [{wch:20},{wch:18},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, wsCat, 'Por Categoria');
+
+    // ── Download ─────────────────────────────────────────────────
+    const filename = `Reporte_${otNumber}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    showToast('Excel generado y descargado', 'success');
 };
 
 window.switchTab=id=>{
